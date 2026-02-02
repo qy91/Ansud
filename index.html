@@ -1,13 +1,785 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>泛联国际船务代理有限公司 - PANLINK SHIPPING AGENCY</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ANSUD SHIPPING AGENCY CO., LTD.</title>
+  <link rel="icon" href="logo.png" type="image/png">
+  <link rel="shortcut icon" href="logo.png" type="image/png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root {
+      --primary: #003366;
+      --secondary: #006699;
+      --accent: #ff6600;
+      --light: #f5f5f5;
+      --dark: #333333;
+    }
+
+    body {
+      font-family: 'Noto Sans SC', sans-serif;
+      color: var(--dark);
+      background-color: var(--light);
+    }
+
+    .hero-gradient {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    }
+
+    .section-title {
+      position: relative;
+      display: inline-block;
+      margin-bottom: 2rem;
+    }
+
+    .section-title::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 0;
+      width: 60px;
+      height: 4px;
+      background-color: var(--accent);
+    }
+
+    .service-card {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .service-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .branch-card {
+      transition: transform 0.3s ease;
+    }
+
+    .branch-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .nav-link {
+      position: relative;
+    }
+
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background-color: var(--accent);
+      transition: width 0.3s ease;
+    }
+
+    .nav-link:hover::after {
+      width: 100%;
+    }
+
+    .btn-primary {
+      background-color: var(--accent);
+      transition: background-color 0.3s ease, transform 0.3s ease;
+    }
+
+    .btn-primary:hover {
+      background-color: #e55a00;
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      background-color: var(--primary);
+      transition: background-color 0.3s ease, transform 0.3s ease;
+    }
+
+    .btn-secondary:hover {
+      background-color: #002244;
+      transform: translateY(-2px);
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .fade-in {
+      animation: fadeIn 0.6s ease forwards;
+    }
+
+    .delay-100 {
+      animation-delay: 0.1s;
+    }
+
+    .delay-200 {
+      animation-delay: 0.2s;
+    }
+
+    .delay-300 {
+      animation-delay: 0.3s;
+    }
+
+    .delay-400 {
+      animation-delay: 0.4s;
+    }
+
+    .delay-500 {
+      animation-delay: 0.5s;
+    }
+  </style>
+</head>
+<body>
+  <div class="min-h-screen flex flex-col">
+    <!-- Navigation -->
+    <header class="fixed top-0 left-0 right-0 z-50 bg-white shadow-md py-4">
+      <div class="container mx-auto px-4 md:px-8">
+        <div class="flex justify-between items-center">
+          <!-- Logo -->
+          <div class="flex items-center">
+            <img src="logo.png" alt="ANSUD Shipping Agency" class="h-10 mr-3">
+            <div>
+              <h1 class="text-xl md:text-2xl font-bold text-blue-800">ANSUD</h1>
+              <p class="text-xs text-gray-600">SHIPPING AGENCY</p>
+            </div>
+          </div>
+
+          <!-- Desktop Navigation -->
+          <nav class="hidden md:flex items-center space-x-8">
+            <a href="#home" class="nav-link text-gray-800 hover:text-blue-800 font-medium">Home</a>
+            <a href="#services" class="nav-link text-gray-800 hover:text-blue-800 font-medium">Services</a>
+            <a href="#coverage" class="nav-link text-gray-800 hover:text-blue-800 font-medium">Coverage</a>
+            <a href="#about" class="nav-link text-gray-800 hover:text-blue-800 font-medium">About Us</a>
+            <a href="#contact" class="nav-link text-gray-800 hover:text-blue-800 font-medium">Contact</a>
+            
+          </nav>
+
+          <!-- Mobile Menu Button -->
+          <button class="md:hidden text-gray-800" onclick="toggleMobileMenu()">
+            <i data-lucide="menu" class="w-6 h-6"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile Navigation Menu -->
+      <div id="mobileMenu" class="hidden md:hidden bg-white shadow-lg absolute top-full left-0 right-0">
+        <div class="container mx-auto px-4 py-4 flex flex-col space-y-4">
+          <a href="#home" class="text-gray-800 hover:text-blue-800 font-medium py-2">Home</a>
+          <a href="#services" class="text-gray-800 hover:text-blue-800 font-medium py-2">Services</a>
+          <a href="#coverage" class="text-gray-800 hover:text-blue-800 font-medium py-2">Coverage</a>
+          <a href="#about" class="text-gray-800 hover:text-blue-800 font-medium py-2">About Us</a>
+          <a href="#contact" class="text-gray-800 hover:text-blue-800 font-medium py-2">Contact</a>
+          <a href="#" class="btn-primary px-6 py-2 rounded-md text-white font-medium text-center">Consult Now</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="flex-grow">
+      <!-- Hero Section -->
+      <section id="home" class="relative min-h-screen flex items-center pt-16 overflow-hidden">
+        <!-- Background Image -->
+        <div class="absolute inset-0 z-0">
+          <img 
+            src="pic\1.jpg" 
+            alt="Shipping Vessel" 
+            class="w-full h-full object-cover object-center"
+          />
+          <!-- Gradient Overlay -->
+          <div class="absolute inset-0 bg-gradient-to-r from-blue-900/90 to-blue-800/70"></div>
+        </div>
+        
+        <div class="container mx-auto px-4 md:px-8 py-20 relative z-10">
+          <div class="max-w-3xl fade-in">
+            <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight text-white">
+              ANSUD: Your Trusted<br>Port Partner in China
+            </h1>
+            <p class="text-lg md:text-xl mb-8 text-blue-50">
+              With over 14 years of hands-on experience in China's shipping agency sector, ANSUD Shipping Agency Co., Ltd. is a dedicated partner for ship owners and ship managers worldwide.
+            </p>
+            <!-- <div class="space-y-4 mb-8">
+              <p class="flex items-center text-white">
+                <i data-lucide="mail" class="mr-2 w-5 h-5"></i>
+                <span>agency@ansud.cn | ops@ansud.cn</span>
+              </p>
+              <p class="flex items-center text-white">
+                <i data-lucide="phone" class="mr-2 w-5 h-5"></i>
+                <span>+86 136 8648 6793 | +86 133 7841 0401</span>
+              </p>
+            </div> -->
+            <div class="flex flex-col sm:flex-row gap-4">
+              <a href="#services" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-md font-medium text-center transition duration-300 transform hover:translate-y-[-2px]">
+                  Explore Services
+                </a>
+                <a href="#contact" class="bg-transparent border-2 border-white text-white px-8 py-3 rounded-md font-medium text-center hover:bg-white hover:text-blue-800 transition duration-300 transform hover:translate-y-[-2px]">
+                  Contact Us
+                </a>
+            </div>
+          </div>
+        </div>
+        
+        
+      </section>
+
+      <!-- About Us -->
+      <section id="about" class="py-20 bg-white">
+        <div class="container mx-auto px-4 md:px-8">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <div class="fade-in">
+              <img 
+                src="pic\2.jpg" 
+                alt="ANSUD Professional Team" 
+                class="w-full h-auto rounded-lg shadow-xl"
+              />
+            </div>
+            <div class="fade-in delay-200">
+              <h2 class="section-title text-3xl md:text-4xl font-bold text-gray-800 inline-block">About ANSUD</h2>
+              <p class="text-gray-600 mb-6">
+                With over 14 years of hands-on experience in China's shipping agency sector, ANSUD Shipping Agency Co., Ltd. is a dedicated partner for ship owners and ship managers worldwide.
+              </p>
+              <p class="text-gray-600 mb-6">
+                We specialize in Owner's Husbandry, Protective Agency, Full Port Agency, and specialized services such as dry docking, S&P handover, and newbuilding agency across all major Chinese ports.
+              </p>
+              <p class="text-gray-600 mb-8">
+                Our mission is simple: to safeguard your vessel, crew, cargo, and interests with local expertise, uncompromising standards, and real-time responsiveness. Whether at berth, anchorage, or shipyard, ANSUD ensures your port calls are efficient, cost-effective, and trouble-free.
+              </p>
+              
+              <h3 class="text-2xl font-bold text-gray-800 mb-4">Why Choose ANSUD?</h3>
+              <ul class="space-y-3 mb-8">
+                <li class="flex items-start">
+                  <i data-lucide="check-circle" class="text-green-500 mr-2 flex-shrink-0 mt-1 w-5 h-5"></i>
+                  <span class="text-gray-600"><strong>Proven Track Record</strong> — 14+ years supporting international ship owners from Asia, Europe, Middle East, and beyond.</span>
+                </li>
+                <li class="flex items-start">
+                  <i data-lucide="check-circle" class="text-green-500 mr-2 flex-shrink-0 mt-1 w-5 h-5"></i>
+                  <span class="text-gray-600"><strong>Nationwide Coverage</strong> — On-ground agents in every key Chinese port, with 24/7 availability.</span>
+                </li>
+                <li class="flex items-start">
+                  <i data-lucide="check-circle" class="text-green-500 mr-2 flex-shrink-0 mt-1 w-5 h-5"></i>
+                  <span class="text-gray-600"><strong>Dedicated to Owners</strong> — We act as your independent eyes and hands in China, prioritizing your interests above all.</span>
+                </li>
+                <li class="flex items-start">
+                  <i data-lucide="check-circle" class="text-green-500 mr-2 flex-shrink-0 mt-1 w-5 h-5"></i>
+                  <span class="text-gray-600"><strong>Cost Control & Transparency</strong> — Competitive fees, detailed disbursement accounts, and no hidden charges.</span>
+                </li>
+                <li class="flex items-start">
+                  <i data-lucide="check-circle" class="text-green-500 mr-2 flex-shrink-0 mt-1 w-5 h-5"></i>
+                  <span class="text-gray-600"><strong>Strong Local Networks</strong> — Established relationships with MSA, Customs, Immigration, Ports Authorities, Shipyards, and service providers.</span>
+                </li>
+                <li class="flex items-start">
+                  <i data-lucide="check-circle" class="text-green-500 mr-2 flex-shrink-0 mt-1 w-5 h-5"></i>
+                  <span class="text-gray-600"><strong>Safety & Compliance First</strong> — Full adherence to international standards (ISM, ISPS, PSC readiness support).</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Services Section -->
+      <section id="services" class="py-20 bg-gray-50">
+        <div class="container mx-auto px-4 md:px-8">
+          <div class="text-center mb-16 fade-in">
+            <h2 class="section-title text-3xl md:text-4xl font-bold text-gray-800 inline-block">Core Services</h2>
+            <p class="text-gray-600 mt-4 max-w-3xl mx-auto">
+              We provide comprehensive Chinese port agency services to meet all your needs
+            </p>
+          </div>
+
+          <div class="space-y-16">
+            <!-- Service 1 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center fade-in delay-100">
+              <div>
+                <h3 class="text-2xl font-bold text-blue-800 mb-4">1. Owner's Husbandry Agency</h3>
+                <p class="text-gray-600 mb-6">
+                  As your dedicated husbandry agent, we provide comprehensive, round-the-clock care for your vessel, crew, and operations in port, at anchorage, or during repairs.
+                </p>
+                <ul class="space-y-2 text-gray-600">
+                  <li class="flex items-start">
+                    <i data-lucide="chevron-right" class="mr-2 text-blue-600 flex-shrink-0 mt-1 w-4 h-4"></i>
+                    <span>Crew change & sign-on/off coordination (including Urgent Visa On Arrival)</span>
+                  </li>
+                  <li class="flex items-start">
+                    <i data-lucide="chevron-right" class="mr-2 text-blue-600 flex-shrink-0 mt-1 w-4 h-4"></i>
+                    <span>PSC rectification & assistance</span>
+                  </li>
+                  <li class="flex items-start">
+                    <i data-lucide="chevron-right" class="mr-2 text-blue-600 flex-shrink-0 mt-1 w-4 h-4"></i>
+                    <span>Medical support & crew to doctor/hospital</span>
+                  </li>
+                  <li class="flex items-start">
+                    <i data-lucide="chevron-right" class="mr-2 text-blue-600 flex-shrink-0 mt-1 w-4 h-4"></i>
+                    <span>Personnel attendance & joining</span>
+                  </li>
+                  <li class="flex items-start">
+                    <i data-lucide="chevron-right" class="mr-2 text-blue-600 flex-shrink-0 mt-1 w-4 h-4"></i>
+                    <span>Customs clearance & delivery of spares/parts</span>
+                  </li>
+                  <li class="flex items-start">
+                    <i data-lucide="chevron-right" class="mr-2 text-blue-600 flex-shrink-0 mt-1 w-4 h-4"></i>
+                    <span>Cash to Master</span>
+                  </li>
+                  <li class="flex items-start">
+                    <i data-lucide="chevron-right" class="mr-2 text-blue-600 flex-shrink-0 mt-1 w-4 h-4"></i>
+                    <span>Courier & stores delivery on board</span>
+                  </li>
+                  <li class="flex items-start">
+                    <i data-lucide="chevron-right" class="mr-2 text-blue-600 flex-shrink-0 mt-1 w-4 h-4"></i>
+                    <span>Warehousing & storage facilities</span>
+                  </li>
+                  <li class="flex items-start">
+                    <i data-lucide="chevron-right" class="mr-2 text-blue-600 flex-shrink-0 mt-1 w-4 h-4"></i>
+                    <span>SSCEC renewal</span>
+                  </li>
+                  <li class="flex items-start">
+                    <i data-lucide="chevron-right" class="mr-2 text-blue-600 flex-shrink-0 mt-1 w-4 h-4"></i>
+                    <span>MSA declaration & liaison</span>
+                  </li>
+                  <li class="flex items-start">
+                    <i data-lucide="chevron-right" class="mr-2 text-blue-600 flex-shrink-0 mt-1 w-4 h-4"></i>
+                    <span>Sludge/garbage removal & disposal</span>
+                  </li>
+                  <li class="flex items-start">
+                    <i data-lucide="chevron-right" class="mr-2 text-blue-600 flex-shrink-0 mt-1 w-4 h-4"></i>
+                    <span>Bunker survey & sampling coordination</span>
+                  </li>
+                  <li class="flex items-start">
+                    <i data-lucide="chevron-right" class="mr-2 text-blue-600 flex-shrink-0 mt-1 w-4 h-4"></i>
+                    <span>SPRO issuance & de-mucking/de-slopping</span>
+                  </li>
+                </ul>
+              </div>
+              <div>
+                <img 
+                  src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=shipping%20crew%20change%2C%20professional%20maritime%20operations%2C%20high%20quality%2C%20realistic&image_size=landscape_4_3" 
+                  alt="Crew Change" 
+                  class="w-full h-auto rounded-lg shadow-xl"
+                />
+              </div>
+            </div>
+
+            <!-- Service 2 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center fade-in delay-200">
+              <div class="order-2 md:order-1">
+                <img 
+                  src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=shipping%20protective%20agency%2C%20professional%20maritime%20services%2C%20high%20quality%2C%20realistic&image_size=landscape_4_3" 
+                  alt="Protective Agency" 
+                  class="w-full h-auto rounded-lg shadow-xl"
+                />
+              </div>
+              <div class="order-1 md:order-2">
+                <h3 class="text-2xl font-bold text-blue-800 mb-4">2. Protective Agency (OPA)</h3>
+                <p class="text-gray-600 mb-6">
+                  In scenarios with potential conflicts (e.g., charterer-appointed agents), we serve as your independent protective layer:
+                </p>
+                <ul class="space-y-2 text-gray-600">
+                  <li class="flex items-start">
+                    <i data-lucide="chevron-right" class="mr-2 text-blue-600 flex-shrink-0 mt-1 w-4 h-4"></i>
+                    <span>Independent monitoring of port operations & delays</span>
+                  </li>
+                  <li class="flex items-start">
+                    <i data-lucide="chevron-right" class="mr-2 text-blue-600 flex-shrink-0 mt-1 w-4 h-4"></i>
+                    <span>Verification & audit of disbursement accounts</span>
+                  </li>
+                  <li class="flex items-start">
+                    <i data-lucide="chevron-right" class="mr-2 text-blue-600 flex-shrink-0 mt-1 w-4 h-4"></i>
+                    <span>Protection against overcharging or unfair practices</span>
+                  </li>
+                  <li class="flex items-start">
+                    <i data-lucide="chevron-right" class="mr-2 text-blue-600 flex-shrink-0 mt-1 w-4 h-4"></i>
+                    <span>Detailed reporting & recommendations to owners</span>
+                  </li>
+                  <li class="flex items-start">
+                    <i data-lucide="chevron-right" class="mr-2 text-blue-600 flex-shrink-0 mt-1 w-4 h-4"></i>
+                    <span>Full husbandry support as needed</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Service 3 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center fade-in delay-300">
+              <div>
+                <h3 class="text-2xl font-bold text-blue-800 mb-4">3. Full Port Agency & Dry Docking Services</h3>
+                <p class="text-gray-600 mb-6">
+                  We handle complete port calls with efficiency and precision, backed by excellent shipyard relationships:
+                </p>
+                <ul class="space-y-2 text-gray-600">
+                  <li class="flex items-start">
+                    <i data-lucide="chevron-right" class="mr-2 text-blue-600 flex-shrink-0 mt-1 w-4 h-4"></i>
+                    <span>Berthing, pilotage, towage coordination</span>
+                  </li>
+                  <li class="flex items-start">
+                    <i data-lucide="chevron-right" class="mr-2 text-blue-600 flex-shrink-0 mt-1 w-4 h-4"></i>
+                    <span>All documentation & authorities liaison</span>
+                  </li>
+                  <li class="flex items-start">
+                    <i data-lucide="chevron-right" class="mr-2 text-blue-600 flex-shrink-0 mt-1 w-4 h-4"></i>
+                    <span>Dry docking supervision: scheduling, cost control, delay minimization</span>
+                  </li>
+                  <li class="flex items-start">
+                    <i data-lucide="chevron-right" class="mr-2 text-blue-600 flex-shrink-0 mt-1 w-4 h-4"></i>
+                    <span>Standardized procedures to meet your timelines</span>
+                  </li>
+                </ul>
+              </div>
+              <div>
+                <img 
+                  src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=ship%20dry%20docking%2C%20shipyard%20operations%2C%20high%20quality%2C%20realistic&image_size=landscape_4_3" 
+                  alt="Dry Docking" 
+                  class="w-full h-auto rounded-lg shadow-xl"
+                />
+              </div>
+            </div>
+
+            <!-- Service 4 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center fade-in delay-400">
+              <div class="order-2 md:order-1">
+                <img 
+                  src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=ship%20sale%20and%20purchase%20handover%2C%20maritime%20operations%2C%20high%20quality%2C%20realistic&image_size=landscape_4_3" 
+                  alt="S&P Handover" 
+                  class="w-full h-auto rounded-lg shadow-xl"
+                />
+              </div>
+              <div class="order-1 md:order-2">
+                <h3 class="text-2xl font-bold text-blue-800 mb-4">4. Sale & Purchase (S&P) Handover Agency</h3>
+                <p class="text-gray-600 mb-6">
+                  Acting as the bridge between buyer and seller:
+                </p>
+                <ul class="space-y-2 text-gray-600">
+                  <li class="flex items-start">
+                    <i data-lucide="chevron-right" class="mr-2 text-blue-600 flex-shrink-0 mt-1 w-4 h-4"></i>
+                    <span>Coordination of vessel delivery formalities</span>
+                  </li>
+                  <li class="flex items-start">
+                    <i data-lucide="chevron-right" class="mr-2 text-blue-600 flex-shrink-0 mt-1 w-4 h-4"></i>
+                    <span>Crew change & spares delivery & landing</span>
+                  </li>
+                  <li class="flex items-start">
+                    <i data-lucide="chevron-right" class="mr-2 text-blue-600 flex-shrink-0 mt-1 w-4 h-4"></i>
+                    <span>Underwater inspections (UWI) & condition surveys</span>
+                  </li>
+                  <li class="flex items-start">
+                    <i data-lucide="chevron-right" class="mr-2 text-blue-600 flex-shrink-0 mt-1 w-4 h-4"></i>
+                    <span>Smooth transition with minimal downtime</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Service 5 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center fade-in delay-500">
+              <div>
+                <h3 class="text-2xl font-bold text-blue-800 mb-4">5. Newbuilding Vessel Agency</h3>
+                <p class="text-gray-600 mb-6">
+                  For vessels under construction in Chinese yards:
+                </p>
+                <ul class="space-y-2 text-gray-600">
+                  <li class="flex items-start">
+                    <i data-lucide="chevron-right" class="mr-2 text-blue-600 flex-shrink-0 mt-1 w-4 h-4"></i>
+                    <span>Liaison between yard, owner, and port authorities</span>
+                  </li>
+                  <li class="flex items-start">
+                    <i data-lucide="chevron-right" class="mr-2 text-blue-600 flex-shrink-0 mt-1 w-4 h-4"></i>
+                    <span>Timely delivery coordination</span>
+                  </li>
+                  <li class="flex items-start">
+                    <i data-lucide="chevron-right" class="mr-2 text-blue-600 flex-shrink-0 mt-1 w-4 h-4"></i>
+                    <span>Cost & delay minimization through strong networks</span>
+                  </li>
+                </ul>
+              </div>
+              <div>
+                <img 
+                  src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=newbuilding%20ship%20in%20shipyard%2C%20maritime%20construction%2C%20high%20quality%2C%20realistic&image_size=landscape_4_3" 
+                  alt="Newbuilding Vessel" 
+                  class="w-full h-auto rounded-lg shadow-xl"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Service Coverage -->
+      <section id="coverage" class="py-20 bg-white">
+        <div class="container mx-auto px-4 md:px-8">
+          <div class="text-center mb-16 fade-in">
+            <h2 class="section-title text-3xl md:text-4xl font-bold text-gray-800 inline-block">Our Service Coverage</h2>
+            <p class="text-gray-600 mt-4 max-w-3xl mx-auto">
+              We cover all major and secondary ports in China
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center fade-in delay-100">
+            <div>
+              <img 
+                src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=china%20ports%20map%2C%20maritime%20map%20with%20highlighted%20ports%2C%20professional%20cartography%2C%20high%20quality&image_size=landscape_4_3" 
+                alt="China Ports Map" 
+                class="w-full h-auto rounded-lg shadow-xl"
+              />
+            </div>
+            <div>
+              <h3 class="text-2xl font-bold text-blue-800 mb-6">Covered Ports</h3>
+              <div class="grid grid-cols-2 gap-4 text-gray-600">
+                <ul class="space-y-2">
+                  <li class="flex items-center">
+                    <i data-lucide="map-pin" class="mr-2 text-red-500 w-4 h-4"></i>
+                    <span>Shanghai</span>
+                  </li>
+                  <li class="flex items-center">
+                    <i data-lucide="map-pin" class="mr-2 text-red-500 w-4 h-4"></i>
+                    <span>Ningbo-Zhoushan</span>
+                  </li>
+                  <li class="flex items-center">
+                    <i data-lucide="map-pin" class="mr-2 text-red-500 w-4 h-4"></i>
+                    <span>Shenzhen</span>
+                  </li>
+                  <li class="flex items-center">
+                    <i data-lucide="map-pin" class="mr-2 text-red-500 w-4 h-4"></i>
+                    <span>Qingdao</span>
+                  </li>
+                  <li class="flex items-center">
+                    <i data-lucide="map-pin" class="mr-2 text-red-500 w-4 h-4"></i>
+                    <span>Guangzhou</span>
+                  </li>
+                  <li class="flex items-center">
+                    <i data-lucide="map-pin" class="mr-2 text-red-500 w-4 h-4"></i>
+                    <span>Tianjin</span>
+                  </li>
+                  <li class="flex items-center">
+                    <i data-lucide="map-pin" class="mr-2 text-red-500 w-4 h-4"></i>
+                    <span>Dalian</span>
+                  </li>
+                  <li class="flex items-center">
+                    <i data-lucide="map-pin" class="mr-2 text-red-500 w-4 h-4"></i>
+                    <span>Xiamen</span>
+                  </li>
+                  <li class="flex items-center">
+                    <i data-lucide="map-pin" class="mr-2 text-red-500 w-4 h-4"></i>
+                    <span>Lianyungang</span>
+                  </li>
+                  <li class="flex items-center">
+                    <i data-lucide="map-pin" class="mr-2 text-red-500 w-4 h-4"></i>
+                    <span>Rizhao</span>
+                  </li>
+                </ul>
+                <ul class="space-y-2">
+                  <li class="flex items-center">
+                    <i data-lucide="map-pin" class="mr-2 text-red-500 w-4 h-4"></i>
+                    <span>Lanshan</span>
+                  </li>
+                  <li class="flex items-center">
+                    <i data-lucide="map-pin" class="mr-2 text-red-500 w-4 h-4"></i>
+                    <span>Qinzhou</span>
+                  </li>
+                  <li class="flex items-center">
+                    <i data-lucide="map-pin" class="mr-2 text-red-500 w-4 h-4"></i>
+                    <span>Yantai</span>
+                  </li>
+                  <li class="flex items-center">
+                    <i data-lucide="map-pin" class="mr-2 text-red-500 w-4 h-4"></i>
+                    <span>Tangshan</span>
+                  </li>
+                  <li class="flex items-center">
+                    <i data-lucide="map-pin" class="mr-2 text-red-500 w-4 h-4"></i>
+                    <span>Yangpu</span>
+                  </li>
+                  <li class="flex items-center">
+                    <i data-lucide="map-pin" class="mr-2 text-red-500 w-4 h-4"></i>
+                    <span>Fuzhou</span>
+                  </li>
+                  <li class="flex items-center">
+                    <i data-lucide="map-pin" class="mr-2 text-red-500 w-4 h-4"></i>
+                    <span>Nantong</span>
+                  </li>
+                  <li class="flex items-center">
+                    <i data-lucide="map-pin" class="mr-2 text-red-500 w-4 h-4"></i>
+                    <span>Quanzhou</span>
+                  </li>
+                  <li class="flex items-center">
+                    <i data-lucide="map-pin" class="mr-2 text-red-500 w-4 h-4"></i>
+                    <span>Zhanjiang</span>
+                  </li>
+                  <li class="flex items-center">
+                    <i data-lucide="map-pin" class="mr-2 text-red-500 w-4 h-4"></i>
+                    <span>Maoming</span>
+                  </li>
+                </ul>
+              </div>
+              <p class="mt-6 text-gray-600">
+                and more ports...
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Contact Us -->
+      <section id="contact" class="py-20 bg-gray-50">
+        <div class="container mx-auto px-4 md:px-8">
+          <div class="text-center mb-16 fade-in">
+            <h2 class="section-title text-3xl md:text-4xl font-bold text-gray-800 inline-block">Contact Us Today</h2>
+            <p class="text-gray-600 mt-4 max-w-3xl mx-auto">
+              Whatever questions or needs you may have, our team is ready to assist you
+            </p>
+          </div>
+
+          <div class="fade-in delay-100">
+            <div class="bg-white rounded-lg shadow-md p-8">
+              <h3 class="text-2xl font-bold text-blue-800 mb-8 text-center">Contact Information</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div class="bg-blue-50 rounded-lg p-6 flex flex-col items-center text-center">
+                    <div class="bg-green-100 p-3 rounded-full mb-4">
+                      <i data-lucide="mail" class="text-green-600 w-8 h-8"></i>
+                    </div>
+                    <h4 class="font-bold text-gray-800 mb-3">Email</h4>
+                    <p class="text-gray-600 mb-2">agency@ansud.cn</p>
+                    <p class="text-gray-600">ops@ansud.cn</p>
+                  </div>
+                  <div class="bg-blue-50 rounded-lg p-6 flex flex-col items-center text-center">
+                    <div class="bg-blue-100 p-3 rounded-full mb-4">
+                      <i data-lucide="phone" class="text-blue-600 w-8 h-8"></i>
+                    </div>
+                    <h4 class="font-bold text-gray-800 mb-3">Phone/WeChat/WhatsApp</h4>
+                    <p class="text-gray-600 mb-2">+86 136 8648 6793</p>
+                    <p class="text-gray-500 text-sm">(Operations)</p>
+                    <p class="text-gray-600 mt-2 mb-2">+86 133 7841 0401</p>
+                    <p class="text-gray-500 text-sm">(24/7 Emergency)</p>
+                  </div>
+                  <div class="bg-blue-50 rounded-lg p-6 flex flex-col items-center text-center">
+                    <div class="bg-purple-100 p-3 rounded-full mb-4">
+                      <i data-lucide="clock" class="text-purple-600 w-8 h-8"></i>
+                    </div>
+                    <h4 class="font-bold text-gray-800 mb-3">Service Hours</h4>
+                    <p class="text-gray-600 mb-2">24/7 Round-the-clock Service</p>
+                    <p class="text-gray-600">Emergency Response Anytime</p>
+                  </div>
+                </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12">
+      <div class="container mx-auto px-4 md:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <!-- Company Info -->
+          <div>
+            <div class="flex items-center mb-4">
+              <img src="logo.png" alt="ANSUD Shipping Agency" class="h-8 mr-3">
+              <h3 class="text-xl font-bold">ANSUD</h3>
+            </div>
+            <p class="text-gray-400 mb-4">
+              Professional Chinese port agency service provider with 14 years of experience, offering reliable services to ship owners worldwide.
+            </p>
+            <!-- <div class="flex space-x-4">
+              <a href="#" class="text-gray-400 hover:text-white transition">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path fill-rule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clipRule="evenodd" />
+                </svg>
+              </a>
+              <a href="#" class="text-gray-400 hover:text-white transition">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" />
+                </svg>
+              </a>
+              <a href="#" class="text-gray-400 hover:text-white transition">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path fill-rule="evenodd" d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.067.06 1.407.06 4.123v.08c0 2.643-.012 2.987-.06 4.043-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.067.048-1.407.06-4.123.06h-.08c-2.643 0-2.987-.012-4.043-.06-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.047-1.024-.06-1.379-.06-3.808v-.63c0-2.43.013-2.784.06-3.808.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772A4.902 4.902 0 015.45 2.525c.636-.247 1.363-.416 2.427-.465C8.901 2.013 9.256 2 11.685 2h.63zm-.081 1.802h-.468c-2.456 0-2.784.011-3.807.058-.975.045-1.504.207-1.857.344-.467.182-.8.398-1.15.748-.35.35-.566.683-.748 1.15-.137.353-.3.882-.344 1.857-.047 1.023-.058 1.351-.058 3.807v.468c0 2.456.011 2.784.058 3.807.045.975.207 1.504.344 1.857.182.466.399.8.748 1.15.35.35.683.566 1.15.748.353.137.882.3 1.857.344 1.054.048 1.37.058 4.041.058h.08c2.597 0 2.917-.01 3.96-.058.976-.045 1.505-.207 1.858-.344.466-.182.8-.398 1.15-.748.35-.35.566-.683.748-1.15.137-.353.3-.882.344-1.857.048-1.055.058-1.37.058-4.041v-.08c0-2.597-.01-2.917-.058-3.96-.045-.976-.207-1.505-.344-1.858a3.097 3.097 0 00-.748-1.15 3.098 3.098 0 00-1.15-.748c-.353-.137-.882-.3-1.857-.344-1.023-.047-1.351-.058-3.807-.058zM12 6.865a5.135 5.135 0 110 10.27 5.135 5.135 0 010-10.27zm0 1.802a3.333 3.333 0 100 6.666 3.333 3.333 0 000-6.666zm5.338-3.205a1.2 1.2 0 110 2.4 1.2 1.2 0 010-2.4z" clipRule="evenodd" />
+                </svg>
+              </a>
+              <a href="#" class="text-gray-400 hover:text-white transition">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
+                </svg>
+              </a>
+            </div> -->
+          </div>
+
+          <!-- Quick Links -->
+          <div>
+            <h3 class="text-lg font-bold mb-4">Quick Links</h3>
+            <ul class="space-y-2">
+              <li><a href="#home" class="text-gray-400 hover:text-white transition">Home</a></li>
+              <li><a href="#services" class="text-gray-400 hover:text-white transition">Services</a></li>
+              <li><a href="#coverage" class="text-gray-400 hover:text-white transition">Coverage</a></li>
+              <li><a href="#about" class="text-gray-400 hover:text-white transition">About Us</a></li>
+              <li><a href="#contact" class="text-gray-400 hover:text-white transition">Contact</a></li>
+            </ul>
+          </div>
+
+          <!-- Services -->
+          <div>
+            <h3 class="text-lg font-bold mb-4">Services</h3>
+            <ul class="space-y-2">
+              <li class="text-gray-400">Owner's Husbandry Agency</li>
+              <li class="text-gray-400">Protective Agency</li>
+              <li class="text-gray-400">Full Port Agency</li>
+              <li class="text-gray-400">Dry Docking Services</li>
+              <li class="text-gray-400">S&P Handover Agency</li>
+              <li class="text-gray-400">Newbuilding Vessel Agency</li>
+            </ul>
+          </div>
+
+          <!-- Contact Info -->
+          <div>
+            <h3 class="text-lg font-bold mb-4">Contact Us</h3>
+            <ul class="space-y-2 text-gray-400">
+              <li class="flex items-start">
+                <i data-lucide="mail" class="mr-2 w-4 h-4 flex-shrink-0 mt-1"></i>
+                <span>agency@ansud.cn</span>
+              </li>
+              <li class="flex items-start">
+                <i data-lucide="mail" class="mr-2 w-4 h-4 flex-shrink-0 mt-1"></i>
+                <span>ops@ansud.cn</span>
+              </li>
+              <li class="flex items-start">
+                <i data-lucide="phone" class="mr-2 w-4 h-4 flex-shrink-0 mt-1"></i>
+                <span>+86 136 8648 6793</span>
+              </li>
+              <li class="flex items-start">
+                <i data-lucide="phone" class="mr-2 w-4 h-4 flex-shrink-0 mt-1"></i>
+                <span>+86 133 7841 0401</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
+          <p>&copy; 2026 ANSUD SHIPPING AGENCY CO., LTD. All rights reserved.</p>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // Initialize Lucide Icons
+    lucide.createIcons();
+
+    // Mobile Menu Toggle
+    function toggleMobileMenu() {
+      const mobileMenu = document.getElementById('mobileMenu');
+      mobileMenu.classList.toggle('hidden');
+    }
+
+    // Scroll Effect
+    window.addEventListener('scroll', function() {
+      const header = document.querySelector('header');
+      if (window.scrollY > 50) {
+        header.classList.add('py-2');
+        header.classList.remove('py-4');
+      } else {
+        header.classList.add('py-4');
+        header.classList.remove('py-2');
+      }
+    });
+  </script>
+</body>
 </html>
