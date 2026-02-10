@@ -3,4 +3,4 @@ Allow: /
 Disallow: /pic/
 Disallow: /src/
 
-Sitemap: https://www.ansud.cn/sitemap.xml
+Sitemap: https://ansud.cn/sitemap.xml
