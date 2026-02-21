@@ -982,25 +982,6 @@
         modal.classList.add('hidden');
       }
     });
-
-    // Policies Modal Functions
-    function showPoliciesModal() {
-      const modal = document.getElementById('policiesModal');
-      modal.classList.remove('hidden');
-    }
-
-    function closePoliciesModal() {
-      const modal = document.getElementById('policiesModal');
-      modal.classList.add('hidden');
-    }
-
-    // Close policies modal when clicking outside
-    window.addEventListener('click', function(event) {
-      const modal = document.getElementById('policiesModal');
-      if (event.target === modal) {
-        modal.classList.add('hidden');
-      }
-    });
   </script>
 </body>
 </html>
