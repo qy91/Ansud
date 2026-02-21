@@ -172,12 +172,12 @@
 
           <!-- Desktop Navigation -->
           <nav class="hidden md:flex items-center space-x-8">
-            <a href="#home" class="nav-link text-gray-800 hover:text-blue-800 font-medium">Home</a>
-            <a href="#services" class="nav-link text-gray-800 hover:text-blue-800 font-medium">Services</a>
-            <a href="#coverage" class="nav-link text-gray-800 hover:text-blue-800 font-medium">Coverage</a>
-            <a href="#about" class="nav-link text-gray-800 hover:text-blue-800 font-medium">About Us</a>
-            <a href="#contact" class="nav-link text-gray-800 hover:text-blue-800 font-medium">Contact</a>
-            
+            <a href="index.html" class="nav-link text-gray-800 hover:text-blue-800 font-medium">Home</a>
+            <a href="index.html#services" class="nav-link text-gray-800 hover:text-blue-800 font-medium">Services</a>
+            <a href="index.html#coverage" class="nav-link text-gray-800 hover:text-blue-800 font-medium">Coverage</a>
+            <a href="policies.html" class="nav-link text-gray-800 hover:text-blue-800 font-medium">Policies</a>
+            <a href="index.html#about" class="nav-link text-gray-800 hover:text-blue-800 font-medium">About Us</a>
+            <a href="index.html#contact" class="nav-link text-gray-800 hover:text-blue-800 font-medium">Contact</a>
           </nav>
 
           <!-- Mobile Menu Button -->
@@ -190,11 +190,12 @@
       <!-- Mobile Navigation Menu -->
       <div id="mobileMenu" class="hidden md:hidden bg-white shadow-lg absolute top-full left-0 right-0">
         <div class="container mx-auto px-4 py-4 flex flex-col space-y-4">
-          <a href="#home" class="text-gray-800 hover:text-blue-800 font-medium py-2">Home</a>
-          <a href="#services" class="text-gray-800 hover:text-blue-800 font-medium py-2">Services</a>
-          <a href="#coverage" class="text-gray-800 hover:text-blue-800 font-medium py-2">Coverage</a>
-          <a href="#about" class="text-gray-800 hover:text-blue-800 font-medium py-2">About Us</a>
-          <a href="#contact" class="text-gray-800 hover:text-blue-800 font-medium py-2">Contact</a>
+          <a href="index.html" class="text-gray-800 hover:text-blue-800 font-medium py-2">Home</a>
+          <a href="index.html#services" class="text-gray-800 hover:text-blue-800 font-medium py-2">Services</a>
+          <a href="index.html#coverage" class="text-gray-800 hover:text-blue-800 font-medium py-2">Coverage</a>
+          <a href="policies.html" class="text-gray-800 hover:text-blue-800 font-medium py-2">Policies</a>
+          <a href="index.html#about" class="text-gray-800 hover:text-blue-800 font-medium py-2">About Us</a>
+          <a href="index.html#contact" class="text-gray-800 hover:text-blue-800 font-medium py-2">Contact</a>
           <a href="#" class="btn-primary px-6 py-2 rounded-md text-white font-medium text-center">Consult Now</a>
         </div>
       </div>
@@ -807,6 +808,140 @@
     </div>
   </div>
 
+  <!-- Policies Modal -->
+  <div id="policiesModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white p-6 rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+      <div class="flex justify-between items-center mb-6 border-b pb-4">
+        <h3 class="text-2xl font-bold text-gray-800">ANSUD Shipping Agency - Policies</h3>
+        <button onclick="closePoliciesModal()" class="text-gray-500 hover:text-gray-700">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <div class="space-y-8">
+        <div>
+          <h4 class="text-xl font-bold text-blue-800 mb-4">1. QHSE (QUALITY, HEALTH, SAFETY, ENVIRONMENT) POLICY</h4>
+          <p class="font-medium mb-2"><strong>Mandate Basis:</strong> Industry Best Practice & ISO Standards</p>
+          <p class="mb-4"><strong>Policy Statement:</strong> The company is committed to delivering services without causing harm to individuals or the environment. We adhere to the highest quality standards in port agency representation.</p>
+          <p class="font-medium mb-2"><strong>Mandated Procedures & Commitments:</strong></p>
+          <ul class="list-disc pl-6 space-y-2 mb-4">
+            <li><strong>Management Systems:</strong> We shall establish, implement, and maintain compliance with ISO 9001:2015 (Quality), ISO 14001:2015 (Environment), and ISO 45001:2018 (OHSMS)</li>
+            <li><strong>Risk Assessment:</strong> We conduct proactive risk assessments for every port call to eliminate hazards and reduce work-related injury/ill health.</li>
+            <li><strong>Safety Culture (Stop Work Authority):</strong> All employees and contractors are mandated to exercise "Stop Work Authority" when unsafe conditions are observed, without fear of retaliation.</li>
+            <li><strong>PPE & Access Control:</strong> Mandatory Personnel Protective Equipment (PPE) for all terminal visits. No Access ID card, No entry.</li>
+            <li><strong>Incident Investigation:</strong> All accidents, incidents, and near misses must be reported promptly. Fatalities/serious incidents must be investigated at the highest organizational level to identify root causes.</li>
+          </ul>
+        </div>
+        
+        <div>
+          <h4 class="text-xl font-bold text-blue-800 mb-4">2. DRUG AND ALCOHOL (D&A) POLICY</h4>
+          <p class="font-medium mb-2"><strong>Mandate Basis:</strong> International Chamber of Shipping (ICS) 2025-2026 Guidelines</p>
+          <p class="mb-4"><strong>Policy Statement:</strong> The company maintains a zero-tolerance approach to drug abuse and drug trafficking facilitation. We recognize our shared responsibility to prevent ships from being used as cover for illicit drug smuggling.</p>
+          <p class="font-medium mb-2"><strong>Mandated Procedures & Commitments:</strong></p>
+          <ul class="list-disc pl-6 space-y-2 mb-4">
+            <li><strong>Prohibited Substances:</strong> The carrying or use of "khat," narcotics, or illegal substances on port premises or while on board vessels is strictly prohibited.</li>
+            <li><strong>Search Procedures:</strong> Agents must be familiar with ship search procedures and common concealment methods to assist principals during customs or security interventions.</li>
+            <li><strong>Incident Response:</strong> Clear protocols for actions to be taken if drugs are suspected/found on board, including immediate notification of the Master and relevant customs authorities.</li>
+            <li><strong>Training:</strong> Mandatory annual familiarization training for all staff on "Drug Trafficking and Drug Abuse Awareness".</li>
+          </ul>
+        </div>
+        
+        <div>
+          <h4 class="text-xl font-bold text-blue-800 mb-4">3. COMPETITION LAW & DIVERGENCE POLICY (Conflict of Interest)</h4>
+          <p class="font-medium mb-2"><strong>Mandate Basis:</strong> FONASBA/BIMCO Agency Standards & Competition Law</p>
+          <p class="mb-4"><strong>Policy Statement:</strong> The company acts exclusively as agent for and on behalf of the principal (the party paying our fee). Where a Charterer nominates us, our legal duty remains solely to the Shipowner who appointed us. Any divergence from the principal's instructions constitutes a fundamental breach of contract.</p>
+          <p class="font-medium mb-2"><strong>Mandated Procedures & Commitments:</strong></p>
+          <ul class="list-disc pl-6 space-y-2 mb-4">
+            <li><strong>Duty of Principal:</strong> The agent shall not neglect the ship's business in favour of the charterer's business, even under long-standing commercial pressure.</li>
+            <li><strong>Prohibited Conduct with Competitors:</strong> We strictly prohibit price-fixing, market allocation, bid rigging, or boycotting of specific customers with competitors.</li>
+            <li><strong>Email & Communication Auditing:</strong> To prevent improper information exchange with competitors, we maintain an email auditing system to monitor business communications regarding commercial terms.</li>
+            <li><strong>Divergence Resolution:</strong> Where a conflict of interest cannot be resolved, the agent must immediately notify the principal to facilitate the appointment of a Protecting Agent (Husbandry Agent).</li>
+          </ul>
+        </div>
+        
+        <div>
+          <h4 class="text-xl font-bold text-blue-800 mb-4">4. ANTI-CORRUPTION & ANTI-BRIBERY POLICY</h4>
+          <p class="font-medium mb-2"><strong>Mandate Basis:</strong> FCPA, UK Bribery Act & Evergreen Integrity Policy</p>
+          <p class="mb-4"><strong>Policy Statement:</strong> The company does not tolerate any form of bribery, corruption, or fraudulent conduct. We comply with the U.S. Foreign Corrupt Practices Act (FCPA) and the U.K. Bribery Act.</p>
+          <p class="font-medium mb-2"><strong>Mandated Procedures & Commitments:</strong></p>
+          <ul class="list-disc pl-6 space-y-4 mb-4">
+            <li>
+              <strong>Prohibited Actions</strong>
+              <ul style="list-style-type: circle;" class="pl-6 space-y-1 mt-1">
+                <li>Offering or receiving "facilitation payments" (even if customary or "small").</li>
+                <li>Lavish hospitality, travel, or gifts that may impair fairness.</li>
+                <li>Using intermediaries to carry out prohibited actions.</li>
+              </ul>
+            </li>
+            <li><strong>Fraud Prevention:</strong> Strict prohibition of embezzlement, false expense claims, document forgery, and misrepresentation of facts in business negotiations.</li>
+            <li><strong>Managerial Responsibility:</strong> Managers are the first line of defence. They must demonstrate ethical leadership and ensure no misconduct is overlooked.</li>
+          </ul>
+        </div>
+        
+        <div>
+          <h4 class="text-xl font-bold text-blue-800 mb-4">5. HUMAN RIGHTS & SEAFARER WELFARE POLICY</h4>
+          <p class="font-medium mb-2"><strong>Mandate Basis:</strong> UN Guiding Principles on Business and Human Rights (UNGP) & Port of Rotterdam</p>
+          <p class="mb-4"><strong>Policy Statement:</strong> The company respects human rights in accordance with the OECD Guidelines and the UN Guiding Principles. We recognize that seafarers are key workers and must be treated with dignity.</p>
+          <p class="font-medium mb-2"><strong>Mandated Procedures & Commitments:</strong></p>
+          <ul class="list-disc pl-6 space-y-2 mb-4">
+            <li><strong>Crew Welfare:</strong> We actively facilitate crew changes, medical assistance, and shore leave without undue delay. We participate in port welfare committee initiatives to support seafarer wellbeing.</li>
+            <li><strong>Due Diligence:</strong> We apply human rights due diligence to identify risks in our own activities and value chains (e.g., suppliers using forced labour).</li>
+            <li><strong>Non-Discrimination:</strong> Commitment to diversity and inclusion; zero tolerance for harassment or discrimination based on race, gender, religion, or nationality.</li>
+          </ul>
+        </div>
+        
+        <div>
+          <h4 class="text-xl font-bold text-blue-800 mb-4">6. CYBER-SECURITY POLICY</h4>
+          <p class="font-medium mb-2"><strong>Mandate Basis:</strong> IMO Guidelines</p>
+          <p class="mb-4"><strong>Policy Statement:</strong> The company implements robust technical and organizational measures to protect against cyber-enabled crime and data breaches, recognizing that agents are prime targets for social engineering attacks aimed at facilitating drug trafficking or cargo theft.</p>
+          <p class="font-medium mb-2"><strong>Mandated Procedures & Commitments:</strong></p>
+          <ul class="list-disc pl-6 space-y-2 mb-4">
+            <li><strong>Cyber Risk Management:</strong> Formal integration of cyber risk measures into operational procedures, including prevention, detection, response, and recovery processes.</li>
+            <li><strong>Social Engineering Defense:</strong> Mandatory training to identify and prevent "social engineering" attacks (e.g., phishing attempts to gain ship schedules or cargo data).</li>
+            <li><strong>Access Control:</strong> Strict controls on access to vessel itineraries, crew lists, and cargo documentation.</li>
+          </ul>
+        </div>
+        
+        <div>
+          <h4 class="text-xl font-bold text-blue-800 mb-4">7. PHYSICAL SECURITY & VESSEL SECURITY POLICY</h4>
+          <p class="font-medium mb-2"><strong>Mandate Basis:</strong> ISPS Code</p>
+          <p class="mb-4"><strong>Policy Statement:</strong> The company supports the Ship Security Officer (SSO) in maintaining the integrity of the Ship Security Plan. We act as the critical link between the vessel and port facility security.</p>
+          <p class="font-medium mb-2"><strong>Mandated Procedures & Commitments:</strong></p>
+          <ul class="list-disc pl-6 space-y-2 mb-4">
+            <li><strong>Access Control:</strong> Verification of visitor identity and authorization prior to facilitating boarding.</li>
+            <li><strong>Hostile Reconnaissance:</strong> Staff are trained to identify and report "hostile reconnaissance" activities by individuals scouting port security or vessel vulnerabilities.</li>
+          </ul>
+        </div>
+        
+        <div>
+          <h4 class="text-xl font-bold text-blue-800 mb-4">8. SHIP OWNERS DEALING POLICY (Disbursement & Financial Integrity)</h4>
+          <p class="font-medium mb-2"><strong>Mandate Basis:</strong> FONASBA/BIMCO Standard Agency Agreement</p>
+          <p class="mb-4"><strong>Policy Statement:</strong> The company acts as the fiduciary of the Shipowner's funds. We manage Disbursement Accounts with the utmost care, skill, and diligence.</p>
+          <p class="font-medium mb-2"><strong>Mandated Procedures & Commitments:</strong></p>
+          <ul class="list-disc pl-6 space-y-2 mb-4">
+            <li><strong>Disbursement Accounting:</strong> Proforma disbursement accounts are estimates only. The principal is liable for actual costs. We shall provide prompt and accurate final accounts.</li>
+            <li><strong>Payment & Lien:</strong> If the Principal fails to put the Agent in funds, the Agent retains the right to detain the Vessel and retain documents pending payment, strictly in accordance with BIMCO terms.</li>
+            <li><strong>P&I & H&M Verification:</strong> Prior to vessel attendance, we shall verify and retain copies of the vessel's current P&I Club and Hull & Machinery (H&M) cover.</li>
+            <li><strong>Supplier Payments:</strong> We shall use best endeavours to encourage port service providers to render invoices timely and shall not delay payments to suppliers on behalf of the Principals.</li>
+          </ul>
+        </div>
+        
+        <div>
+          <h4 class="text-xl font-bold text-blue-800 mb-4">9. PERSONAL DATA PROTECTION & PRIVACY POLICY</h4>
+          <p class="font-medium mb-2"><strong>Mandate Basis:</strong> GDPR / PDPA</p>
+          <p class="mb-4"><strong>Policy Statement:</strong> The company complies with applicable Personal Data Protection Acts. We respect the privacy of crew members, customers, and business partners.</p>
+          <p class="font-medium mb-2"><strong>Mandated Procedures & Commitments:</strong></p>
+          <ul class="list-disc pl-6 space-y-2 mb-4">
+            <li><strong>Lawful Processing:</strong> Personal data (crew passports, seafarer books, addresses) is collected, processed, and utilized lawfully and securely.</li>
+            <li><strong>Breach Response:</strong> Formal incident response procedure for personal data breaches, including mandatory notification to competent authorities and affected individuals.</li>
+            <li><strong>Data Minimization:</strong> Access to personal data is restricted to personnel who require it to perform statutory port clearance duties.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     // Initialize Lucide Icons
     lucide.createIcons();
@@ -843,6 +978,25 @@
     // Close modal when clicking outside
     window.addEventListener('click', function(event) {
       const modal = document.getElementById('wechatModal');
+      if (event.target === modal) {
+        modal.classList.add('hidden');
+      }
+    });
+
+    // Policies Modal Functions
+    function showPoliciesModal() {
+      const modal = document.getElementById('policiesModal');
+      modal.classList.remove('hidden');
+    }
+
+    function closePoliciesModal() {
+      const modal = document.getElementById('policiesModal');
+      modal.classList.add('hidden');
+    }
+
+    // Close policies modal when clicking outside
+    window.addEventListener('click', function(event) {
+      const modal = document.getElementById('policiesModal');
       if (event.target === modal) {
         modal.classList.add('hidden');
       }
