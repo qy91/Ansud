@@ -679,7 +679,7 @@
                             <img src="pic\whatsapp.svg" alt="WhatsApp" class="w-6 h-6">
                           </a>
                           <!-- WeChat Button -->
-                          <a href="javascript:void(0)" class="flex items-center justify-center text-white w-8 h-8 rounded-full transition duration-300">
+                          <a href="javascript:void(0)" onclick="showWeChatQR1()" class="flex items-center justify-center text-white w-8 h-8 rounded-full transition duration-300">
                             <img src="pic\wechat.svg" alt="WeChat" class="w-6 h-6">
                           </a>
                         </div>
@@ -790,7 +790,25 @@
     </footer>
   </div>
 
-  <!-- WeChat QR Code Modal -->
+  <!-- WeChat QR Code Modal 1 -->
+  <div id="wechatModal1" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white p-6 rounded-lg shadow-xl">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-bold text-gray-800">WeChat QR Code</h3>
+        <button onclick="closeWeChatQR1()" class="text-gray-500 hover:text-gray-700">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <div class="flex justify-center">
+        <img src="pic/qr1.png" alt="WeChat QR Code" class="w-48 h-48">
+      </div>
+      <p class="text-center mt-4 text-gray-600">Scan this QR code to add on WeChat</p>
+    </div>
+  </div>
+
+  <!-- WeChat QR Code Modal 2 -->
   <div id="wechatModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
     <div class="bg-white p-6 rounded-lg shadow-xl">
       <div class="flex justify-between items-center mb-4">
@@ -978,6 +996,25 @@
     // Close modal when clicking outside
     window.addEventListener('click', function(event) {
       const modal = document.getElementById('wechatModal');
+      if (event.target === modal) {
+        modal.classList.add('hidden');
+      }
+    });
+
+    // WeChat QR Code Modal 1 Functions
+    function showWeChatQR1() {
+      const modal = document.getElementById('wechatModal1');
+      modal.classList.remove('hidden');
+    }
+
+    function closeWeChatQR1() {
+      const modal = document.getElementById('wechatModal1');
+      modal.classList.add('hidden');
+    }
+
+    // Close modal 1 when clicking outside
+    window.addEventListener('click', function(event) {
+      const modal = document.getElementById('wechatModal1');
       if (event.target === modal) {
         modal.classList.add('hidden');
       }
