@@ -259,9 +259,11 @@
     <p class="hint">These values are auto-filled on every voucher page once saved.</p>
 
     <div class="setting-row">
-      <label for="vesselName">Vessel Name</label>
-      <div class="field">
-        <input type="text" id="vesselName" placeholder="e.g. M.V. ANSUD STAR">
+      <label for="vesselSelect">Vessel Name<br><span style="font-weight:400;color:#6b7280;">(saved list — pick one for the vouchers)</span></label>
+      <div class="field" style="display:flex; gap:8px; align-items:center;">
+        <select id="vesselSelect" onchange="switchVessel(this.value)" style="flex:1;"></select>
+        <button type="button" class="btn secondary" style="height:38px; padding:0 12px; box-sizing:border-box; display:inline-flex; align-items:center;" onclick="addVessel()" title="Add a new vessel name">➕ New</button>
+        <button type="button" class="btn danger" style="height:38px; padding:0 12px; box-sizing:border-box; display:inline-flex; align-items:center;" onclick="deleteVessel()" title="Delete current vessel name">🗑</button>
       </div>
     </div>
 
@@ -379,7 +381,7 @@ function loadData() {
     if (raw) return normalizeStoredData(JSON.parse(raw));
   } catch (e) {}
   return {
-    vesselName: '', port: '',
+    vesselName: '', vessels: [], port: '',
     passengers: [], ports: {},
     trips: []
   };
@@ -387,10 +389,11 @@ function loadData() {
 // Migrate old data shape (locations: array) into per-port shape (ports: {port: [locs]})
 function normalizeStoredData(d) {
   if (typeof d !== 'object' || d === null || Array.isArray(d)) {
-    return { vesselName: '', port: '', passengers: [], ports: {}, trips: [] };
+    return { vesselName: '', vessels: [], port: '', passengers: [], ports: {}, trips: [] };
   }
   const out = {
     vesselName: d.vesselName || '',
+    vessels: Array.isArray(d.vessels) ? d.vessels.filter(s => typeof s === 'string' && s.trim()) : [],
     port: d.port || '',
     passengers: Array.isArray(d.passengers) ? d.passengers : [],
     ports: {},
@@ -406,6 +409,10 @@ function normalizeStoredData(d) {
     out.ports[d.port || 'Default Port'] = d.locations.filter(s => typeof s === 'string');
   }
   if (!out.port && Object.keys(out.ports).length) out.port = Object.keys(out.ports)[0];
+  // Migration: old single vessel name → seed the vessel list
+  if (out.vessels.length === 0 && out.vesselName) out.vessels.push(out.vesselName);
+  if (out.vesselName && !out.vessels.includes(out.vesselName)) out.vessels.push(out.vesselName);
+  if (!out.vesselName && out.vessels.length) out.vesselName = out.vessels[0];
   return out;
 }
 function saveData() {
@@ -426,6 +433,72 @@ document.querySelectorAll('.tab').forEach(tab => {
     document.getElementById('tab-cloud').classList.toggle('hidden', target !== 'cloud');
   });
 });
+
+// ===================== Vessel names (simple saved list, linked to nothing else) =====================
+function renderVesselSelect() {
+  const sel = document.getElementById('vesselSelect');
+  if (!sel) return;
+  if (!Array.isArray(data.vessels)) data.vessels = [];
+  let html = '';
+  if (data.vessels.length === 0) {
+    html = '<option value="">— no vessel yet, click ➕ New —</option>';
+  } else {
+    data.vessels.forEach(v => {
+      const selAttr = (v === data.vesselName) ? ' selected' : '';
+      html += `<option value="${escapeHtml(v)}"${selAttr}>${escapeHtml(v)}</option>`;
+    });
+    if (data.vesselName && !data.vessels.includes(data.vesselName)) {
+      html += `<option value="${escapeHtml(data.vesselName)}" selected>${escapeHtml(data.vesselName)}</option>`;
+    }
+  }
+  sel.innerHTML = html;
+}
+
+function switchVessel(name) {
+  data.vesselName = name;
+  saveData();
+  renderVesselSelect();
+  // vessel name is printed on every voucher — refresh the preview
+  if (selectedTrips().length > 0) {
+    document.getElementById('printArea').innerHTML = selectedTrips().map(t => buildVoucherHtml(t)).join('');
+  }
+}
+
+function addVessel() {
+  const name = prompt('Enter new vessel name (e.g. M.V. ANSUD STAR):');
+  if (!name || !name.trim()) { renderVesselSelect(); return; }
+  const n = name.trim();
+  if (data.vessels.includes(n)) {
+    flash('⚠ Vessel already exists: ' + n, 'warn');
+    data.vesselName = n;
+    renderVesselSelect();
+  } else {
+    data.vessels.push(n);
+    data.vesselName = n;
+    flash('✓ Vessel added: ' + n, 'success');
+  }
+  saveData();
+  renderVesselSelect();
+  if (selectedTrips().length > 0) {
+    document.getElementById('printArea').innerHTML = selectedTrips().map(t => buildVoucherHtml(t)).join('');
+  }
+}
+
+function deleteVessel() {
+  const v = data.vesselName;
+  if (!v) { flash('⚠ No vessel name to delete.', 'warn'); return; }
+  if (!confirm(`Delete vessel name "${v}" from the list?`)) return;
+  data.vessels = data.vessels.filter(x => x !== v);
+  data.vesselName = data.vessels[0] || '';
+  saveData();
+  renderVesselSelect();
+  if (selectedTrips().length > 0) {
+    document.getElementById('printArea').innerHTML = selectedTrips().map(t => buildVoucherHtml(t)).join('');
+  } else {
+    document.getElementById('printArea').innerHTML = '';
+  }
+  flash('🗑 Vessel deleted: ' + v, 'success');
+}
 
 // ===================== Settings =====================
 function getCurrentLocations() {
@@ -465,7 +538,7 @@ function renderPortSelect() {
 }
 
 function syncSettingsToInputs() {
-  document.getElementById('vesselName').value = data.vesselName || '';
+  renderVesselSelect();
   renderPortSelect();
   document.getElementById('passengers').value = (data.passengers || []).join('\n');
   document.getElementById('locations').value = getCurrentLocations().join('\n');
@@ -515,7 +588,6 @@ function deletePort() {
 }
 
 function saveSettings() {
-  data.vesselName = document.getElementById('vesselName').value.trim();
   data.passengers = document.getElementById('passengers').value
     .split('\n').map(s => s.trim()).filter(Boolean);
   const locText = document.getElementById('locations').value.trim();
@@ -835,7 +907,7 @@ function flash(msg, type) {
 }
 function resetAll() {
   if (!confirm('Clear ALL settings and trips? This cannot be undone.')) return;
-  data = { vesselName: '', port: '', passengers: [], ports: {}, trips: [] };
+  data = { vesselName: '', vessels: [], port: '', passengers: [], ports: {}, trips: [] };
   saveData();
   syncSettingsToInputs();
   renderTrips();
@@ -867,6 +939,7 @@ function normalizeData(parsed) {
   }
   const out = {
     vesselName: parsed.vesselName || '',
+    vessels: Array.isArray(parsed.vessels) ? parsed.vessels.filter(s => typeof s === 'string' && s.trim()) : [],
     port: parsed.port || '',
     passengers: Array.isArray(parsed.passengers) ? parsed.passengers : [],
     ports: {},
@@ -887,6 +960,10 @@ function normalizeData(parsed) {
     out.ports[parsed.port || 'Default Port'] = parsed.locations.filter(s => typeof s === 'string');
   }
   if (!out.port && Object.keys(out.ports).length) out.port = Object.keys(out.ports)[0];
+  // Migration: a single vessel name with no list → seed the list with it
+  if (out.vessels.length === 0 && out.vesselName) out.vessels.push(out.vesselName);
+  if (out.vesselName && !out.vessels.includes(out.vesselName)) out.vessels.push(out.vesselName);
+  if (!out.vesselName && out.vessels.length) out.vesselName = out.vessels[0];
   return out;
 }
 
@@ -1071,6 +1148,7 @@ function loadDemo() {
   if (!confirm('This will replace your current data with example data. Continue?')) return;
   data = {
     vesselName: 'M.V. ANSUD STAR',
+    vessels: ['M.V. ANSUD STAR', 'M.V. ANSUD PEARL', 'M.T. ANSUD WAVE'],
     port: 'Shanghai Port',
     passengers: ['John Smith', 'Jane Doe', 'Bob Lee', 'Alice Wong'],
     ports: {
