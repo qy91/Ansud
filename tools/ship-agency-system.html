@@ -35,6 +35,23 @@
   .btn.sv{background:var(--accent)} .btn.sv:hover{background:#0b8a5f}
   .btn.danger{background:var(--danger)} .btn.danger:hover{background:#b91c1c}
   .err{color:var(--danger);font-size:12px;margin-top:8px;min-height:16px}
+  /* 导入数据 */
+  .fval textarea{width:100%;padding:8px 10px;border:1px solid var(--brand);border-radius:7px;font-size:13px;font-family:ui-monospace,Consolas,monospace;background:#fff;resize:vertical;line-height:1.6}
+  .fval textarea:focus{outline:none;box-shadow:0 0 0 3px rgba(11,94,156,.12)}
+  .import-summary{margin-top:14px;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+  .import-summary.hidden,.import-opts.hidden{display:none}
+  .import-title{padding:9px 14px;background:#f5f8fb;font-size:13px;font-weight:700;border-bottom:1px solid var(--line)}
+  .import-tbl{width:100%;border-collapse:collapse;font-size:13px}
+  .import-tbl th{background:#fafcfe;text-align:left;padding:7px 14px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--line)}
+  .import-tbl td{padding:7px 14px;border-bottom:1px solid var(--line)}
+  .import-tbl tr:last-child td{border-bottom:none}
+  .import-warn{padding:9px 14px;background:#fff6ed;color:#b54708;font-size:12px;border-top:1px solid var(--line)}
+  .import-opts{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+  .import-radio{display:flex;align-items:flex-start;gap:9px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--radius);cursor:pointer;font-size:13px}
+  .import-radio:hover{border-color:var(--brand)}
+  .import-radio input{margin-top:3px;flex:0 0 auto}
+  .import-radio b{display:block;margin-bottom:2px}
+  .import-sub{display:block;font-size:12px;color:var(--muted);line-height:1.5}
 
   /* ---------- App ---------- */
   .topbar{background:var(--brand);color:#fff;padding:0 22px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20}
@@ -87,6 +104,12 @@
   .fval{font-size:14px;color:var(--ink)}
   .fval input,.fval select{width:100%;padding:8px 10px;border:1px solid var(--brand);border-radius:7px;font-size:14px;background:#fff;font-family:inherit}
   .fval input:focus,.fval select:focus{outline:none;box-shadow:0 0 0 3px rgba(11,94,156,.12)}
+  /* 24 小时制日期时间控件：日期选择器 + 时/分下拉 */
+  .dt24{display:flex;align-items:center;gap:8px;width:100%}
+  .dt24>input[type=date]{flex:1 1 auto;min-width:0;width:auto}
+  .dt24-t{display:flex;align-items:center;gap:4px;flex:0 0 auto}
+  .dt24-t select{width:auto;min-width:62px;padding:8px 6px;text-align:center;font-variant-numeric:tabular-nums}
+  .dt24-c{color:var(--muted);font-weight:700;flex:0 0 auto}
 
   /* fee table (agent) */
   .fee-tbl{display:flex;flex-direction:column;gap:8px;padding:12px 20px}
@@ -232,7 +255,7 @@
     </div>
     <button class="btn" onclick="doLogin()">进入系统 / Enter</button>
     <div id="lg-err" class="err"></div>
-    <div style="margin-top:14px;font-size:12px;color:var(--muted);text-align:center">账号由管理员在 Neon Auth 分配，本系统不开放自助注册</div>
+    <div style="margin-top:14px;font-size:12px;color:var(--muted);text-align:center"><!-- 账号由管理员在 Neon Auth 分配，本系统不开放自助注册 --></div>
   </div>
 </div>
 
@@ -256,8 +279,8 @@
       <a class="nav" data-page="clients" onclick="showPage('clients');renderClients()">🏢 委托方信息维护</a>
       <a class="nav" onclick="openModal()">➕ 新增代理船舶</a>
       <div class="sec">数据</div>
-      <a class="nav" onclick="exportJSON()">⬇ 导出数据</a>
-      <a class="nav" onclick="resetData()">♻ 重置演示数据</a>
+      <a class="nav" onclick="exportJSON()">⬇ 导出全量备份</a>
+      <a class="nav" onclick="openImport()">📥 导入数据</a>
     </div>
 
     <div class="main">
@@ -461,6 +484,37 @@
   </div>
 </div>
 
+<!-- ===================== IMPORT MODAL ===================== -->
+<div id="import-mask" class="mask hidden" onclick="if(event.target===this)closeImport()">
+  <div class="modal" style="width:680px;max-width:100%">
+    <div class="mh">导入数据 <span class="en">Import Data</span></div>
+    <div class="mb">
+      <div class="fields-grid">
+        <div class="field" style="grid-column:1/-1">
+          <div class="flbl">选择 JSON 文件<span class="fen">File</span></div>
+          <div class="fval"><input type="file" id="import-file" accept=".json,application/json" onchange="onImportFile(this)"></div>
+        </div>
+        <div class="field" style="grid-column:1/-1">
+          <div class="flbl">或直接粘贴 JSON<span class="fen">Paste</span></div>
+          <div class="fval"><textarea id="import-text" rows="5" placeholder='支持三种写法：&#10;① [{"cn":"船名（中）","en":"Vessel Name",...}, ...]       船舶数组&#10;② {"ships":[...],"vessels":[...],"agents":[...],"clients":[...]}   全量备份&#10;③ {"cn":"船名（中）","en":"Vessel Name",...}               单条船舶' oninput="analyzeImportText()"></textarea></div>
+        </div>
+      </div>
+      <div id="import-summary" class="import-summary hidden"></div>
+      <div id="import-opts" class="import-opts hidden">
+        <label class="import-radio"><input type="radio" name="import-mode" value="merge" checked onchange="renderImportSummary()">
+          <span><b>合并导入</b><span class="import-sub">按 ID 覆盖同名记录；文件中未提及的记录全部保留</span></span></label>
+        <label class="import-radio"><input type="radio" name="import-mode" value="replace" onchange="renderImportSummary()">
+          <span><b>整表替换</b><span class="import-sub">文件中出现的集合，原有记录清空后写入</span></span></label>
+      </div>
+      <div id="import-err" class="err"></div>
+    </div>
+    <div class="mf">
+      <button class="btn ghost sm" onclick="closeImport()">取消</button>
+      <button class="btn sm" id="import-ok" onclick="doImport()" disabled>导入</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===================== QUOTE MODAL ===================== -->
 <div id="quote-mask" class="mask hidden" onclick="if(event.target===this)closeQuote()">
   <div class="modal" style="width:840px;max-width:100%">
@@ -620,52 +674,12 @@ function lsGet(k){ try{ var s=localStorage.getItem(k); return s?JSON.parse(s):nu
 
 /* ---------------- data ---------------- */
 var STORE = "shipAgencyData_v2";
-var seed = [
-  {id:1, vesselId:1, cn:"中远海运之星", en:"COSCO Star", imo:"9789089", mmsi:"413123456", flag:"中国 CHINA", loa:"366", beam:"51", nt:"101274",
-   principal:"中远海运集装箱运输有限公司", principalType:"国内总代", localAgent:"洋山港船务代理有限公司", voy:"V.2608E", terminal:"洋山深水港 一期", berth:"3# 泊位",
-   eta:"2026-10-08 06:30", etd:"2026-10-08 22:00", status:"in",
-   todos:[
-     {title:"船员更换",detail:"计划 10/09 上下 8 名船员，需办理边检、工作许可及行李清关。代理：王经理 138-xxxx-xxxx。",done:false},
-     {title:"申请 SSCEC",detail:"向中国船东互保协会申请船舶证书（SSCEC），资料已邮件发送，截止 10/08 18:00。",done:false},
-     {title:"CTM 燃油加注",detail:"联系供应商安排 300MT VLSFO，靠泊后 2 小时内完成。",done:true}
-   ]},
-  {id:2, vesselId:2, cn:"马士基杭州", en:"Maersk Hangzhou", imo:"9456472", mmsi:"412567890", flag:"新加坡 SINGAPORE", loa:"399", beam:"59", nt:"115437",
-   principal:"马士基（中国）航运", principalType:"船东", localAgent:"宁波港船务代理有限公司", voy:"V.4412W", terminal:"宁波舟山港 北仑", berth:"7# 泊位",
-   eta:"2026-10-08 09:00", etd:"2026-10-09 04:30", status:"in",
-   todos:[
-     {title:"联检安排",detail:"海关、边检、海事联合检查，预计靠泊后 1 小时。",done:false},
-     {title:"CTM 淡水供应",detail:"加淡水 200 吨，联系码头水车。",done:false}
-   ]},
-  {id:3, vesselId:3, cn:"地中海航运凤凰", en:"MSC Phoenix", imo:"9313571", mmsi:"355671000", flag:"巴拿马 PANAMA", loa:"366", beam:"48", nt:"99820",
-   principal:"地中海航运（MSC）", principalType:"船管", localAgent:"上海外代外高桥分公司", voy:"V.8801", terminal:"上海外高桥 二期", berth:"2# 泊位",
-   eta:"2026-10-08 14:00", etd:"2026-10-09 10:00", status:"arr",
-   todos:[
-     {title:"船员更换",detail:"更换船长及 3 名高级船员，需提前报备边检。",done:false},
-     {title:"申请 SSCEC",detail:"证书续期，资料待船东提供。",done:false}
-   ]},
-  {id:4, vesselId:4, cn:"长荣翡翠", en:"Evergreen Jade", imo:"9234721", mmsi:"416123000", flag:"中国台湾 TAIWAN", loa:"334", beam:"43", nt:"89211",
-   principal:"长荣海运", principalType:"租家", localAgent:"盐田国际船务代理有限公司", voy:"V.1255", terminal:"盐田国际 西港", berth:"9# 泊位",
-   eta:"2026-10-07 20:00", etd:"2026-10-08 16:00", status:"out",
-   todos:[{title:"离港手续",detail:"已办结关、吨税及离港证。",done:true}]},
-  {id:5, vesselId:5, cn:"达飞路易斯", en:"CMA CGM Louis", imo:"9451238", mmsi:"228123456", flag:"法国 FRANCE", loa:"396", beam:"54", nt:"108765",
-   principal:"达飞轮船（CMA CGM）", principalType:"船东", localAgent:"青岛港船务代理有限公司", voy:"V.7330", terminal:"青岛前湾 三期", berth:"11# 泊位",
-   eta:"2026-10-08 11:30", etd:"2026-10-08 19:30", status:"in",
-   todos:[
-     {title:"加油代理",detail:"加油 500MT，联检与加油同步办理中。",done:false},
-     {title:"CTM 物料供应",detail:"补给伙食及备件，联系供货商。",done:false}
-   ]},
-  {id:6, vesselId:6, cn:"中海环球", en:"China Shipping Globe", imo:"9700156", mmsi:"413987654", flag:"中国 CHINA", loa:"400", beam:"58", nt:"119302",
-   principal:"中海集运", principalType:"国内总代", localAgent:"天津港船务代理有限公司", voy:"V.3099N", terminal:"天津港 集装箱", berth:"5# 泊位",
-   eta:"2026-10-08 16:45", etd:"2026-10-09 08:00", status:"arr",
-   todos:[{title:"冷藏箱检修",detail:"600 TEU 冷藏箱温度巡检，联系冷藏工程师。",done:false}]}
-];
 function save(d){ persist("ships", d); }
 /* data 由 boot() 从 Neon 拉取后填充；proc→in 的迁移也在 boot() 里做 */
 var data = [];
 
 /* ---------------- vessel master ---------------- */
 var VSTORE = "vesselMaster_v1";
-var vesselSeed = seed.map(function(s){ return {id:s.id, cn:s.cn, en:s.en, imo:s.imo, mmsi:s.mmsi, flag:s.flag, loa:s.loa, beam:s.beam, nt:s.nt}; });
 function saveVessels(d){ persist("vessels", d); }
 var vessels = [];
 
@@ -873,7 +887,7 @@ function blockHTML(fields, s, editable){
     if(editMode){
       var ctrl;
       if(f.type==="datetime"){
-        ctrl = '<input id="d-'+f.key+'" type="datetime-local" value="'+(v?v.replace(' ','T').slice(0,16):'')+'">';
+        ctrl = dtHTML("d-"+f.key, v);
       } else if(f.type==="select"){
         var sopts = (typeof f.opts==="function") ? f.opts() : (f.opts||[]);
         ctrl = buildSelect("d-"+f.key, sopts, v);
@@ -1112,7 +1126,7 @@ function blockShell(title, en, bodyHTML){
   return '<div class="block"><div class="block-h">'+title+' <span class="en">'+en+'</span></div><div class="block-b"><div class="fields-grid">'+bodyHTML+'</div></div></div>';
 }
 function modalInput(f){
-  if(f.type==="datetime") return '<input id="f-'+f.key+'" type="datetime-local">';
+  if(f.type==="datetime") return dtHTML("f-"+f.key, "");
   if(f.type==="select"){ var aopts=(typeof f.opts==="function")?f.opts():(f.opts||[]); return buildSelect("f-"+f.key, aopts, ""); }
   return '<input id="f-'+f.key+'" type="text" placeholder="'+esc(f.ph||'')+'">';
 }
@@ -1161,6 +1175,36 @@ function renderModalTodos(){
 function addNewTodo(){ newTodos.push({title:"",detail:"",done:false}); renderModalTodos(); }
 function updNewTodo(i,k,v){ if(newTodos[i]) newTodos[i][k]=v; }
 function delNewTodo(i){ newTodos.splice(i,1); renderModalTodos(); }
+/* ---------- 24 小时制日期时间控件 ----------
+   原生 <input type="datetime-local"> 的 AM/PM 由浏览器语言决定
+   （Chrome 读浏览器 UI 语言，不读页面 lang），代码无法控制。
+   这里改用「日期选择器 + 时/分下拉」，从根上摆脱 locale 依赖，恒定 24 小时制。
+   隐藏 input 承载 "YYYY-MM-DD HH:mm" 组合值，既有读取逻辑无需改动。 */
+function dtHTML(id, v){
+  v = (v||"").replace("T"," ").slice(0,16);
+  var d  = v ? v.slice(0,10) : "";
+  var hh = v ? v.slice(11,13) : "00";
+  var mm = v ? v.slice(14,16) : "00";
+  var hopts = "", mopts = "", i, s;
+  for(i=0;i<24;i++){ s=(i<10?"0":"")+i; hopts += '<option value="'+s+'"'+(s===hh?" selected":"")+'>'+s+'</option>'; }
+  for(i=0;i<60;i++){ s=(i<10?"0":"")+i; mopts += '<option value="'+s+'"'+(s===mm?" selected":"")+'>'+s+'</option>'; }
+  return '<div class="dt24">'+
+    '<input type="date" id="'+id+'-d" value="'+d+'" onchange="dtSync(\''+id+'\')">'+
+    '<div class="dt24-t">'+
+      '<select id="'+id+'-h" onchange="dtSync(\''+id+'\')">'+hopts+'</select>'+
+      '<span class="dt24-c">:</span>'+
+      '<select id="'+id+'-m" onchange="dtSync(\''+id+'\')">'+mopts+'</select>'+
+    '</div>'+
+    '<input type="hidden" id="'+id+'" value="'+v+'">'+
+  '</div>';
+}
+function dtSync(id){
+  var hid=document.getElementById(id); if(!hid) return;
+  var d=document.getElementById(id+"-d"),
+      h=document.getElementById(id+"-h"),
+      m=document.getElementById(id+"-m");
+  hid.value = (d && d.value) ? (d.value + " " + (h?h.value:"00") + ":" + (m?m.value:"00")) : "";
+}
 function val(id){ var el=document.getElementById(id); return el?el.value.trim():""; }
 function dtVal(id){ var el=document.getElementById(id); return el&&el.value? el.value.replace("T"," ") : ""; }
 function saveNew(){
@@ -1496,15 +1540,179 @@ function startClock(){
   function tick(){ document.getElementById("clock").textContent=new Date().toLocaleString("zh-CN",{hour12:false}); }
   tick(); setInterval(tick,1000);
 }
-function exportJSON(){ var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}); var a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="ship-agency-data.json"; a.click(); toast("已导出 JSON"); }
-function resetData(){ if(!confirm("重置为演示数据？当前修改将丢失。")) return; data=seed.slice(); save(data); vessels=vesselSeed.slice(); saveVessels(vessels); localAgents=agentSeed.slice(); saveAgents(localAgents); localClients=clientSeed.slice(); saveClients(localClients); refresh(); renderVessels(); renderAgents(); renderClients(); toast("已重置"); }
+/* ---------------- 导入数据 ----------------
+   支持三种 JSON 形态：
+     ① 船舶数组            → 按「代理船舶」导入
+     ② {ships,vessels,agents,clients,flags} → 全量备份导入
+     ③ 单条船舶对象        → 导入一条
+   两种模式：merge 按 ID 覆盖（未提及的保留）/ replace 整表替换。
+   注意：导入只动文件中出现的集合，不会把没提到的集合清空。 */
+var importData = null;
+function openImport(){
+  importData = null;
+  document.getElementById("import-file").value = "";
+  document.getElementById("import-text").value = "";
+  document.getElementById("import-summary").classList.add("hidden");
+  document.getElementById("import-opts").classList.add("hidden");
+  document.getElementById("import-err").textContent = "";
+  document.getElementById("import-ok").disabled = true;
+  var m = document.querySelector('input[name="import-mode"][value="merge"]');
+  if(m) m.checked = true;
+  document.getElementById("import-mask").classList.remove("hidden");
+}
+function closeImport(){ document.getElementById("import-mask").classList.add("hidden"); }
+function importError(msg){ document.getElementById("import-err").textContent = msg; }
+function onImportFile(input){
+  var f = input.files && input.files[0];
+  if(!f) return;
+  var r = new FileReader();
+  r.onload = function(){
+    document.getElementById("import-text").value = r.result;
+    analyzeImportText();
+  };
+  r.onerror = function(){ importError("读取文件失败"); };
+  r.readAsText(f, "UTF-8");
+}
+function normalizeImport(obj){
+  var out = {ships:null, vessels:null, agents:null, clients:null, flags:null};
+  if(Array.isArray(obj)){
+    out.ships = obj;                                    /* 裸数组 → 代理船舶 */
+  } else if(obj && typeof obj === "object"){
+    if(Array.isArray(obj.ships))   out.ships   = obj.ships;
+    if(Array.isArray(obj.vessels)) out.vessels = obj.vessels;
+    if(Array.isArray(obj.agents))  out.agents  = obj.agents;
+    if(Array.isArray(obj.clients)) out.clients = obj.clients;
+    if(Array.isArray(obj.flags))   out.flags   = obj.flags;
+    if(!out.ships && (obj.cn || obj.en)) out.ships = [obj];   /* 单条船舶 */
+  }
+  return out;
+}
+function analyzeImportText(){
+  var raw = document.getElementById("import-text").value.trim();
+  document.getElementById("import-err").textContent = "";
+  if(!raw){ importData = null; hideImportSummary(); return; }
+  var obj;
+  try{ obj = JSON.parse(raw); }
+  catch(e){ importData = null; hideImportSummary(); importError("JSON 解析失败：" + e.message); return; }
+  var norm = normalizeImport(obj);
+  var any = false;
+  ["ships","vessels","agents","clients","flags"].forEach(function(k){ if(norm[k] && norm[k].length) any = true; });
+  if(!any){
+    importData = null; hideImportSummary();
+    importError("未识别到可导入的数据。需要船舶数组、单条船舶对象，或含 ships/vessels/agents/clients 的对象。");
+    return;
+  }
+  importData = norm;
+  renderImportSummary();
+}
+function hideImportSummary(){
+  document.getElementById("import-summary").classList.add("hidden");
+  document.getElementById("import-opts").classList.add("hidden");
+  document.getElementById("import-ok").disabled = true;
+}
+/* 按主键合并：有 id 用 id；无 id 的集合（如自定义国籍）退到用 v 作自然键；
+   两者都没有的才续新 id。深拷贝避免污染待导入数据。 */
+function mergeInto(cur, incoming){
+  var maxId = 0;
+  cur.concat(incoming).forEach(function(x){ var n = parseInt(x.id, 10); if(!isNaN(n) && n > maxId) maxId = n; });
+  function keyOf(x){
+    if(x.id !== undefined && x.id !== null && x.id !== "") return "id:" + x.id;
+    if(x.v  !== undefined && x.v  !== null && x.v  !== "") return "v:"  + x.v;
+    return null;
+  }
+  var map = {}, order = [];
+  function put(x){
+    var k = keyOf(x);
+    if(!k){
+      k = "id:" + (++maxId);
+      x = JSON.parse(JSON.stringify(x));
+      x.id = maxId;
+    }
+    if(!map[k]) order.push(k);
+    map[k] = x;
+  }
+  cur.forEach(put);
+  incoming.forEach(function(x){ put(JSON.parse(JSON.stringify(x))); });
+  return order.map(function(k){ return map[k]; }).sort(function(a,b){
+    var na = parseInt(a.id, 10), nb = parseInt(b.id, 10);
+    if(isNaN(na) || isNaN(nb)) return 0;
+    return na - nb;
+  });
+}
+function renderImportSummary(){
+  if(!importData){ hideImportSummary(); return; }
+  var mode = document.querySelector('input[name="import-mode"]:checked').value;
+  var labels = {ships:"代理船舶", vessels:"船舶主数据", agents:"本港代理", clients:"委托方", flags:"自定义国籍"};
+  var html = '<div class="import-title">识别到以下数据</div><table class="import-tbl"><thead><tr>'+
+    '<th>集合</th><th>文件记录数</th><th>'+(mode==="merge" ? "合并后总数" : "替换后总数")+'</th></tr></thead><tbody>';
+  ["ships","vessels","agents","clients","flags"].forEach(function(k){
+    var inc = importData[k];
+    if(!inc || !inc.length) return;
+    var cur = k==="ships" ? data : k==="vessels" ? vessels : k==="agents" ? localAgents
+            : k==="clients" ? localClients : customFlagsList();
+    var after = mode==="merge" ? mergeInto(cur, inc).length : inc.length;
+    html += '<tr><td>'+labels[k]+'</td><td class="mono">'+inc.length+'</td><td class="mono">'+after+'</td></tr>';
+  });
+  html += '</tbody></table>';
+  if(mode === "replace")
+    html += '<div class="import-warn">⚠ 整表替换会清除该集合中原有的全部记录，且不可撤销。</div>';
+  document.getElementById("import-summary").innerHTML = html;
+  document.getElementById("import-summary").classList.remove("hidden");
+  document.getElementById("import-opts").classList.remove("hidden");
+  document.getElementById("import-ok").disabled = false;
+}
+function doImport(){
+  if(!importData){ importError("没有可导入的数据"); return; }
+  var mode = document.querySelector('input[name="import-mode"]:checked').value;
+  var plan = [];
+  [["ships", data, importData.ships], ["vessels", vessels, importData.vessels],
+   ["agents", localAgents, importData.agents], ["clients", localClients, importData.clients],
+   ["flags", customFlagsList(), importData.flags]].forEach(function(t){
+    if(!t[2] || !t[2].length) return;
+    plan.push({kind:t[0], arr: mode==="replace" ? t[2].slice() : mergeInto(t[1], t[2])});
+  });
+  if(!plan.length){ importError("没有可导入的数据"); return; }
+
+  plan.forEach(function(p){
+    if(p.kind === "ships")        data = p.arr;
+    else if(p.kind === "vessels") vessels = p.arr;
+    else if(p.kind === "agents")  localAgents = p.arr;
+    else if(p.kind === "clients") localClients = p.arr;
+    else if(p.kind === "flags")   applyCustomFlags(p.arr);
+  });
+  var jobs = plan.map(function(p){ return persist(p.kind, p.arr); });
+  closeImport();
+  refresh(); renderVessels(); renderAgents(); renderClients();
+  toast("已导入 " + plan.length + " 个集合");
+  Promise.all(jobs.map(function(j){ return j.catch(function(){}); }));
+}
+/* 全量备份：导出全部集合，格式与「导入数据」的全量备份形态一致，可原样导回 */
+function exportJSON(){
+  var payload = {
+    exportedAt: new Date().toISOString(),
+    ships:   data,
+    vessels: vessels,
+    agents:  localAgents,
+    clients: localClients,
+    flags:   customFlagsList()
+  };
+  var d = new Date(), pad = function(n){ return (n<10?"0":"")+n; };
+  var stamp = d.getFullYear() + pad(d.getMonth()+1) + pad(d.getDate()) + "-" + pad(d.getHours()) + pad(d.getMinutes());
+  var blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "ship-agency-backup-" + stamp + ".json";
+  a.click();
+  toast("已导出全量备份（船舶 " + data.length + " / 主数据 " + vessels.length + " / 代理 " + localAgents.length + " / 委托方 " + localClients.length + "）");
+}
 
 /* ---------------- boot：从 Neon 载入全量数据 ----------------
    关键区分：
-     · 从未初始化过（seeded=false）→ 库为空则写入演示种子 / 搬迁 localStorage 遗留数据，
-       并置 seeded=true。只发生一次。
+     · 从未初始化过（seeded=false）→ 只把浏览器遗留的 localStorage 数据搬进 Neon
+       （用户自己的旧数据，不是演示数据），并置 seeded=true。只发生一次。
+       若没有遗留数据，就保持空库，由使用者自行录入。
      · 已初始化过（seeded=true）→ 尊重库里的现状。即使用户把数据删空了，
-       也保持空，不再重新播种。否则「删除全部数据」这个操作永远做不成。 */
+       也保持空，不写回任何东西。否则「删除全部数据」这个操作永远做不成。 */
 function boot(){
   apiRpc("api_bootstrap").then(function(b){
     var jobs = [];
@@ -1516,15 +1724,16 @@ function boot(){
     var seeded = (b.seeded === true || b.seeded === "true");
 
     if(!seeded){
-      /* 首次运行：补种子 + 标记已初始化 */
-      if(!data.length){        data = lsGet(STORE) || seed.slice();            jobs.push(persist("ships", data)); }
-      if(!vessels.length){    vessels = lsGet(VSTORE) || vesselSeed.slice();  jobs.push(persist("vessels", vessels)); }
-      if(!localAgents.length){ localAgents = backfillAgents(lsGet(ASTORE) || agentSeed.slice()); jobs.push(persist("agents", localAgents)); }
-      if(!localClients.length){ localClients = backfillClients(lsGet(CSTORE) || clientSeed.slice()); jobs.push(persist("clients", localClients)); }
-      if(!customFlagsList().length){
-        var legacyFlags = lsGet("customFlags_v1");
-        if(legacyFlags && legacyFlags.length){ applyCustomFlags(legacyFlags); jobs.push(persist("flags", legacyFlags)); }
-      }
+      /* 首次运行：只把浏览器里遗留的 localStorage 数据搬进来（那是用户自己的旧数据）。
+         不再生成任何演示数据 —— 空库就保持空，由使用者自行录入。
+         搬完标记已初始化，今后即使删空也不再触发。 */
+      var legacy;
+      legacy = lsGet(STORE);        if(!data.length      && legacy && legacy.length){ data = legacy;                   jobs.push(persist("ships", data)); }
+      legacy = lsGet(VSTORE);       if(!vessels.length   && legacy && legacy.length){ vessels = legacy;                jobs.push(persist("vessels", vessels)); }
+      legacy = lsGet(ASTORE);       if(!localAgents.length && legacy && legacy.length){ localAgents = backfillAgents(legacy); jobs.push(persist("agents", localAgents)); }
+      legacy = lsGet(CSTORE);       if(!localClients.length && legacy && legacy.length){ localClients = backfillClients(legacy); jobs.push(persist("clients", localClients)); }
+      legacy = lsGet("customFlags_v1");
+      if(!customFlagsList().length && legacy && legacy.length){ applyCustomFlags(legacy); jobs.push(persist("flags", legacy)); }
       jobs.push(apiRpc("api_mark_seeded"));
     }
 
