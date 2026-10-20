@@ -222,6 +222,112 @@
   .icon-btn:hover{background:#f1f5f9}
   .icon-btn.danger:hover{background:#fee2e2;color:var(--danger);border-color:#fecaca}
 
+  /* ---------- Voucher ---------- */
+  .v-tabs{display:flex;gap:4px;border-bottom:1px solid var(--line)}
+  .v-tab{padding:9px 18px;cursor:pointer;background:transparent;border:none;border-bottom:2px solid transparent;
+    font-size:14px;font-weight:500;color:var(--muted);font-family:inherit}
+  .v-tab:hover{color:var(--brand)}
+  .v-tab.active{color:var(--brand);border-bottom-color:var(--brand);background:#f5f8fb}
+  #vpanel-trips,#vpanel-settings{padding-top:16px}
+
+  .v-pickbar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--panel);
+    border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;margin-bottom:14px}
+  .v-pick{display:flex;flex-direction:column;gap:5px;flex:1 1 220px}
+  .v-pick label{font-size:12px;font-weight:600;color:var(--ink)}
+  .v-pick label .v-en{font-weight:400;color:var(--muted);margin-left:4px}
+  .v-pick select{padding:9px 10px;border:1px solid var(--line);border-radius:7px;font-size:14px;background:#fff;font-family:inherit}
+  .v-pick select:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(11,94,156,.12)}
+  .v-pick-lock{flex:1 1 260px}
+  .v-hint{font-size:12px;color:var(--muted);line-height:1.6}
+
+  .v-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:var(--panel);
+    border:1px solid var(--line);border-radius:var(--radius);padding:12px 16px;margin-top:14px}
+  .v-info{margin-left:auto;color:var(--muted);font-size:13px}
+  .v-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .v-row select{flex:1;padding:9px 10px;border:1px solid var(--line);border-radius:7px;font-size:14px;background:#fff;font-family:inherit}
+  .v-row .btn.sm{width:auto}
+
+  .v-card{border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px;background:#fbfcfe}
+  .v-card.off{background:#f7f8fa;opacity:.62}
+  .v-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:10px;flex-wrap:wrap}
+  .v-card-head b{color:var(--brand);font-size:14px}
+  .v-card-head .v-tools{display:flex;gap:8px;align-items:center}
+  .v-chk{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink);cursor:pointer;white-space:nowrap}
+  .v-chk input{margin:0}
+  .v-grid{display:grid;gap:10px;grid-template-columns:repeat(3,1fr)}
+  .v-grid.r2{grid-template-columns:1fr 1fr;margin-top:10px}
+  .v-grid label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:600;color:var(--muted)}
+  .v-grid input,.v-grid select{padding:7px 9px;border:1px solid var(--line);border-radius:6px;font-size:14px;background:#fff;font-family:inherit;width:100%}
+  .v-grid input:focus,.v-grid select:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(11,94,156,.12)}
+  .tm{display:flex;align-items:center;gap:4px}
+  .tm select{padding:7px 6px;border:1px solid var(--line);border-radius:6px;font-size:14px;background:#fff;font-family:inherit}
+  .tm select:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(11,94,156,.12)}
+  .tm-c{color:var(--muted);font-weight:600}
+  .v-pax{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}
+  .v-pax .v-chk{background:#eef4fa;border-radius:14px;padding:4px 11px 4px 9px}
+  .v-icon{border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:15px;padding:3px 7px;border-radius:6px;line-height:1}
+  .v-icon:hover{background:#eef2f7;color:var(--danger)}
+
+  .v-taglist{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+  .v-tag{background:#eef4fa;color:var(--brand-d);padding:3px 11px;border-radius:14px;font-size:12px;display:inline-flex;align-items:center;gap:6px}
+  .v-tag button{background:transparent;border:none;color:var(--brand);font-size:14px;cursor:pointer;padding:0;line-height:1}
+  .v-tag button:hover{color:var(--danger)}
+  textarea#v-locations,textarea#v-passengers{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;
+    font-size:14px;font-family:inherit;background:#fff;resize:vertical;line-height:1.6}
+  textarea#v-locations:focus,textarea#v-passengers:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(11,94,156,.12)}
+  .v-empty{text-align:center;padding:26px;color:#9aa4b2;font-style:italic;background:var(--panel);
+    border:1px solid var(--line);border-radius:var(--radius)}
+
+  .v-back{position:fixed;top:16px;left:16px;z-index:9999;padding:10px 18px;background:var(--brand);color:#fff;
+    border:none;border-radius:24px;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.25)}
+  .v-back:hover{background:var(--brand-d)}
+
+  /* ---------- 凭证单据：两张排满一页 A4 ---------- */
+  #voucher-print{display:none}
+  body.v-preview #voucher-print{display:block}
+  body.v-preview .topbar,body.v-preview .layout,body.v-preview .toast,body.v-preview .side{display:none}
+  body.v-preview #v-back{display:block}
+
+  .voucher{width:210mm;height:148mm;padding:7mm 12mm;margin:6mm auto;background:#fff;
+    box-sizing:border-box;box-shadow:0 0 8px rgba(0,0,0,.1);overflow:hidden}
+  .voucher h1,.voucher h2{text-align:center;margin:0;font-family:"Times New Roman",Times,serif;font-weight:bold}
+  .voucher h1{font-size:13pt;margin-bottom:2mm;letter-spacing:1px}
+  .voucher h2{font-size:11pt;margin-bottom:4mm;letter-spacing:1.5px}
+  .voucher table{width:100%;border-collapse:collapse;font-family:"Times New Roman",Times,serif}
+  .voucher table,.voucher th,.voucher td{border:1px solid #000}
+  .voucher td{padding:3px 8px;vertical-align:middle;font-size:11pt}
+  .voucher td.v-label{width:22%;font-size:10pt;white-space:nowrap}
+  .voucher td.v-field{width:28%;height:7mm}
+  .voucher td.v-field-wide{width:78%;height:7mm}
+  .voucher td.v-head{text-align:center;padding:4px;font-size:10pt;white-space:nowrap}
+
+  /* ---------- 隔离主系统全局表格样式对凭证的渗透 ----------
+     主系统有 table{border:1px solid var(--line); border-radius; overflow:hidden}、
+     tr:hover td 有底色、body 行高 1.5。渗透进凭证后：
+     · 表格最外圈描边被全局浅灰 var(--line) 顶掉 → 老版那种闭合黑外框消失；
+     · 行高变大 → 行距、签名区和老版对不上。
+     这里全部按老 voucher 的样式强制回来（必须 !important，否则盖不住全局规则）。 */
+  .voucher table{border:1px solid #000 !important;border-radius:0 !important;overflow:visible !important;background:#fff !important}
+  .voucher table tr:hover td{background:#fff !important;cursor:default}
+  .voucher{line-height:normal}
+
+  /* 注意：上面「报价单」那套打印样式里有一条 `body>*{display:none!important}`，
+     它会把 body 的所有直接子元素（包括 #voucher-print）全隐藏。
+     凭证要能打出来，必须靠更高优先级 + !important 把它捞回来。
+     body.v-print 由 beforeprint 事件按「凭证区是否有内容」动态加，
+     这样打印报价单时（凭证区为空）不会误伤原有的报价打印逻辑。 */
+  @media print{
+    @page{size:A4;margin:0}
+    body{background:#fff;padding:0;margin:0}
+    html,body{height:auto}
+    .topbar,.layout,.toast,.v-back{display:none!important}
+    #voucher-print{display:block}
+    body.v-print #voucher-print{display:block !important;visibility:visible !important}
+    body.v-print #quote-mask{display:none !important}   /* 别把上次生成的报价单一起打出来 */
+    .voucher{border:none;margin:0;padding:7mm 12mm;box-shadow:none;
+      width:210mm;height:148mm;page-break-inside:avoid;break-inside:avoid}
+  }
+
   .mask{position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:flex-start;justify-content:center;z-index:50;padding:40px 16px;overflow:auto}
   .modal{background:#fff;border-radius:14px;width:560px;max-width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3)}
   .modal .mh{padding:16px 20px;border-bottom:1px solid var(--line);font-weight:700;font-size:16px}
@@ -233,6 +339,12 @@
   .lang{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:7px;padding:4px 10px;font-size:12px;cursor:pointer}
   .lang:hover{background:rgba(255,255,255,.28)}
   #db-banner{display:none;position:sticky;top:0;z-index:9999;background:#b42318;color:#fff;font-size:13px;line-height:1.55;padding:10px 16px;box-shadow:0 2px 12px rgba(0,0,0,.25)}
+  #db-banner .db-retry{float:right;margin-left:16px;background:#fff;color:#b42318;border:none;border-radius:7px;
+    padding:6px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+  #db-banner .db-retry:hover{background:#fee4e2}
+  #db-banner .db-code{display:inline-block;background:rgba(0,0,0,.28);padding:2px 8px;border-radius:5px;
+    font-family:ui-monospace,Consolas,monospace;font-size:12px;word-break:break-all}
+  #db-banner .db-raw{margin-top:6px;font-size:11px;opacity:.85;word-break:break-all;font-family:ui-monospace,Consolas,monospace}
   #db-banner.show{display:block}
   @media(max-width:900px){.side{display:none}.stats{grid-template-columns:repeat(2,1fr)}.modal .grid2{grid-template-columns:1fr}.drow{grid-template-columns:120px 1fr}}
 </style>
@@ -278,6 +390,8 @@
       <a class="nav" data-page="agents" onclick="showPage('agents');renderAgents()">🤝 本港代理维护</a>
       <a class="nav" data-page="clients" onclick="showPage('clients');renderClients()">🏢 委托方信息维护</a>
       <a class="nav" onclick="openModal()">➕ 新增代理船舶</a>
+      <div class="sec">单据</div>
+      <a class="nav" data-page="voucher" onclick="showPage('voucher');renderVoucher()">🎫 交通凭证 Voucher</a>
       <div class="sec">数据</div>
       <a class="nav" onclick="exportJSON()">⬇ 导出全量备份</a>
       <a class="nav" onclick="openImport()">📥 导入数据</a>
@@ -297,7 +411,7 @@
         </div>
 
         <div class="toolbar">
-          <input id="search" placeholder="🔍 搜索船名 / 码头 / 航次…" oninput="renderDashboard()">
+          <input id="search" placeholder="🔍 搜索船名 / 港口 / 航次…" oninput="renderDashboard()">
           <select id="filter-status" onchange="renderDashboard()">
             <option value="">全部状态</option>
             <option value="in">在港</option>
@@ -309,7 +423,7 @@
 
         <table>
           <thead><tr>
-            <th>中文船名</th><th>英文船名</th><th>码头 / 泊位</th>
+            <th>中文船名</th><th>英文船名</th><th>港口 PORT</th><th>泊位</th>
             <th>靠泊时间 ETA</th><th>离泊时间 ETD</th><th>状态</th>
           </tr></thead>
           <tbody id="ship-tbody"></tbody>
@@ -364,6 +478,76 @@
         </table>
       </div>
 
+      <!-- TRANSPORTATION VOUCHER -->
+      <div id="page-voucher" class="page hidden">
+        <div class="page-title">交通凭证 <span class="en">Transportation Voucher</span></div>
+        <div class="page-desc">为船员 / 工作人员生成接送凭证。<b>船名</b>取自「当前代理船舶」与「船舶主数据」，<b>港口</b>取自全系统统一的港口列表——两处共用同一份数据，在船舶详情里改港口，凭证这里立刻同步。</div>
+
+        <div class="v-tabs">
+          <button class="v-tab active" id="vtab-trips" onclick="switchVTab('trips')">🗺 行程 Trips</button>
+          <button class="v-tab" id="vtab-settings" onclick="switchVTab('settings')">⚙ 设置 Settings</button>
+        </div>
+
+        <!-- 行程 -->
+        <div id="vpanel-trips">
+          <div class="v-pickbar">
+            <div class="v-pick">
+              <label>船名 <span class="v-en">Vessel Name</span></label>
+              <select id="v-vessel" onchange="pickVessel(this.value)"></select>
+            </div>
+            <div class="v-pick">
+              <label>港口 <span class="v-en">Port</span></label>
+              <select id="v-port" onchange="pickPort(this.value)"></select>
+            </div>
+            <div class="v-pick v-pick-lock">
+              <label>&nbsp;</label>
+              <div class="v-hint" id="v-pick-hint"></div>
+            </div>
+          </div>
+          <div id="v-trip-list"></div>
+          <div class="v-actions">
+            <button class="btn sm sv" onclick="generateVouchers()">📄 生成凭证</button>
+            <button class="btn sm ghost" onclick="addTrip()">＋ 添加行程</button>
+            <button class="btn sm ghost" id="v-print-btn" onclick="printVouchers()">🖨 打印 / 导出 PDF</button>
+            <span class="v-info" id="v-trip-count"></span>
+          </div>
+        </div>
+
+        <!-- 设置 -->
+        <div id="vpanel-settings" class="hidden">
+          <div class="block">
+            <div class="block-h">⚓ 港口列表 <span class="en">Ports</span></div>
+            <div class="block-b">
+              <div class="v-row">
+                <select id="v-port-mgr" style="flex:1" onchange="onPortMgrChange()"></select>
+                <button class="btn sm ghost" onclick="promptAddPort()">＋ 新增港口</button>
+                <button class="btn sm danger" onclick="promptDeletePort()">🗑 删除</button>
+              </div>
+              <div class="v-hint">这里的港口会被「船舶航次信息 → 港口」和凭证顶部的 PORT 下拉共用。</div>
+              <div class="v-row" style="margin-top:12px">
+                <textarea id="v-locations" placeholder="每个地点一行，例如：&#10;Shanghai Airport&#10;Pudong Hotel&#10;Hong Kong Pier" style="min-height:120px"></textarea>
+              </div>
+              <div class="v-hint" id="v-loc-label">接驳地点属于当前选中的港口。</div>
+              <div class="v-taglist" id="v-loc-tags"></div>
+            </div>
+          </div>
+
+          <div class="block">
+            <div class="block-h">👥 乘客名单 <span class="en">Passengers</span></div>
+            <div class="block-b">
+              <textarea id="v-passengers" placeholder="每人一行，例如：&#10;John Smith&#10;Jane Doe" style="min-height:120px"></textarea>
+              <div class="v-hint">主名单，凭证可按行程单独勾选本次乘车的人。</div>
+              <div class="v-taglist" id="v-pax-tags"></div>
+            </div>
+          </div>
+
+          <div class="v-actions">
+            <button class="btn sm sv" onclick="saveVSettings(true)">💾 保存设置</button>
+            <span class="v-info" id="v-saved-at"></span>
+          </div>
+        </div>
+      </div>
+
       <!-- DETAIL -->
       <div id="page-detail" class="page hidden">
         <div class="detail-head">
@@ -399,6 +583,7 @@
           <button class="btn sm ghost hidden" id="detail-cancel-btn" onclick="cancelEdit()">取消</button>
           <button class="btn sm danger hidden" id="detail-delete-btn" onclick="detailDelete()">删除</button>
           <button class="btn sm" id="detail-quote-btn" onclick="generateQuote()">📄 生成报价</button>
+          <button class="btn sm ghost" onclick="gotoVoucher(currentId)">🎫 生成交通凭证</button>
         </div>
       </div>
     </div>
@@ -530,6 +715,10 @@
 
 <div id="toast" class="toast"></div>
 
+<!-- ===================== VOUCHER PRINT AREA ===================== -->
+<div id="voucher-print"></div>
+<button id="v-back" class="v-back hidden" onclick="backToVoucherEdit()" title="返回编辑">← 返回编辑</button>
+
 <script src="config.js"></script>
 <script>
 /* ---------------- i18n ---------------- */
@@ -660,14 +849,47 @@ function dbFail(msg){
   }
 }
 function dbRecover(){ var el=document.getElementById("db-banner"); if(el) el.classList.remove("show"); }
-/* 统一写入口：kind ∈ ships | vessels | agents | clients | flags */
+/* 统一写入口：kind ∈ ships | vessels | agents | clients | flags | ports | vsettings | vtrips */
 function persist(kind, arr){
-  return apiRpc("api_save_" + kind, {p_items: arr})
+  var fn = "api_save_" + kind;
+  return apiRpc(fn, {p_items: arr})
     .then(function(){ dbRecover(); })
     .catch(function(e){
-      dbFail(e.message);
+      var m = (e && e.message) || String(e);
+      /* PGRST202 = PostgREST 在 schema cache 里找不到这个函数。
+         凭证模块的函数要跑过 schema-voucher.sql 才存在，未跑时单独提示，
+         不要糊成「数据库未连通」——那会让用户以为整个库挂了。 */
+      if(/PGRST202/.test(m)){ dbNeedMigration(fn, m); return; }
+      dbFail(m);
       toast("保存失败：未写入数据库");
     });
+}
+function dbNeedMigration(fn, raw){
+  var el=document.getElementById("db-banner");
+  if(el){
+    el.innerHTML = "⚠ <b>Data API 找不到函数：<code>"+String(fn).replace(/</g,"&lt;")+"</code></b><br>"+
+      "只有两种可能，按顺序排查：<br>"+
+      "① <b>函数没建到这个库</b>——请在 Neon 控制台 SQL Editor 执行下面的自检，看三行结果是否都在：<br>"+
+      '<code class="db-code">SELECT proname FROM pg_proc WHERE pronamespace=&#39;public&#39;::regnamespace '+
+      'AND proname IN (&#39;api_save_ports&#39;,&#39;api_save_vsettings&#39;,&#39;api_save_vtrips&#39;);</code><br>'+
+      "查出 0 行 → schema-voucher.sql 没执行成功（或跑到了别的项目 / 分支的 SQL Editor 里，"+
+      "注意要和 config.js 里 <code>ep-purple-surf-b3n0of19</code> 同一个项目同一个分支）；查出 3 行 → 是 ②。<br>"+
+      "② <b>schema 缓存没刷新</b>——在 SQL Editor 执行 <code>NOTIFY pgrst, &#39;reload schema&#39;;</code> 后点「重新检测」；"+
+      "仍不行就在 Neon 控制台把 Data API 关掉再打开（强制重建缓存），或过几分钟再点。"+ 
+      '<button class="db-retry" onclick="retryMigration()">↻ 重新检测</button>'+
+      (raw ? '<div class="db-raw">原始报错：'+String(raw).replace(/</g,"&lt;")+'</div>' : "");
+    el.classList.add("show");
+  }
+}
+/* 重新检测：把凭证三件套按当前内存数据原样写回（都是幂等写，不会产生脏数据）。
+   三个函数都在，写成功 → dbRecover() 摘掉横幅；任何一个还缺，横幅会再次弹出。 */
+function retryMigration(){
+  var el=document.getElementById("db-banner");
+  if(el) el.classList.remove("show");
+  toast("正在重新检测数据库函数…");
+  Promise.all([persist("ports",ports), persist("vsettings",vset), persist("vtrips",trips)])
+    .then(function(){ toast("检测通过：凭证功能已可用"); })
+    .catch(function(){ /* persist 内部已处理横幅与提示 */ });
 }
 /* 仅用于把浏览器里遗留的 localStorage 数据一次性搬进 Neon */
 function lsGet(k){ try{ var s=localStorage.getItem(k); return s?JSON.parse(s):null; }catch(e){ return null; } }
@@ -808,8 +1030,8 @@ var voyageFields = [
   {key:"principal",     label:"委托方", en:"Principal", type:"select", opts:clientOpts},
   {key:"principalType", label:"委托方类别", en:"Client Type", type:"select", opts:principalTypeOpts},
   {key:"localAgent",    label:"本港代理", en:"Local Agent", type:"select", opts:localAgentOpts},
+  {key:"port",          label:"港口", en:"Port", type:"select", opts:portOpts},
   {key:"voy",       label:"航次号", en:"Voyage No.", type:"text", ph:"如：V.2608E"},
-  {key:"terminal",  label:"码头", en:"Terminal", type:"text", ph:"如：洋山深水港 一期"},
   {key:"berth",     label:"泊位", en:"Berth", type:"text", ph:"如：3# 泊位"},
   {key:"eta",       label:"靠泊 ETA", en:"Berthing Time", type:"datetime"},
   {key:"etd",       label:"离泊 ETD", en:"Departure Time", type:"datetime"},
@@ -842,15 +1064,15 @@ function renderDashboard(){
   var tb=document.getElementById("ship-tbody");
   var list=data.filter(function(s){
     if(fs && s.status!==fs) return false;
-    var hay=(s.cn+s.en+(s.terminal||"")+(s.berth||"")+s.voy).toLowerCase();
+    var hay=(s.cn+s.en+(s.port||"")+(s.berth||"")+s.voy).toLowerCase();
     if(q && !hay.includes(q)) return false;
     return true;
   });
-  if(!list.length){ tb.innerHTML='<tr><td colspan="6" class="empty">暂无匹配的代理船舶</td></tr>'; updateStats(); return; }
+  if(!list.length){ tb.innerHTML='<tr><td colspan="7" class="empty">暂无匹配的代理船舶</td></tr>'; updateStats(); return; }
   tb.innerHTML = list.map(function(s){
-    var loc=[s.terminal,s.berth].filter(Boolean).join(" · ");
+    var loc=s.berth||"—";
     return '<tr onclick="openDetail('+s.id+')">'+
-      '<td>'+esc(s.cn)+'</td><td>'+esc(s.en)+'</td><td>'+esc(loc)+'</td>'+
+      '<td>'+esc(s.cn)+'</td><td>'+esc(s.en)+'</td><td>'+esc(s.port||"—")+'</td><td>'+esc(loc)+'</td>'+
       '<td class="mono">'+fmt(s.eta)+'</td><td class="mono">'+fmt(s.etd)+'</td>'+
       '<td>'+statusBadge(s.status)+'</td></tr>';
   }).join("");
@@ -875,6 +1097,17 @@ function selOpts(f, cur){
 function buildSelect(id, opts, cur){
   return '<select id="'+id+'">'+selOpts({opts:opts}, cur)+'</select>';
 }
+/* ---------------- 港口主数据（船舶记录与交通凭证共用） ----------------
+   ports 存放在 app_settings 的 'ports' 键，由 boot() 载入。
+   这里只提供取选项 / 写库的纯函数，和自定义国籍那套是一样的套路。 */
+var ports = [];
+function portOpts(){
+  var o = ports.map(function(p){ return {v:p.v, t:p.t||p.v}; });
+  o.unshift({v:"", t:"— 请选择港口 —"});
+  return o;
+}
+function portNames(){ return ports.map(function(p){ return p.v; }); }
+function savePorts(){ persist("ports", ports); }
 function localAgentOpts(){
   var o = localAgents.map(function(a){ return {v:a.company, t:a.company}; });
   o.unshift({v:"", t:"— 请选择本港代理 —"});
@@ -1093,7 +1326,7 @@ function generateQuote(){
         qline("Vessel Name", s.en)+
         qline("IMO", s.imo)+
         qline("Flag", s.flag)+
-        qline("Port of Call", [s.terminal,s.berth].filter(Boolean).join(" / "))+
+        qline("Port of Call", [s.port,s.berth].filter(Boolean).join(" / "))+
       '</div></div>'+
       '<div class="q-sec"><div class="q-sec-t">FEE SCHEDULE</div>'+
         '<div class="q-feebar"><span class="q-hint">'+hint+'</span>'+curSel+'</div>'+
@@ -1219,7 +1452,7 @@ function saveNew(){
     vesselId:String(v.id),
     status:document.getElementById("f-status").value,
     principal:val("f-principal"), principalType:val("f-principalType"), voy:val("f-voy"),
-    terminal:val("f-terminal"), berth:val("f-berth"),
+    berth:val("f-berth"),
     eta:dtVal("f-eta"), etd:dtVal("f-etd"),
     todos:newTodos.filter(function(t){return t.title||t.detail;}).map(function(t){return {title:t.title,detail:t.detail,done:!!t.done};})
   };
@@ -1573,6 +1806,17 @@ function onImportFile(input){
   r.onerror = function(){ importError("读取文件失败"); };
   r.readAsText(f, "UTF-8");
 }
+var IMPORT_COLS = ["ships","vessels","agents","clients","flags","ports","vtrips","vsettings"];
+function currentColl(k){
+  return k==="ships"     ? data
+       : k==="vessels"   ? vessels
+       : k==="agents"    ? localAgents
+       : k==="clients"   ? localClients
+       : k==="flags"     ? customFlagsList()
+       : k==="ports"     ? ports
+       : k==="vtrips"    ? trips
+       : [vset];
+}
 function normalizeImport(obj){
   var out = {ships:null, vessels:null, agents:null, clients:null, flags:null};
   if(Array.isArray(obj)){
@@ -1583,6 +1827,11 @@ function normalizeImport(obj){
     if(Array.isArray(obj.agents))  out.agents  = obj.agents;
     if(Array.isArray(obj.clients)) out.clients = obj.clients;
     if(Array.isArray(obj.flags))   out.flags   = obj.flags;
+    if(Array.isArray(obj.ports))   out.ports   = obj.ports;
+    if(Array.isArray(obj.vtrips))  out.vtrips  = obj.vtrips;
+    /* 凭证设置是单条对象而非集合，这里包成一条数组以复用统计逻辑；导入时恒为覆盖 */
+    if(obj.vsettings && typeof obj.vsettings === "object" && !Array.isArray(obj.vsettings))
+      out.vsettings = [normalizeVSettings(obj.vsettings)];
     if(!out.ships && (obj.cn || obj.en)) out.ships = [obj];   /* 单条船舶 */
   }
   return out;
@@ -1642,20 +1891,25 @@ function mergeInto(cur, incoming){
 function renderImportSummary(){
   if(!importData){ hideImportSummary(); return; }
   var mode = document.querySelector('input[name="import-mode"]:checked').value;
-  var labels = {ships:"代理船舶", vessels:"船舶主数据", agents:"本港代理", clients:"委托方", flags:"自定义国籍"};
+  var labels = {ships:"代理船舶", vessels:"船舶主数据", agents:"本港代理", clients:"委托方", flags:"自定义国籍",
+                ports:"港口列表", vtrips:"凭证行程", vsettings:"凭证设置"};
   var html = '<div class="import-title">识别到以下数据</div><table class="import-tbl"><thead><tr>'+
     '<th>集合</th><th>文件记录数</th><th>'+(mode==="merge" ? "合并后总数" : "替换后总数")+'</th></tr></thead><tbody>';
-  ["ships","vessels","agents","clients","flags"].forEach(function(k){
+  IMPORT_COLS.forEach(function(k){
     var inc = importData[k];
     if(!inc || !inc.length) return;
-    var cur = k==="ships" ? data : k==="vessels" ? vessels : k==="agents" ? localAgents
-            : k==="clients" ? localClients : customFlagsList();
-    var after = mode==="merge" ? mergeInto(cur, inc).length : inc.length;
+    var cur = currentColl(k);
+    /* 凭证设置只有一条，不存在「合并」一说，两种模式下结果都是文件里那一条 */
+    var after = (k === "vsettings" || mode === "replace") ? inc.length : mergeInto(cur, inc).length;
     html += '<tr><td>'+labels[k]+'</td><td class="mono">'+inc.length+'</td><td class="mono">'+after+'</td></tr>';
   });
   html += '</tbody></table>';
+  var warn = "";
   if(mode === "replace")
-    html += '<div class="import-warn">⚠ 整表替换会清除该集合中原有的全部记录，且不可撤销。</div>';
+    warn += '⚠ 整表替换会清除该集合中原有的全部记录，且不可撤销。';
+  if(importData.vsettings && importData.vsettings.length)
+    warn += (warn ? '<br>' : '') + '凭证设置（船名 / 港口 / 乘客 / 接驳地点）是单条记录，两种模式下都以文件内容覆盖。';
+  if(warn) html += '<div class="import-warn">'+warn+'</div>';
   document.getElementById("import-summary").innerHTML = html;
   document.getElementById("import-summary").classList.remove("hidden");
   document.getElementById("import-opts").classList.remove("hidden");
@@ -1667,9 +1921,13 @@ function doImport(){
   var plan = [];
   [["ships", data, importData.ships], ["vessels", vessels, importData.vessels],
    ["agents", localAgents, importData.agents], ["clients", localClients, importData.clients],
-   ["flags", customFlagsList(), importData.flags]].forEach(function(t){
+   ["flags", customFlagsList(), importData.flags],
+   ["ports", ports, importData.ports], ["vtrips", trips, importData.vtrips],
+   ["vsettings", [vset], importData.vsettings]].forEach(function(t){
     if(!t[2] || !t[2].length) return;
-    plan.push({kind:t[0], arr: mode==="replace" ? t[2].slice() : mergeInto(t[1], t[2])});
+    /* 凭证设置恒为覆盖；其余集合按模式决定合并还是替换 */
+    var arr = (t[0] === "vsettings" || mode === "replace") ? t[2].slice() : mergeInto(t[1], t[2]);
+    plan.push({kind:t[0], arr:arr});
   });
   if(!plan.length){ importError("没有可导入的数据"); return; }
 
@@ -1679,10 +1937,13 @@ function doImport(){
     else if(p.kind === "agents")  localAgents = p.arr;
     else if(p.kind === "clients") localClients = p.arr;
     else if(p.kind === "flags")   applyCustomFlags(p.arr);
+    else if(p.kind === "ports")   ports = p.arr;
+    else if(p.kind === "vtrips")  trips = p.arr;
+    else if(p.kind === "vsettings") vset = p.arr[0] || normalizeVSettings(null);
   });
   var jobs = plan.map(function(p){ return persist(p.kind, p.arr); });
   closeImport();
-  refresh(); renderVessels(); renderAgents(); renderClients();
+  refresh(); renderVessels(); renderAgents(); renderClients(); renderVoucher();
   toast("已导入 " + plan.length + " 个集合");
   Promise.all(jobs.map(function(j){ return j.catch(function(){}); }));
 }
@@ -1694,7 +1955,10 @@ function exportJSON(){
     vessels: vessels,
     agents:  localAgents,
     clients: localClients,
-    flags:   customFlagsList()
+    flags:   customFlagsList(),
+    ports:   ports,
+    vsettings: vset,
+    vtrips:  trips
   };
   var d = new Date(), pad = function(n){ return (n<10?"0":"")+n; };
   var stamp = d.getFullYear() + pad(d.getMonth()+1) + pad(d.getDate()) + "-" + pad(d.getHours()) + pad(d.getMinutes());
@@ -1703,7 +1967,449 @@ function exportJSON(){
   a.href = URL.createObjectURL(blob);
   a.download = "ship-agency-backup-" + stamp + ".json";
   a.click();
-  toast("已导出全量备份（船舶 " + data.length + " / 主数据 " + vessels.length + " / 代理 " + localAgents.length + " / 委托方 " + localClients.length + "）");
+  toast("已导出全量备份（船舶 " + data.length + " / 主数据 " + vessels.length + " / 代理 " + localAgents.length +
+        " / 委托方 " + localClients.length + " / 行程 " + trips.length + "）");
+}
+
+/* ================== 交通凭证 Transportation Voucher ==================
+   数据全部存 Neon，不再用 localStorage：
+     ports → app_settings 键 'ports'           （单键 upsert）
+     vset  → app_settings 键 'voucherSettings' （单键 upsert；注意是对象不是数组）
+     trips → voucher_trips 表                  （整集合替换）
+   与系统本体的两个结合点：
+     ① 船名选项 = 「当前代理船舶」+「船舶主数据」；选中代理船舶时顺带带出它记录的港口
+     ② 港口列表 = 船舶详情「港口」字段与凭证 PORT 下拉共用的同一份 ports
+   需要 Neon 侧先执行 schema-voucher.sql。没执行也能打开页面，只是凭证数据不落库，
+   persist() 会认出 PGRST202 并提示去执行迁移。
+   ------------------------------------------------------------------ */
+var VSET_DEFAULT = {vessel:"", port:"", passengers:[], locations:{}};
+var vset = JSON.parse(JSON.stringify(VSET_DEFAULT));
+var trips = [];
+var vTab = "trips";
+var vcurPort = "";            /* 设置页当前编辑的港口 */
+var vSettingsRendered = false;
+
+function normalizeVSettings(o){
+  var d = JSON.parse(JSON.stringify(VSET_DEFAULT));
+  if(!o || typeof o !== "object" || Array.isArray(o)) return d;
+  d.vessel     = typeof o.vessel === "string" ? o.vessel : "";
+  d.port       = typeof o.port   === "string" ? o.port   : "";
+  d.passengers = Array.isArray(o.passengers) ? o.passengers.slice() : [];
+  if(o.locations && typeof o.locations === "object" && !Array.isArray(o.locations)){
+    Object.keys(o.locations).forEach(function(k){
+      if(Array.isArray(o.locations[k])) d.locations[k] = o.locations[k].slice();
+    });
+  }
+  return d;
+}
+function persistVSet(){ persist("vsettings", vset); }
+function persistTrips(){ persist("vtrips", trips); }
+
+/* ---------- 船名：来自系统，不在凭证里自立门户 ---------- */
+function vesselChoices(){
+  var out = [], seen = {};
+  (data||[]).forEach(function(s){
+    var nm = (s.en || s.cn || "").trim();
+    if(!nm || seen[nm]) return;
+    out.push({name:nm, cn:s.cn||"", en:s.en||"", port:s.port||"", src:"当前代理船舶"});
+    seen[nm] = 1;
+  });
+  (vessels||[]).forEach(function(v){
+    var nm = (v.en || v.cn || "").trim();
+    if(!nm || seen[nm]) return;
+    out.push({name:nm, cn:v.cn||"", en:v.en||"", port:"", src:"船舶主数据"});
+    seen[nm] = 1;
+  });
+  return out;
+}
+function vesselLabel(c){ return (c.en && c.cn && c.en !== c.cn) ? (c.en + " / " + c.cn) : (c.en || c.cn); }
+function findVesselChoice(name){
+  var list = vesselChoices();
+  for(var i=0;i<list.length;i++){ if(list[i].name === name) return list[i]; }
+  return null;
+}
+
+/* ---------- 港口：与船舶详情共用一份 ---------- */
+function ensurePortSilent(name){
+  var n = (name||"").trim();
+  if(!n || ports.some(function(p){ return p.v === n; })) return false;
+  ports.push({v:n, t:n});
+  return true;
+}
+function ensurePort(name){
+  if(!ensurePortSilent(name)) return false;
+  savePorts();
+  renderPortPicker();
+  return true;
+}
+
+/* ---------- 页面切换 / 渲染入口 ---------- */
+function renderVoucher(){
+  switchVTab(vTab || "trips");
+}
+function switchVTab(name){
+  vTab = name;
+  ["trips","settings"].forEach(function(n){
+    var p = document.getElementById("vpanel-" + n); if(p) p.classList.toggle("hidden", n !== name);
+    var b = document.getElementById("vtab-" + n);   if(b) b.classList.toggle("active", n === name);
+  });
+  if(name === "trips"){ renderVesselPicker(); renderPortPicker(); renderTrips(); }
+  else { renderSettingsPanel(); }
+}
+function renderVesselPicker(){
+  var sel = document.getElementById("v-vessel"); if(!sel) return;
+  var list = vesselChoices();
+  var html = '<option value="">— 请选择船名 —</option>' +
+    list.map(function(c){ return '<option value="'+esc(c.name)+'"'+(c.name===vset.vessel?" selected":"")+'>'+esc(vesselLabel(c))+'</option>'; }).join("");
+  if(vset.vessel && !list.some(function(c){ return c.name === vset.vessel; }))
+    html += '<option value="'+esc(vset.vessel)+'" selected>'+esc(vset.vessel)+'（系统内已无此船）</option>';
+  sel.innerHTML = html;
+  renderPickHint();
+}
+function renderPickHint(){
+  var el = document.getElementById("v-pick-hint"); if(!el) return;
+  var c = findVesselChoice(vset.vessel);
+  if(!c){
+    el.textContent = vset.vessel ? "该船名未关联到系统记录，凭证仍会使用它。"
+                                 : "先选好船名与港口，再添加行程。船名来自「当前代理船舶」与「船舶主数据」。";
+    return;
+  }
+  el.textContent = "来源：" + c.src + (c.port ? ("　·　该船记录的港口：" + c.port) : "　·　该船未登记港口");
+}
+function renderPortPicker(){
+  var sel = document.getElementById("v-port"); if(!sel) return;
+  var names = portNames();
+  var html = '<option value="">— 请选择港口 —</option>' +
+    names.map(function(p){ return '<option value="'+esc(p)+'"'+(p===vset.port?" selected":"")+'>'+esc(p)+'</option>'; }).join("");
+  if(vset.port && names.indexOf(vset.port) < 0)
+    html += '<option value="'+esc(vset.port)+'" selected>'+esc(vset.port)+'</option>';
+  sel.innerHTML = html;
+}
+function pickVessel(name){
+  vset.vessel = name || "";
+  var c = findVesselChoice(vset.vessel);
+  /* 联合 airlines：选中代理船舶时把它的港口补进港口列表并自动选中 */
+  if(c && c.port){
+    ensurePortSilent(c.port);
+    savePorts();
+    vset.port = c.port;
+    renderPortPicker();
+  }
+  persistVSet(); renderTrips(); renderPickHint(); updateTripCount();
+}
+function pickPort(name){
+  vset.port = name || "";
+  persistVSet(); renderTrips();
+}
+
+/* ---------- 行程 ---------- */
+function currentLocs(){ return (vset.locations && vset.locations[vset.port]) || []; }
+function locOptions(cur){
+  var list = currentLocs();
+  var html = '<option value="">— 请选择 —</option>' +
+    list.map(function(l){ return '<option value="'+esc(l)+'"'+(l===cur?" selected":"")+'>'+esc(l)+'</option>'; }).join("");
+  if(cur && list.indexOf(cur) < 0) html += '<option value="'+esc(cur)+'" selected>'+esc(cur)+'</option>';
+  return html;
+}
+function timeOpts(kind, cur){
+  var n = (kind === "h") ? 24 : 60, out = "", i, s;
+  for(i=0;i<n;i++){ s = (i<10?"0":"")+i; out += '<option value="'+s+'"'+(s===cur?" selected":"")+'>'+s+'</option>'; }
+  return out;
+}
+function splitTime(v){
+  v = v || "";
+  return { h: (v.slice(0,2) || "00"), m: (v.slice(3,5) || "00") };
+}
+/* 不用 <input type="time"> —— 那玩意在英文界面的 Chrome 上照样弹 AM/PM */
+function timeCell(id, val){
+  var t = splitTime(val);
+  return '<div class="tm">'+
+      '<select id="'+id+'-h" onchange="setTripTime(\''+id+'\')">'+timeOpts("h", t.h)+'</select>'+
+      '<span class="tm-c">:</span>'+
+      '<select id="'+id+'-m" onchange="setTripTime(\''+id+'\')">'+timeOpts("m", t.m)+'</select>'+
+    '</div>';
+}
+function newTripId(){
+  return trips.reduce(function(m,t){ return Math.max(m, parseInt(t.id,10) || 0); }, 0) + 1;
+}
+function isPaxOn(trip, name){ return !trip.passengers || trip.passengers.indexOf(name) >= 0; }
+function tripPax(trip){
+  var master = vset.passengers || [];
+  if(!trip.passengers) return master.slice();
+  return trip.passengers.filter(function(n){ return master.indexOf(n) >= 0; });
+}
+function renderTrips(){
+  var box = document.getElementById("v-trip-list"); if(!box) return;
+  if(!trips.length){
+    box.innerHTML = '<div class="v-empty">还没有行程。点下方「＋ 添加行程」开始。</div>';
+    updateTripCount(); return;
+  }
+  box.innerHTML = trips.map(function(t, i){
+    var master = vset.passengers || [];
+    var allOn  = master.length > 0 && master.every(function(p){ return isPaxOn(t, p); });
+    var paxHtml = master.length
+      ? '<label class="v-chk"><input type="checkbox" '+(allOn?"checked":"")+' onchange="setTripPaxAll('+i+',this.checked)"> 全选</label>' +
+        master.map(function(p){
+          return '<label class="v-chk"><input type="checkbox" '+(isPaxOn(t,p)?"checked":"")+' onchange="setTripPax('+i+',this.getAttribute(\'data-pax\'),this.checked)" data-pax="'+esc(p)+'">'+esc(p)+'</label>';
+        }).join("")
+      : '<span class="v-hint">乘客名单为空，请到「设置」页添加。</span>';
+    return '<div class="v-card'+(t.selected===false?" off":"")+'">'+
+        '<div class="v-card-head"><b>行程 '+(i+1)+'</b>'+
+          '<div class="v-tools">'+
+            '<label class="v-chk"><input type="checkbox" '+(t.selected===false?"":"checked")+' onchange="toggleTrip('+i+',this.checked)"> 选用</label>'+
+            '<button class="v-icon" onclick="moveTrip('+i+',-1)" title="上移">↑</button>'+
+            '<button class="v-icon" onclick="moveTrip('+i+',1)" title="下移">↓</button>'+
+            '<button class="v-icon" onclick="removeTrip('+i+')" title="删除本条行程">✕</button>'+
+          '</div>'+
+        '</div>'+
+        '<div class="v-grid">'+
+          '<label>日期 Date<input type="date" value="'+esc(t.date||"")+'" onchange="setTrip('+i+',\'date\',this.value)"></label>'+
+          '<label>出发时间 Start'+timeCell("vtS"+i, t.startTime)+'</label>'+
+          '<label>结束时间 End'+timeCell("vtE"+i, t.endTime)+'</label>'+
+        '</div>'+
+        '<div class="v-grid r2">'+
+          '<label>起点 From<select onchange="setTrip('+i+',\'from\',this.value)">'+locOptions(t.from)+'</select></label>'+
+          '<label>终点 To<select onchange="setTrip('+i+',\'to\',this.value)">'+locOptions(t.to)+'</select></label>'+
+        '</div>'+
+        '<div class="v-pax">'+paxHtml+'</div>'+
+      '</div>';
+  }).join("");
+  updateTripCount();
+}
+function updateTripCount(){
+  var el = document.getElementById("v-trip-count"); if(!el) return;
+  var all = trips.length;
+  var n = trips.filter(function(t){ return t.selected !== false; }).length;
+  if(!all){ el.textContent = ""; return; }
+  el.textContent = "共 " + all + " 条行程，已选用 " + n + " 条 · 约 " + Math.ceil(n/2) + " 页 A4";
+}
+function addTrip(){
+  trips.push({id:newTripId(), selected:true, date:"", startTime:"", endTime:"", from:"", to:""});
+  persistTrips(); renderTrips();
+}
+function removeTrip(i){
+  if(!trips[i]) return;
+  trips.splice(i,1); persistTrips(); renderTrips();
+}
+function moveTrip(i, dir){
+  var j = i + dir;
+  if(j < 0 || j >= trips.length) return;
+  var tmp = trips[i]; trips[i] = trips[j]; trips[j] = tmp;
+  persistTrips(); renderTrips();
+}
+function setTrip(i, k, v){
+  if(!trips[i]) return;
+  trips[i][k] = v || "";
+  persistTrips(); updateTripCount();
+}
+function setTripTime(id){
+  var i = parseInt(id.replace("vtS","").replace("vtE",""), 10);
+  if(isNaN(i) || !trips[i]) return;
+  var field = (id.indexOf("vtS") === 0) ? "startTime" : "endTime";
+  var h = document.getElementById(id+"-h"), m = document.getElementById(id+"-m");
+  trips[i][field] = (h ? h.value : "00") + ":" + (m ? m.value : "00");
+  persistTrips();
+}
+function toggleTrip(i, on){
+  if(!trips[i]) return;
+  trips[i].selected = on; persistTrips(); renderTrips();
+}
+function setTripPax(i, name, on){
+  var t = trips[i]; if(!t) return;
+  var master = vset.passengers || [];
+  if(!t.passengers) t.passengers = master.slice();       /* 由「全选」切到本地选择 */
+  var k = t.passengers.indexOf(name);
+  if(on && k < 0) t.passengers.push(name);
+  if(!on && k >= 0) t.passengers.splice(k,1);
+  persistTrips();
+}
+function setTripPaxAll(i, on){
+  var t = trips[i]; if(!t) return;
+  if(on) t.passengers = undefined;                        /* undefined = 跟随主名单 */
+  else t.passengers = [];
+  persistTrips(); renderTrips();
+}
+
+/* ---------- 设置页 ---------- */
+function renderSettingsPanel(){
+  vSettingsRendered = true;
+  if(!vcurPort) vcurPort = vset.port || (ports[0] && ports[0].v) || "";
+  var sel = document.getElementById("v-port-mgr");
+  if(sel){
+    sel.innerHTML = ports.length
+      ? ports.map(function(p){ return '<option value="'+esc(p.v)+'"'+(p.v===vcurPort?" selected":"")+'>'+esc(p.v)+'</option>'; }).join("")
+      : '<option value="">（暂无港口）</option>';
+  }
+  var ta = document.getElementById("v-locations");
+  if(ta) ta.value = ((vset.locations||{})[vcurPort]||[]).join("\n");
+  var lbl = document.getElementById("v-loc-label");
+  if(lbl) lbl.textContent = vcurPort
+    ? ("接驳地点属于港口「" + vcurPort + "」。切换上面的港口可维护各自的地点。")
+    : "请先用「＋ 新增港口」建一个港口，再给它维护接驳地点。";
+  var pt = document.getElementById("v-passengers");
+  if(pt) pt.value = (vset.passengers||[]).join("\n");
+  renderLocTags(); renderPaxTags();
+}
+function onPortMgrChange(){
+  vcurPort = document.getElementById("v-port-mgr").value || "";
+  var ta = document.getElementById("v-locations");
+  if(ta) ta.value = ((vset.locations||{})[vcurPort]||[]).join("\n");
+  var lbl = document.getElementById("v-loc-label");
+  if(lbl) lbl.textContent = vcurPort
+    ? ("接驳地点属于港口「" + vcurPort + "」。切换上面的港口可维护各自的地点。")
+    : "请先用「＋ 新增港口」建一个港口，再给它维护接驳地点。";
+  renderLocTags();
+}
+function readSettingsInputs(){
+  var ta = document.getElementById("v-locations"), pt = document.getElementById("v-passengers");
+  if(ta && vcurPort){
+    vset.locations = vset.locations || {};
+    vset.locations[vcurPort] = ta.value.split("\n").map(function(s){ return s.trim(); }).filter(Boolean);
+  }
+  if(pt) vset.passengers = pt.value.split("\n").map(function(s){ return s.trim(); }).filter(Boolean);
+}
+function saveVSettings(){
+  if(vTab === "settings" && vSettingsRendered) readSettingsInputs();
+  persistVSet();
+  renderLocTags(); renderPaxTags(); renderTrips(); renderPortPicker(); renderVesselPicker();
+  var el = document.getElementById("v-saved-at");
+  if(el) el.textContent = "已保存到数据库 · " + new Date().toLocaleTimeString("zh-CN",{hour12:false});
+  toast("设置已保存");
+}
+function promptAddPort(){
+  var n = prompt("新增港口名称（中英文均可，例如 Ningbo Port）：");
+  if(!n) return;
+  n = n.trim();
+  if(!n){ toast("港口名称不能为空"); return; }
+  if(!ensurePort(n)){ toast("该港口已存在"); return; }
+  savePorts(); vcurPort = n; renderSettingsPanel(); renderPortPicker(); toast("已新增港口：" + n);
+}
+function promptDeletePort(){
+  if(!ports.length){ toast("没有可删除的港口"); return; }
+  var p = document.getElementById("v-port-mgr").value || vcurPort;
+  if(!p){ toast("请先选择要删除的港口"); return; }
+  var used = (data||[]).filter(function(s){ return s.port === p; }).length;
+  if(used && !confirm("有 " + used + " 条代理船舶使用港口「" + p + "」。\n删除后这些记录的港口字段会失去选项（数据本身不变）。\n确认删除？")) return;
+  if(!confirm("删除港口「" + p + "」及其全部接驳地点？")) return;
+  ports = ports.filter(function(x){ return x.v !== p; });
+  delete (vset.locations||{})[p];
+  savePorts(); persistVSet();
+  if(vset.port === p) vset.port = ports[0] ? ports[0].v : "";
+  vcurPort = vset.port;
+  renderSettingsPanel(); renderPortPicker(); renderTrips(); toast("已删除港口：" + p);
+}
+function promptAddLocation(){
+  if(!vcurPort){ toast("请先选择或新增港口"); return; }
+  var n = prompt("为港口「" + vcurPort + "」新增接驳地点：");
+  if(!n || !n.trim()) return;
+  vset.locations = vset.locations || {};
+  vset.locations[vcurPort] = vset.locations[vcurPort] || [];
+  if(vset.locations[vcurPort].indexOf(n.trim()) >= 0){ toast("该地点已存在"); return; }
+  vset.locations[vcurPort].push(n.trim());
+  persistVSet(); renderSettingsPanel(); renderTrips(); toast("已新增地点");
+}
+function renderLocTags(){
+  var box = document.getElementById("v-loc-tags"); if(!box) return;
+  var l = (vset.locations||{})[vcurPort] || [];
+  box.innerHTML = l.map(function(x,i){
+    return '<span class="v-tag">'+esc(x)+'<button onclick="delLoc('+i+')" title="删除">×</button></span>';
+  }).join("");
+}
+function renderPaxTags(){
+  var box = document.getElementById("v-pax-tags"); if(!box) return;
+  box.innerHTML = (vset.passengers||[]).map(function(x,i){
+    return '<span class="v-tag">'+esc(x)+'<button onclick="delPax('+i+')" title="删除">×</button></span>';
+  }).join("");
+}
+function delLoc(i){
+  var l = (vset.locations||{})[vcurPort]; if(!l) return;
+  l.splice(i,1); persistVSet(); renderSettingsPanel(); renderTrips();
+}
+function delPax(i){
+  vset.passengers.splice(i,1); persistVSet(); renderSettingsPanel(); renderTrips();
+}
+
+/* ---------- 生成 / 打印 ---------- */
+function selectedTrips(){ return trips.filter(function(t){ return t.selected !== false; }); }
+function vcheckReady(){
+  if(!vset.vessel){ toast("请先选择船名"); return false; }
+  if(!vset.port){ toast("请先选择港口"); return false; }
+  if(!selectedTrips().length){ toast("请至少勾选一条行程"); return false; }
+  return true;
+}
+function generateVouchers(){
+  if(!vcheckReady()) return;
+  document.getElementById("voucher-print").innerHTML = selectedTrips().map(buildVoucherHtml).join("");
+  document.body.classList.add("v-preview");
+  var b = document.getElementById("v-back"); if(b) b.classList.remove("hidden");
+  window.scrollTo(0,0);
+}
+function printVouchers(){
+  if(!vcheckReady()) return;
+  var pa = document.getElementById("voucher-print");
+  pa.innerHTML = selectedTrips().map(buildVoucherHtml).join("");
+  /* 保险：万一 beforeprint 没触发（个别浏览器/嵌入场景），这里先把标记打上 */
+  if(pa.innerHTML.replace(/\s/g,"")) document.body.classList.add("v-print");
+  window.print();
+}
+function backToVoucherEdit(){
+  document.body.classList.remove("v-preview");
+  document.getElementById("v-back").classList.add("hidden");
+  document.getElementById("voucher-print").innerHTML = "";
+  window.scrollTo(0,0);
+}
+/* 打印前挂 v-print 标记。
+   只在凭证区确实有内容时才挂，否则会让「生成报价 → 打印」那条路径
+   被 body.v-print #quote-mask{display:none} 误伤成空白页。 */
+window.addEventListener("beforeprint", function(){
+  var pa = document.getElementById("voucher-print");
+  if(pa && pa.innerHTML.replace(/\s/g,"")) document.body.classList.add("v-print");
+  else document.body.classList.remove("v-print");
+});
+window.addEventListener("afterprint", function(){
+  document.body.classList.remove("v-print");
+});
+function vFmtDate(iso){
+  if(!iso) return "";
+  var d = new Date(iso);
+  if(isNaN(d)) return esc(iso);
+  return d.toLocaleDateString("en-GB", {day:"2-digit", month:"short", year:"numeric"});
+}
+function buildVoucherHtml(t){
+  var pax = tripPax(t);
+  var names = pax.length ? pax.map(function(p){ return esc(p); }).join("<br>\n") : "&nbsp;";
+  return '<div class="voucher">'+
+      '<h1>ANSUD SHIPPING AGENCY CO., LTD.</h1>'+
+      '<h2>TRANSPORTATION VOUCHER</h2>'+
+      '<table>'+
+        '<tr><td class="v-label">VESSEL NAME</td><td class="v-field-wide" colspan="3">'+esc(vset.vessel||"")+'</td></tr>'+
+        '<tr><td class="v-label">DATE</td><td class="v-field">'+vFmtDate(t.date)+'</td>'+
+            '<td class="v-label">PORT</td><td class="v-field">'+esc(vset.port||"")+'</td></tr>'+
+        '<tr><td class="v-label">TRIP TIME START</td><td class="v-field">'+esc(t.startTime||"")+'</td>'+
+            '<td class="v-label">TRIP TIME END</td><td class="v-field">'+esc(t.endTime||"")+'</td></tr>'+
+        '<tr><td class="v-label">FROM</td><td class="v-field-wide" colspan="3">'+esc(t.from||"")+'</td></tr>'+
+        '<tr><td class="v-label">TO</td><td class="v-field-wide" colspan="3">'+esc(t.to||"")+'</td></tr>'+
+        '<tr><td class="v-head" colspan="2">PASSENGERS\' NAME</td><td class="v-head" colspan="2">PASSENGERS\' SIGNATURE</td></tr>'+
+        '<tr><td colspan="2" style="height:58mm;vertical-align:top;padding:4px 8px;line-height:1.6;">'+names+'</td>'+
+            '<td colspan="2" style="height:58mm;"></td></tr>'+
+      '</table>'+
+    '</div>';
+}
+
+/* ---------- 从船舶详情直接带船名 / 港口过来 ---------- */
+function gotoVoucher(id){
+  showPage("voucher");
+  var s = (data||[]).filter(function(x){ return x.id === id; })[0];
+  if(s){
+    if(s.port) ensurePortSilent(s.port);
+    savePorts();
+    vset.vessel = (s.en || s.cn || "");
+    if(s.port) vset.port = s.port;
+    persistVSet();
+  }
+  vTab = "trips";
+  switchVTab("trips");
+  if(s) toast("已带入「" + (s.cn||s.en) + "」的船名与港口");
 }
 
 /* ---------------- boot：从 Neon 载入全量数据 ----------------
@@ -1721,6 +2427,9 @@ function boot(){
     localAgents = Array.isArray(b.agents) ? b.agents : [];
     localClients = Array.isArray(b.clients) ? b.clients : [];
     applyCustomFlags(Array.isArray(b.flags) ? b.flags : []);
+    ports      = Array.isArray(b.ports) ? b.ports : [];
+    vset       = normalizeVSettings(b.vsettings);
+    trips      = Array.isArray(b.vtrips) ? b.vtrips : [];
     var seeded = (b.seeded === true || b.seeded === "true");
 
     if(!seeded){
@@ -1734,12 +2443,55 @@ function boot(){
       legacy = lsGet(CSTORE);       if(!localClients.length && legacy && legacy.length){ localClients = backfillClients(legacy); jobs.push(persist("clients", localClients)); }
       legacy = lsGet("customFlags_v1");
       if(!customFlagsList().length && legacy && legacy.length){ applyCustomFlags(legacy); jobs.push(persist("flags", legacy)); }
+
+      /* 老 standalone 凭证工具（localStorage 键 ansud_voucher_v2）的历史数据搬进 Neon。
+         同样只在凭证那边还是空的时候搬，避免覆盖已经在库里的数据。 */
+      var vl = lsGet("ansud_voucher_v2");
+      if(vl && typeof vl === "object" && !trips.length && !(vset.passengers||[]).length &&
+         ((vl.trips||[]).length || (vl.passengers||[]).length || Object.keys(vl.ports||{}).length)){
+        vset.vessel     = (typeof vl.vesselName === "string" && vl.vesselName) ? vl.vesselName
+                        : (Array.isArray(vl.vessels) && vl.vessels.length ? String(vl.vessels[0]) : "");
+        vset.port       = (typeof vl.port === "string") ? vl.port : "";
+        vset.passengers = Array.isArray(vl.passengers) ? vl.passengers.slice() : [];
+        vset.locations  = {};
+        Object.keys(vl.ports || {}).forEach(function(k){
+          if(Array.isArray(vl.ports[k])) vset.locations[k] = vl.ports[k].slice();
+          ensurePortSilent(k);                       /* 港口名进入全系统共用的港口列表 */
+        });
+        if(!vset.port && Object.keys(vset.locations).length) vset.port = Object.keys(vset.locations)[0];
+        trips = (Array.isArray(vl.trips) ? vl.trips : []).map(function(t, i){
+          return {id:i+1, selected:t.selected!==false, date:t.date||"", startTime:t.startTime||"",
+                  endTime:t.endTime||"", from:t.from||"", to:t.to||"",
+                  passengers: Array.isArray(t.passengers) ? t.passengers.slice() : undefined};
+        });
+        jobs.push(persist("ports", ports));
+        jobs.push(persist("vsettings", vset));
+        jobs.push(persist("vtrips", trips));
+      }
+
       jobs.push(apiRpc("api_mark_seeded"));
     }
 
-    /* 迁移：「办理中(proc)」已下线，历史数据统一归为「在港」 */
+    /* 迁移一：「办理中(proc)」已下线，历史数据统一归为「在港」 */
     var changed = false;
     data.forEach(function(s){ if(s.status==="proc"){ s.status="in"; changed=true; } });
+
+    /* 迁移二：「港口 PORT」与「码头 Terminal」合并为统一的 PORT。
+       规则：
+         · 只有码头、没有港口 → 码头值直接升为 PORT
+         · 两者都有        → 拼成「港口 · 码头」，信息不丢
+         · 只有港口        → 不动
+       迁移完删掉 terminal 字段，且只跑一次（之后该字段不存在，循环自动空转）。 */
+    data.forEach(function(s){
+      var t = (s.terminal||"").trim();
+      if(!t){ delete s.terminal; return; }
+      var p = (s.port||"").trim();
+      if(!p) s.port = t;
+      else if(p.indexOf(t) < 0) s.port = p + " · " + t;
+      delete s.terminal;
+      changed = true;
+    });
+
     if(changed) jobs.push(persist("ships", data));
 
     dbRecover();
@@ -1752,6 +2504,7 @@ function boot(){
     dbFail(m);
     data = []; vessels = []; localAgents = []; localClients = [];
     applyCustomFlags([]);
+    ports = []; trips = []; vset = normalizeVSettings(null);
     refresh();
   });
 }
