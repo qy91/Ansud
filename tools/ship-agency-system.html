@@ -1482,7 +1482,7 @@ function doLogin(){
     if(/MISSING_OR_NULL_ORIGIN/.test(m))
       hint = "页面是用 file:// 直接打开的，Neon Auth 会拒绝。请改用 http 访问：运行 start-server.cmd，然后打开 http://localhost:8787";
     else if(/INVALID_ORIGIN/.test(m))
-      hint = "当前访问地址不在 Neon Auth 的可信来源里。请改用 http://localhost:8787 访问；如需用别的地址，去 Neon 控制台 Better Auth → Trusted Origins 添加。";
+      hint = "当前访问地址 " + location.origin + " 不在 Neon Auth 的可信来源里。请到 Neon 控制台 Better Auth → Trusted Origins → Add Origin，添加：" + location.origin;
     else if(/HTTP 4\d\d/.test(m))
       hint = "邮箱或密码不正确";
     err.textContent = hint;
