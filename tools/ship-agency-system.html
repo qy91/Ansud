@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>船舶代理管理系统 | Ship Agency Management System</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b5e9c'/%3E%3Ctext x='16' y='22' font-size='18' font-family='sans-serif' font-weight='bold' fill='white' text-anchor='middle'%3E%E8%88%B9%3C/text%3E%3C/svg%3E">
 <style>
   :root{
     --bg:#f4f6f9; --panel:#ffffff; --ink:#1f2a37; --muted:#6b7280;
@@ -1479,7 +1480,9 @@ function doLogin(){
   }).catch(function(e){
     var m=(e && e.message) || "登录失败";
     var hint = m;
-    if(/MISSING_OR_NULL_ORIGIN/.test(m))
+    if(/EMAIL_NOT_VERIFIED/i.test(m))
+      hint = "邮箱尚未验证。请到邮箱点一下验证链接；内部工具也可在 Neon 控制台 Better Auth 里关掉邮箱验证。";
+    else if(/MISSING_OR_NULL_ORIGIN/.test(m))
       hint = "页面是用 file:// 直接打开的，Neon Auth 会拒绝。请改用 http 访问：运行 start-server.cmd，然后打开 http://localhost:8787";
     else if(/INVALID_ORIGIN/.test(m))
       hint = "当前访问地址 " + location.origin + " 不在 Neon Auth 的可信来源里。请到 Neon 控制台 Better Auth → Trusted Origins → Add Origin，添加：" + location.origin;
@@ -1497,8 +1500,11 @@ function exportJSON(){ var blob=new Blob([JSON.stringify(data,null,2)],{type:"ap
 function resetData(){ if(!confirm("重置为演示数据？当前修改将丢失。")) return; data=seed.slice(); save(data); vessels=vesselSeed.slice(); saveVessels(vessels); localAgents=agentSeed.slice(); saveAgents(localAgents); localClients=clientSeed.slice(); saveClients(localClients); refresh(); renderVessels(); renderAgents(); renderClients(); toast("已重置"); }
 
 /* ---------------- boot：从 Neon 载入全量数据 ----------------
-   首次运行且库为空时：优先把浏览器遗留的 localStorage 搬进 Neon，
-   没有遗留数据才写入演示种子。proc→in 的状态迁移也在这里完成。 */
+   关键区分：
+     · 从未初始化过（seeded=false）→ 库为空则写入演示种子 / 搬迁 localStorage 遗留数据，
+       并置 seeded=true。只发生一次。
+     · 已初始化过（seeded=true）→ 尊重库里的现状。即使用户把数据删空了，
+       也保持空，不再重新播种。否则「删除全部数据」这个操作永远做不成。 */
 function boot(){
   apiRpc("api_bootstrap").then(function(b){
     var jobs = [];
@@ -1507,14 +1513,19 @@ function boot(){
     localAgents = Array.isArray(b.agents) ? b.agents : [];
     localClients = Array.isArray(b.clients) ? b.clients : [];
     applyCustomFlags(Array.isArray(b.flags) ? b.flags : []);
+    var seeded = (b.seeded === true || b.seeded === "true");
 
-    if(!data.length){        data = lsGet(STORE) || seed.slice();            jobs.push(persist("ships", data)); }
-    if(!vessels.length){    vessels = lsGet(VSTORE) || vesselSeed.slice();  jobs.push(persist("vessels", vessels)); }
-    if(!localAgents.length){ localAgents = backfillAgents(lsGet(ASTORE) || agentSeed.slice()); jobs.push(persist("agents", localAgents)); }
-    if(!localClients.length){ localClients = backfillClients(lsGet(CSTORE) || clientSeed.slice()); jobs.push(persist("clients", localClients)); }
-    if(!customFlagsList().length){
-      var legacyFlags = lsGet("customFlags_v1");
-      if(legacyFlags && legacyFlags.length){ applyCustomFlags(legacyFlags); jobs.push(persist("flags", legacyFlags)); }
+    if(!seeded){
+      /* 首次运行：补种子 + 标记已初始化 */
+      if(!data.length){        data = lsGet(STORE) || seed.slice();            jobs.push(persist("ships", data)); }
+      if(!vessels.length){    vessels = lsGet(VSTORE) || vesselSeed.slice();  jobs.push(persist("vessels", vessels)); }
+      if(!localAgents.length){ localAgents = backfillAgents(lsGet(ASTORE) || agentSeed.slice()); jobs.push(persist("agents", localAgents)); }
+      if(!localClients.length){ localClients = backfillClients(lsGet(CSTORE) || clientSeed.slice()); jobs.push(persist("clients", localClients)); }
+      if(!customFlagsList().length){
+        var legacyFlags = lsGet("customFlags_v1");
+        if(legacyFlags && legacyFlags.length){ applyCustomFlags(legacyFlags); jobs.push(persist("flags", legacyFlags)); }
+      }
+      jobs.push(apiRpc("api_mark_seeded"));
     }
 
     /* 迁移：「办理中(proc)」已下线，历史数据统一归为「在港」 */
