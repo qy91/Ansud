@@ -1,0 +1,1541 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>船舶代理管理系统 | Ship Agency Management System</title>
+<style>
+  :root{
+    --bg:#f4f6f9; --panel:#ffffff; --ink:#1f2a37; --muted:#6b7280;
+    --line:#e3e8ef; --brand:#0b5e9c; --brand-d:#08487a; --accent:#0e9f6e;
+    --warn:#d97706; --danger:#dc2626; --info:#2563eb;
+    --radius:12px; --shadow:0 1px 3px rgba(16,24,40,.08),0 1px 2px rgba(16,24,40,.06);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Segoe UI","Microsoft YaHei",-apple-system,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+  .hidden{display:none!important}
+
+  /* ---------- Login ---------- */
+  .login-wrap{height:100vh;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(1200px 600px at 70% -10%,#0b5e9c 0%,transparent 60%),linear-gradient(135deg,#0b3a63,#06243f)}
+  .login-card{background:#fff;border-radius:16px;padding:38px 40px;width:380px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+  .login-card h1{font-size:20px;color:var(--brand-d);display:flex;align-items:center;gap:10px}
+  .login-card .sub{color:var(--muted);font-size:13px;margin:6px 0 24px}
+  .logo{width:34px;height:34px;border-radius:8px;background:var(--brand);color:#fff;display:grid;place-items:center;font-weight:700}
+  .fld{margin-bottom:14px}
+  .fld label{display:block;font-size:13px;color:var(--ink);margin-bottom:6px}
+  .fld input,.fld select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px;background:#fff}
+  .fld input:focus,.fld select:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(11,94,156,.12)}
+  .btn{width:100%;padding:11px;border:none;border-radius:8px;background:var(--brand);color:#fff;font-size:15px;font-weight:600;cursor:pointer;transition:.15s}
+  .btn:hover{background:var(--brand-d)}
+  .btn.ghost{background:#eef2f7;color:var(--brand-d)}
+  .btn.ghost:hover{background:#e2e9f1}
+  .btn.sm{padding:8px 16px;font-size:13px;width:auto}
+  .btn.sv{background:var(--accent)} .btn.sv:hover{background:#0b8a5f}
+  .btn.danger{background:var(--danger)} .btn.danger:hover{background:#b91c1c}
+  .err{color:var(--danger);font-size:12px;margin-top:8px;min-height:16px}
+
+  /* ---------- App ---------- */
+  .topbar{background:var(--brand);color:#fff;padding:0 22px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20}
+  .topbar .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px}
+  .topbar .brand .logo{background:rgba(255,255,255,.18)}
+  .topbar .right{display:flex;align-items:center;gap:16px;font-size:13px}
+  .topbar .clock{font-variant-numeric:tabular-nums}
+  .topbar .user{display:flex;align-items:center;gap:8px}
+  .topbar .user .av{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.2);display:grid;place-items:center;font-weight:700}
+
+  .layout{display:flex;min-height:calc(100vh - 56px)}
+  .side{width:210px;background:var(--panel);border-right:1px solid var(--line);padding:14px 10px}
+  .side .nav{display:block;padding:10px 14px;border-radius:8px;color:var(--ink);font-size:14px;cursor:pointer;margin-bottom:4px;text-decoration:none}
+  .side .nav:hover{background:#eef2f7}
+  .side .nav.active{background:var(--brand);color:#fff;font-weight:600}
+  .side .sec{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding:14px 14px 6px}
+
+  .main{flex:1;padding:20px 24px;overflow:auto}
+  .page-title{font-size:20px;font-weight:700;margin-bottom:2px}
+  .page-title .en{font-size:13px;color:var(--muted);font-weight:400;margin-left:8px}
+  .page-desc{color:var(--muted);font-size:13px;margin-bottom:18px}
+
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+  .stat .k{font-size:12px;color:var(--muted)}
+  .stat .v{font-size:26px;font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums}
+  .stat .v.s{color:var(--accent)} .stat .v.w{color:var(--warn)} .stat .v.i{color:var(--info)}
+
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+  .toolbar input,.toolbar select{padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px;background:#fff}
+  .toolbar input{min-width:220px}
+  .toolbar .right{margin-left:auto;display:flex;gap:10px}
+
+  .empty{padding:40px;text-align:center;color:var(--muted);background:var(--panel);border:1px dashed var(--line);border-radius:var(--radius)}
+
+  /* detail blocks */
+  .detail-head{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 22px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px}
+  .detail-head .back{font-size:13px;color:var(--brand);cursor:pointer;display:inline-block;margin-bottom:8px}
+  .detail-head .dtitle{font-size:22px;font-weight:700}
+  .detail-head .dtitle .en{font-size:14px;color:var(--muted);font-weight:400;margin-left:8px}
+  .block{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:16px;overflow:hidden}
+  .block-h{padding:13px 20px;background:#f8fafc;border-bottom:1px solid var(--line);font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px}
+  .block-h .en{font-weight:400;font-size:12px;color:var(--muted)}
+  .block-h .count{margin-left:auto;font-size:12px;font-weight:600;color:var(--brand)}
+  .block-b{padding:6px 20px}
+  .fields-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:6px 24px;padding:12px 20px}
+  .field{padding:6px 0}
+  .flbl{font-size:12px;color:var(--muted);font-weight:600;margin-bottom:4px}
+  .flbl .fen{margin-left:6px;font-weight:400}
+  .fval{font-size:14px;color:var(--ink)}
+  .fval input,.fval select{width:100%;padding:8px 10px;border:1px solid var(--brand);border-radius:7px;font-size:14px;background:#fff;font-family:inherit}
+  .fval input:focus,.fval select:focus{outline:none;box-shadow:0 0 0 3px rgba(11,94,156,.12)}
+
+  /* fee table (agent) */
+  .fee-tbl{display:flex;flex-direction:column;gap:8px;padding:12px 20px}
+  .fee-row{display:grid;grid-template-columns:1.3fr .9fr .8fr .85fr .6fr 1.15fr 32px;gap:8px;align-items:center}
+  .fee-row.fee-head{font-size:12px;color:var(--muted);font-weight:600}
+  .fee-row input{padding:7px 9px;border:1px solid var(--brand);border-radius:6px;font-size:13px;font-family:inherit;width:100%}
+  .fee-row input:focus{outline:none;box-shadow:0 0 0 3px rgba(11,94,156,.12)}
+  .fee-row select{padding:7px 9px;border:1px solid var(--brand);border-radius:6px;font-size:13px;font-family:inherit;width:100%;background:#fff}
+  .fee-row select:focus{outline:none;box-shadow:0 0 0 3px rgba(11,94,156,.12)}
+  .fee-empty{font-size:13px;color:var(--muted)}
+
+  /* profit (detail, internal only) */
+  .profit-note{font-size:12px;color:var(--muted);font-weight:400;margin-left:8px}
+  .profit-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+  .profit-card{background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+  .profit-card .pk{font-size:12px;color:var(--muted);margin-bottom:6px}
+  .profit-card .pv{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}
+  .profit-card.pos .pv{color:#0f8a4a}
+  .profit-card.neg .pv{color:#c0392b}
+  .profit-empty{font-size:13px;color:var(--muted)}
+
+  /* quote */
+  .quote{padding:24px 28px;background:#fff;color:#1d2939;font-size:13px;line-height:1.7}
+  .quote h2{font-size:20px;margin:0 0 2px;text-align:center;letter-spacing:2px}
+  .quote .q-sub{text-align:center;color:var(--muted);font-size:12px;margin-bottom:18px}
+  .quote .q-meta{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:14px;flex-wrap:wrap;gap:6px}
+  .quote .q-sec{margin:16px 0}
+  .quote .q-sec-t{font-weight:700;font-size:13px;border-left:3px solid var(--brand);padding-left:8px;margin-bottom:8px}
+  .quote .q-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px 24px}
+  .quote .q-grid>div{display:flex;gap:10px;align-items:baseline}
+  .quote .q-grid .k{color:var(--muted);flex:0 0 auto;min-width:84px}
+  .quote table{border:1px solid #d0d7de;border-radius:0;overflow:visible;cursor:default}
+  .quote table:hover td{background:#fff}
+  .quote th{background:#f1f5f9;border:1px solid #d0d7de}
+  .quote td,.quote th{border:1px solid #d0d7de;padding:9px 10px}
+  .quote .num{text-align:right;font-variant-numeric:tabular-nums}
+  .quote .q-total{text-align:right;font-weight:700;font-size:14px;margin-top:10px}
+  .quote .q-hint{font-size:12px;color:var(--muted);margin:-2px 0 8px}
+  .quote .q-feebar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:-2px 0 8px}
+  .quote .q-feebar .q-hint{margin:0}
+  .quote .q-curwrap{font-size:12px;color:var(--muted);white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+  .quote .q-curwrap select{padding:5px 8px;border:1px solid var(--brand);border-radius:6px;font-size:13px;font-family:inherit;background:#fff;color:#1d2939}
+  .quote .q-curwrap select:focus{outline:none;box-shadow:0 0 0 3px rgba(11,94,156,.12)}
+  .quote .q-fee td.q-cur{text-align:center;color:#1d2939}
+  .quote .q-fee th{white-space:nowrap}
+  .quote .q-fee .col-chk{width:30px;text-align:center}
+  .quote .q-fee .col-del{width:34px;text-align:center}
+  .quote .q-fee input[type=text]{width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:6px;font-size:13px;font-family:inherit;background:#fff;color:#1d2939}
+  .quote .q-fee input[type=text]:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(11,94,156,.12)}
+  .quote .q-fee select{width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:6px;font-size:13px;font-family:inherit;background:#fff;color:#1d2939}
+  .quote .q-fee select:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(11,94,156,.12)}
+  .quote .q-fee td.num input{text-align:right}
+  .quote .q-fee tr.off{opacity:.45}
+  .quote .q-fee-chk{width:16px;height:16px;cursor:pointer}
+  .quote .q-fee-del{border:none;background:transparent;color:#c0392b;cursor:pointer;font-size:15px;line-height:1;padding:3px}
+  .quote .q-fee-add{margin-top:10px}
+  .quote .q-note{font-size:12px;color:var(--muted);margin-top:16px;border-top:1px dashed #d0d7de;padding-top:10px}
+  .quote .empty{padding:14px;text-align:center;color:var(--muted)}
+
+  @media print{
+    @page{margin:14mm}
+    html,body{margin:0 !important;padding:0 !important;background:#fff !important;height:auto !important}
+    body>*{display:none !important}
+    #quote-mask{display:block !important;position:static !important;inset:auto !important;background:#fff !important;padding:0 !important;overflow:visible !important;z-index:auto !important}
+    #quote-mask .modal{position:static !important;transform:none !important;width:auto !important;max-width:100% !important;max-height:none !important;height:auto !important;box-shadow:none !important;border:none !important;border-radius:0 !important;margin:0 !important;overflow:visible !important}
+    #quote-mask .mh,#quote-mask .mf{display:none !important}
+    #quote-mask .mb{position:static !important;padding:0 !important;max-height:none !important;height:auto !important;overflow:visible !important}
+    .quote{border:none !important;padding:0 !important}
+    .quote .q-sec,.quote table{break-inside:avoid;page-break-inside:avoid}
+    .quote input[type=text]{border:none !important;background:transparent !important;padding:0 !important;height:auto !important;color:#1d2939 !important;font-size:13px !important}
+    .quote select{border:none !important;background:transparent !important;padding:0 !important;height:auto !important;color:#1d2939 !important;font-size:13px !important;-webkit-appearance:none;appearance:none}
+    .quote .q-fee th.col-chk,.quote .q-fee td.col-chk,
+    .quote .q-fee th.col-del,.quote .q-fee td.col-del{display:none !important}
+    .quote .q-fee tr.off{display:none !important}
+    .quote .q-hint,.quote .q-fee-add,.quote .q-curwrap{display:none !important}
+  }
+
+  /* todo */
+  .todo{border-bottom:1px solid var(--line)}
+  .todo:last-child{border-bottom:none}
+  .todo-row{display:flex;align-items:center;gap:12px;padding:12px 4px;cursor:pointer}
+  .todo-row:hover{background:#f9fbfd}
+  .todo-ck{width:20px;height:20px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-size:12px;color:#fff;flex-shrink:0}
+  .todo-ck.on{background:var(--accent);border-color:var(--accent)}
+  .todo-title{flex:1;font-size:14px;font-weight:600}
+  .todo-arrow{color:var(--muted);transition:.15s;font-size:13px}
+  .todo-detail{padding:0 4px 14px 36px;color:var(--muted);font-size:13px;white-space:pre-wrap}
+  .todo-edit{padding:12px 4px;border-bottom:1px solid var(--line)}
+  .todo-edit:last-of-type{border-bottom:none}
+  .todo-edit-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+  .todo-edit-head .ti{flex:1;padding:8px 10px;border:1px solid var(--brand);border-radius:7px;font-size:14px}
+  .todo-edit-head .ck{font-size:13px;display:flex;align-items:center;gap:4px;white-space:nowrap}
+  .todo-edit .td{width:100%;min-height:64px;padding:8px 10px;border:1px solid var(--line);border-radius:7px;font-size:13px;font-family:inherit;resize:vertical}
+  .todo-edit .td:focus{outline:none;border-color:var(--brand)}
+
+  .detail-actions{margin-top:4px;display:flex;gap:10px;flex-wrap:wrap}
+
+  table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+  th,td{padding:11px 14px;text-align:left;font-size:13px;border-bottom:1px solid var(--line)}
+  th{background:#f8fafc;color:var(--muted);font-weight:600;white-space:nowrap}
+  tr:hover td{background:#f9fbfd;cursor:pointer}
+  td.mono{font-variant-numeric:tabular-nums}
+
+  .badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600}
+  .b-in{background:#dcfce7;color:#15803d}
+  .b-arr{background:#fef3c7;color:#b45309}
+  .b-out{background:#e5e7eb;color:#4b5563}
+  .b-proc{background:#dbeafe;color:#1d4ed8}
+  .icon-btn{border:1px solid var(--line);background:#fff;border-radius:7px;padding:6px 10px;font-size:13px;cursor:pointer;color:var(--ink)}
+  .icon-btn:hover{background:#f1f5f9}
+  .icon-btn.danger:hover{background:#fee2e2;color:var(--danger);border-color:#fecaca}
+
+  .mask{position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:flex-start;justify-content:center;z-index:50;padding:40px 16px;overflow:auto}
+  .modal{background:#fff;border-radius:14px;width:560px;max-width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+  .modal .mh{padding:16px 20px;border-bottom:1px solid var(--line);font-weight:700;font-size:16px}
+  .modal .mb{padding:18px 20px}
+  .modal .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .modal .mf{padding:14px 20px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:flex-end}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1f2a37;color:#fff;padding:11px 20px;border-radius:10px;font-size:14px;z-index:80;box-shadow:0 10px 30px rgba(0,0,0,.3);opacity:0;transition:.25s;pointer-events:none}
+  .toast.show{opacity:1}
+  .lang{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:7px;padding:4px 10px;font-size:12px;cursor:pointer}
+  .lang:hover{background:rgba(255,255,255,.28)}
+  #db-banner{display:none;position:sticky;top:0;z-index:9999;background:#b42318;color:#fff;font-size:13px;line-height:1.55;padding:10px 16px;box-shadow:0 2px 12px rgba(0,0,0,.25)}
+  #db-banner.show{display:block}
+  @media(max-width:900px){.side{display:none}.stats{grid-template-columns:repeat(2,1fr)}.modal .grid2{grid-template-columns:1fr}.drow{grid-template-columns:120px 1fr}}
+</style>
+</head>
+<body>
+<div id="db-banner"></div>
+
+<!-- ===================== LOGIN ===================== -->
+<div id="login" class="login-wrap">
+  <div class="login-card">
+    <h1><span class="logo">船</span> 船舶代理管理系统</h1>
+    <div class="sub">Ship Agency Management System · 请登录进入系统</div>
+    <div class="fld">
+      <label>邮箱 / Email</label>
+      <input id="lg-user" placeholder="如 ops@company.com" value="">
+    </div>
+    <div class="fld">
+      <label>密码 / Password</label>
+      <input id="lg-pass" type="password" placeholder="登录密码" value="">
+    </div>
+    <button class="btn" onclick="doLogin()">进入系统 / Enter</button>
+    <div id="lg-err" class="err"></div>
+    <div style="margin-top:14px;font-size:12px;color:var(--muted);text-align:center">账号由管理员在 Neon Auth 分配，本系统不开放自助注册</div>
+  </div>
+</div>
+
+<!-- ===================== APP ===================== -->
+<div id="app" class="hidden">
+  <div class="topbar">
+    <div class="brand"><span class="logo">船</span> 船舶代理管理系统</div>
+    <div class="right">
+      <span class="clock" id="clock"></span>
+      <div class="user"><span class="av" id="av">A</span><span id="uname">agency</span></div>
+      <button class="lang" onclick="doLogout()">退出</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div class="side">
+      <div class="sec">导航菜单</div>
+      <a class="nav active" data-page="dashboard" onclick="showPage('dashboard');renderDashboard()">📋 当前代理船舶</a>
+      <a class="nav" data-page="vessels" onclick="showPage('vessels');renderVessels()">🛠 船舶基本信息维护</a>
+      <a class="nav" data-page="agents" onclick="showPage('agents');renderAgents()">🤝 本港代理维护</a>
+      <a class="nav" data-page="clients" onclick="showPage('clients');renderClients()">🏢 委托方信息维护</a>
+      <a class="nav" onclick="openModal()">➕ 新增代理船舶</a>
+      <div class="sec">数据</div>
+      <a class="nav" onclick="exportJSON()">⬇ 导出数据</a>
+      <a class="nav" onclick="resetData()">♻ 重置演示数据</a>
+    </div>
+
+    <div class="main">
+      <!-- DASHBOARD (list) -->
+      <div id="page-dashboard" class="page">
+        <div class="page-title">当前代理船舶 <span class="en">Vessels Under Agency</span></div>
+        <div class="page-desc">点击任意船舶行进入详情页查看与编辑。</div>
+
+        <div class="stats">
+          <div class="stat"><div class="k">在港船舶 In Port</div><div class="v s" id="st-in">0</div></div>
+          <div class="stat"><div class="k">即将到港 Arriving</div><div class="v w" id="st-arr">0</div></div>
+          <div class="stat"><div class="k">今日离港 Departing</div><div class="v i" id="st-out">0</div></div>
+          <div class="stat"><div class="k">代理总数 Total</div><div class="v" id="st-total">0</div></div>
+        </div>
+
+        <div class="toolbar">
+          <input id="search" placeholder="🔍 搜索船名 / 码头 / 航次…" oninput="renderDashboard()">
+          <select id="filter-status" onchange="renderDashboard()">
+            <option value="">全部状态</option>
+            <option value="in">在港</option>
+            <option value="arr">即将到港</option>
+            <option value="out">已离港</option>
+          </select>
+          <div class="right"><button class="btn sm" onclick="openModal()">＋ 新增船舶</button></div>
+        </div>
+
+        <table>
+          <thead><tr>
+            <th>中文船名</th><th>英文船名</th><th>码头 / 泊位</th>
+            <th>靠泊时间 ETA</th><th>离泊时间 ETD</th><th>状态</th>
+          </tr></thead>
+          <tbody id="ship-tbody"></tbody>
+        </table>
+      </div>
+
+      <!-- VESSEL MASTER -->
+      <div id="page-vessels" class="page hidden">
+        <div class="page-title">船舶基本信息维护 <span class="en">Vessel Master</span></div>
+        <div class="page-desc">维护船舶主数据（船名 / IMO / MMSI / 国籍 / 船长 / 船宽 / 净吨）。新增代理船舶时可直接从此处选取，自动带出基本信息。</div>
+        <div class="toolbar">
+          <input id="search-v" placeholder="🔍 搜索船名 / IMO…" oninput="renderVessels()">
+          <div class="right"><button class="btn sm" onclick="openVesselModal()">＋ 新增船舶</button></div>
+        </div>
+        <table>
+          <thead><tr>
+            <th>中文船名</th><th>英文船名</th><th>IMO</th><th>MMSI</th><th>国籍</th><th>船长(m)</th><th>船宽(m)</th><th>净吨</th><th>操作</th>
+          </tr></thead>
+          <tbody id="vessel-tbody"></tbody>
+        </table>
+      </div>
+
+      <!-- LOCAL AGENT MASTER -->
+      <div id="page-agents" class="page hidden">
+        <div class="page-title">本港代理信息维护 <span class="en">Local Agent Master</span></div>
+        <div class="page-desc">维护本港代理公司档案（中英文公司名 / 联系人 / 邮箱电话 / 中英文地址 / 邮编 / 备注 / 收费价格表）。新增代理船舶时「本港代理」可从此处选取。</div>
+        <div class="toolbar">
+          <input id="search-a" placeholder="🔍 搜索公司 / 联系人 / 电话 / 邮箱…" oninput="renderAgents()">
+          <div class="right"><button class="btn sm" onclick="openAgentModal()">＋ 新增代理</button></div>
+        </div>
+        <table>
+          <thead><tr>
+            <th>公司名</th><th>联系人</th><th>电话</th><th>邮箱</th><th>地址 / 邮编</th><th>收费项目数</th><th>备注</th><th>操作</th>
+          </tr></thead>
+          <tbody id="agent-tbody"></tbody>
+        </table>
+      </div>
+
+      <!-- CLIENT (委托方) MASTER -->
+      <div id="page-clients" class="page hidden">
+        <div class="page-title">委托方信息维护 <span class="en">Client Master</span></div>
+        <div class="page-desc">维护委托方档案（公司名称 / 姓名 / 职位 / 电话 / 手机 / 地址 / 邮箱 / 备注）。新增代理船舶时「委托方」可从此处选取。</div>
+        <div class="toolbar">
+          <input id="search-c" placeholder="🔍 搜索公司 / 姓名 / 电话 / 邮箱…" oninput="renderClients()">
+          <div class="right"><button class="btn sm" onclick="openClientModal()">＋ 新增委托方</button></div>
+        </div>
+        <table>
+          <thead><tr>
+            <th>公司名称</th><th>姓名</th><th>职位</th><th>电话</th><th>手机</th><th>邮箱</th><th>地址</th><th>备注</th><th>操作</th>
+          </tr></thead>
+          <tbody id="client-tbody"></tbody>
+        </table>
+      </div>
+
+      <!-- DETAIL -->
+      <div id="page-detail" class="page hidden">
+        <div class="detail-head">
+          <div>
+            <span class="back" onclick="showPage('dashboard');renderDashboard()">‹ 返回列表</span>
+            <div class="dtitle" id="detail-title"></div>
+          </div>
+          <div id="detail-status"></div>
+        </div>
+
+        <div class="block">
+          <div class="block-h">🚢 船舶基本信息 <span class="en">Basic Information</span></div>
+          <div class="block-b fields-grid" id="blk-basic"></div>
+        </div>
+
+        <div class="block">
+          <div class="block-h">🧭 船舶航次信息 <span class="en">Voyage Information</span></div>
+          <div class="block-b fields-grid" id="blk-voyage"></div>
+        </div>
+
+        <div class="block">
+          <div class="block-h">📋 待办事项 <span class="en">To-Do List</span> <span id="todo-count" class="count"></span></div>
+          <div class="block-b" id="blk-todo"></div>
+        </div>
+
+        <div class="block">
+          <div class="block-h">💰 预估毛利 <span class="en">Estimated Margin</span><span class="profit-note">仅内部可见 · 依据本港代理维护的成本价 / 对外报价核算</span></div>
+          <div class="block-b" id="blk-profit"></div>
+        </div>
+
+        <div class="detail-actions">
+          <button class="btn sm sv" id="detail-edit-btn" onclick="startEdit()">编辑</button>
+          <button class="btn sm ghost hidden" id="detail-cancel-btn" onclick="cancelEdit()">取消</button>
+          <button class="btn sm danger hidden" id="detail-delete-btn" onclick="detailDelete()">删除</button>
+          <button class="btn sm" id="detail-quote-btn" onclick="generateQuote()">📄 生成报价</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL (新增) ===================== -->
+<div id="mask" class="mask hidden" onclick="if(event.target===this)closeModal()">
+  <div class="modal" style="width:720px;max-width:100%">
+    <div class="mh">新增代理船舶</div>
+    <div class="mb" id="modal-body"></div>
+    <div class="mf">
+      <button class="btn ghost sm" onclick="closeModal()">取消</button>
+      <button class="btn sm" onclick="saveNew()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== VESSEL MODAL ===================== -->
+<div id="vessel-mask" class="mask hidden" onclick="if(event.target===this)closeVesselModal()">
+  <div class="modal" style="width:680px;max-width:100%">
+    <div class="mh" id="vessel-mh">新增船舶</div>
+    <div class="mb" id="vessel-body"></div>
+    <div class="mf">
+      <button class="btn ghost sm" onclick="closeVesselModal()">取消</button>
+      <button class="btn sm" onclick="saveVessel()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== AGENT MODAL ===================== -->
+<div id="agent-mask" class="mask hidden" onclick="if(event.target===this)closeAgentModal()">
+  <div class="modal" style="width:880px;max-width:100%">
+    <div class="mh" id="agent-mh">新增本港代理</div>
+    <div class="mb">
+      <div class="fields-grid">
+        <div class="field"><div class="flbl">公司名<span class="fen">Company</span></div><div class="fval"><input id="ag-company" type="text" placeholder="如：洋山港船务代理有限公司"></div></div>
+        <div class="field"><div class="flbl">英文公司名<span class="fen">Company (EN)</span></div><div class="fval"><input id="ag-company-en" type="text" placeholder="e.g. Yangshan Port Shipping Agency Co., Ltd."></div></div>
+        <div class="field"><div class="flbl">联系人<span class="fen">Contact</span></div><div class="fval"><input id="ag-contact" type="text" placeholder="如：王经理"></div></div>
+        <div class="field"><div class="flbl">电话<span class="fen">Phone</span></div><div class="fval"><input id="ag-phone" type="text" placeholder="如：138-0000-0000"></div></div>
+        <div class="field"><div class="flbl">邮箱<span class="fen">Email</span></div><div class="fval"><input id="ag-email" type="text" placeholder="如：ops@agent.com"></div></div>
+        <div class="field" style="grid-column:1/-1"><div class="flbl">地址<span class="fen">Address</span></div><div class="fval"><input id="ag-address" type="text" placeholder="如：上海市浦东新区某路 88 号"></div></div>
+        <div class="field" style="grid-column:1/-1"><div class="flbl">英文地址<span class="fen">Address (EN)</span></div><div class="fval"><input id="ag-address-en" type="text" placeholder="e.g. No.99 West Huanhu Rd, Pudong New Area, Shanghai"></div></div>
+        <div class="field"><div class="flbl">邮编<span class="fen">Postcode</span></div><div class="fval"><input id="ag-postcode" type="text" placeholder="如：201306"></div></div>
+        <div class="field"><div class="flbl">备注<span class="fen">Remarks</span></div><div class="fval"><input id="ag-remark" type="text" placeholder="如：24 小时值班 / 兼营拖轮"></div></div>
+      </div>
+      <div class="block" style="margin-top:14px">
+        <div class="block-h">💰 收费价格表 <span class="en">Fee Schedule</span></div>
+        <div class="fee-tbl">
+          <div class="fee-row fee-head"><span>收费项目</span><span>计费单位</span><span>成本价</span><span>对外报价</span><span>币种</span><span>备注</span><span></span></div>
+          <div id="agent-fees"></div>
+        </div>
+        <button class="btn sm ghost" style="margin-top:10px" onclick="addAgentFee()">＋ 添加收费项</button>
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn ghost sm" onclick="closeAgentModal()">取消</button>
+      <button class="btn sm" onclick="saveAgent()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== CLIENT MODAL ===================== -->
+<div id="client-mask" class="mask hidden" onclick="if(event.target===this)closeClientModal()">
+  <div class="modal" style="width:720px;max-width:100%">
+    <div class="mh" id="client-mh">新增委托方</div>
+    <div class="mb">
+      <div class="fields-grid">
+        <div class="field" style="grid-column:1/-1"><div class="flbl">公司名称<span class="fen">Company</span></div><div class="fval"><input id="cl-company" type="text" placeholder="如：中远海运集装箱运输有限公司"></div></div>
+        <div class="field"><div class="flbl">姓名<span class="fen">Contact Name</span></div><div class="fval"><input id="cl-name" type="text" placeholder="如：陈志远"></div></div>
+        <div class="field"><div class="flbl">职位<span class="fen">Title</span></div><div class="fval"><input id="cl-title" type="text" placeholder="如：船务部经理"></div></div>
+        <div class="field"><div class="flbl">电话号码<span class="fen">Telephone</span></div><div class="fval"><input id="cl-phone" type="text" placeholder="如：021-6596-1001"></div></div>
+        <div class="field"><div class="flbl">手机号码<span class="fen">Mobile</span></div><div class="fval"><input id="cl-mobile" type="text" placeholder="如：139-0180-1001"></div></div>
+        <div class="field" style="grid-column:1/-1"><div class="flbl">地址<span class="fen">Address</span></div><div class="fval"><input id="cl-address" type="text" placeholder="如：上海市虹口区东大名路 700 号"></div></div>
+        <div class="field" style="grid-column:1/-1"><div class="flbl">邮箱<span class="fen">Email</span></div><div class="fval"><input id="cl-email" type="text" placeholder="如：ops@client.com"></div></div>
+        <div class="field" style="grid-column:1/-1"><div class="flbl">备注<span class="fen">Remarks</span></div><div class="fval"><input id="cl-remark" type="text" placeholder="如：优先联系人 / 结算账期 30 天"></div></div>
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn ghost sm" onclick="closeClientModal()">取消</button>
+      <button class="btn sm" onclick="saveClient()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== QUOTE MODAL ===================== -->
+<div id="quote-mask" class="mask hidden" onclick="if(event.target===this)closeQuote()">
+  <div class="modal" style="width:840px;max-width:100%">
+    <div class="mh">Quotation <span class="en">船舶代理报价单</span>
+      <button class="btn ghost sm" style="float:right;margin-top:-2px" onclick="window.print()">🖨 打印 / 导出 PDF</button>
+    </div>
+    <div class="mb" id="quote-body" style="padding:0"></div>
+    <div class="mf">
+      <button class="btn ghost sm" onclick="closeQuote()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script src="config.js"></script>
+<script>
+/* ---------------- i18n ---------------- */
+var L = {
+  zh:{in:"在港",arr:"即将到港",out:"已离港",proc:"办理中"},
+  en:{in:"In Port",arr:"Arriving",out:"Departed",proc:"Processing"}
+};
+var lang = "zh";
+
+/* ---------------- Neon Data API + Neon Auth ---------------- */
+/* 无后端方案：读写走 Data API 的 PostgREST 兼容 RPC，
+   服务端逻辑是 schema.sql 里的 api_bootstrap / api_save_* 函数。
+   JWT 由 Neon Auth 签发（约 15 分钟有效），登录页自动获取并在过期前续期。 */
+var NEON = (window.NEON_CONFIG) || {url:"", authUrl:""};
+var TOKEN = null, TOKEN_EXP = 0, CREDS = null, REFRESHING = null;
+
+function authReady(){ return !!authBase(); }
+function dataReady(){ return !!NEON.url; }
+/* Neon Auth 根地址。控制台给的 Auth URL 形如
+   https://xxx.neonauth.<region>.aws.neon.tech/neondb/auth
+   末尾的 /auth 是路由前缀，必须保留；各接口再拼 /sign-in/email、/token、/sign-up/email。
+   这里只做去斜杠归一，不要剥 /auth（剥了会导致 /neondb/token 404）。 */
+function authBase(){
+  return (NEON.authUrl || "").replace(/\/+$/,"");
+}
+
+/* 说明：自助注册已按需求关闭。Neon Auth 的 /auth/sign-up/email 接口本身仍然开放
+   （Neon 暂不支持限制注册），若需彻底禁止需在 Neon 控制台开启邮箱验证，
+   或后续改由服务端中转。需要重新开放自助注册时，取消下面注释即可。 */
+/*
+function signUp(email, password, name){
+  if(!authReady()) return Promise.reject(new Error("未配置 config.js 里的 authUrl"));
+  return fetch(authBase() + "/sign-up/email", {
+    method:"POST",
+    credentials:"include",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({email:email, password:password, name:name || email})
+  }).then(function(r){
+    if(!r.ok) return r.text().then(function(t){ throw new Error("注册失败 HTTP " + r.status + " " + t.slice(0,200)); });
+    return r.json();
+  });
+}
+*/
+/* 从 JWT 里解出 exp（base64url，不验签，只取过期时间） */
+function jwtExp(jwt){
+  try{
+    var p = JSON.parse(atob(jwt.split(".")[1].replace(/-/g,"+").replace(/_/g,"/")));
+    return p.exp || 0;
+  }catch(e){ return 0; }
+}
+
+/* 用邮箱密码向 Neon Auth 换 JWT —— 两步：
+   ① POST /auth/sign-in/email 拿「会话 token」（同时服务端种下会话 cookie）
+   ② GET  /auth/token         用会话 cookie 换「JWT」（Data API 要的是这个）
+   注意：跨域请求必须带 credentials:"include"，否则 cookie 不随请求发送，② 会 401 */
+function signIn(email, password, force){
+  if(!authReady()) return Promise.reject(new Error("未配置 config.js 里的 authUrl"));
+  if(TOKEN && !force && TOKEN_EXP - Date.now()/1000 > 60) return Promise.resolve(TOKEN);
+  if(REFRESHING) return REFRESHING;
+  CREDS = {email:email, password:password};
+  REFRESHING = fetch(authBase() + "/sign-in/email", {
+    method:"POST",
+    credentials:"include",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({email:email, password:password})
+  }).then(function(r){
+    if(!r.ok) return r.text().then(function(t){ throw new Error("登录失败 HTTP " + r.status + " " + t.slice(0,200)); });
+    return r.json();
+  }).then(function(j){
+    if(!j || !j.token) throw new Error("Neon Auth 未返回会话 token：" + JSON.stringify(j).slice(0,200));
+    return fetch(authBase() + "/token", { credentials:"include" }).then(function(r){
+      if(!r.ok) return r.text().then(function(t){
+        throw new Error("换取 JWT 失败 HTTP " + r.status + " " + t.slice(0,200) +
+          "（浏览器若拦截了第三方 cookie，请换 Chrome 或允许第三方 cookie）");
+      });
+      return r.json();
+    });
+  }).then(function(t){
+    var jwt = t && t.token;
+    if(!jwt) throw new Error("Neon Auth 未返回 JWT：" + JSON.stringify(t).slice(0,200));
+    TOKEN = jwt;
+    TOKEN_EXP = jwtExp(jwt) || (Date.now()/1000 + 900);
+    return TOKEN;
+  }).finally(function(){ REFRESHING = null; });
+  return REFRESHING;
+}
+function signOut(){ TOKEN=null; TOKEN_EXP=0; CREDS=null; }
+
+/* 取一个可用 token：未过期直接用；快过期且有凭据就续期；都没有则报错 */
+function currentToken(){
+  if(TOKEN && TOKEN_EXP - Date.now()/1000 > 60) return Promise.resolve(TOKEN);
+  if(CREDS) return signIn(CREDS.email, CREDS.password, true);
+  if(TOKEN) return Promise.resolve(TOKEN); /* 已过期但无凭据，仍发一次让服务端报 401 */
+  return Promise.reject(new Error("尚未登录，无法访问数据库"));
+}
+function apiRpc(fn, body){
+  if(!dataReady()) return Promise.reject(new Error("未配置 config.js 里的 url"));
+  /* url 已含 /rest/v1（控制台原文），这里只拼 /rpc/<函数名> */
+  var base = NEON.url.replace(/\/+$/,"");
+  var attempt = function(tk, force){
+    return fetch(base + "/rpc/" + fn, {
+      method:"POST",
+      headers:{
+        "Authorization":"Bearer " + tk,
+        "Content-Type":"application/json",
+        "Accept":"application/json"
+      },
+      body: JSON.stringify(body || {})
+    }).then(function(r){
+      /* token 过期 / 失效：重新登录一次再重试 */
+      if(r.status===401 && !force && CREDS){
+        return signIn(CREDS.email, CREDS.password, true).then(function(ntk){
+          return attempt(ntk, true);
+        });
+      }
+      if(!r.ok) return r.text().then(function(t){ throw new Error(fn + " → HTTP " + r.status + " " + t.slice(0,200)); });
+      return r.json();
+    });
+  };
+  return currentToken().then(attempt);
+}
+function dbFail(msg){
+  var el=document.getElementById("db-banner");
+  if(el){
+    el.innerHTML = "⚠ <b>数据库未连通，改动不会保存。</b><br>" + String(msg).replace(/</g,"&lt;") +
+      "<br>请检查 config.js 的 url / authUrl，并确认 schema.sql 已在 Neon 执行、账号密码正确。";
+    el.classList.add("show");
+  }
+}
+function dbRecover(){ var el=document.getElementById("db-banner"); if(el) el.classList.remove("show"); }
+/* 统一写入口：kind ∈ ships | vessels | agents | clients | flags */
+function persist(kind, arr){
+  return apiRpc("api_save_" + kind, {p_items: arr})
+    .then(function(){ dbRecover(); })
+    .catch(function(e){
+      dbFail(e.message);
+      toast("保存失败：未写入数据库");
+    });
+}
+/* 仅用于把浏览器里遗留的 localStorage 数据一次性搬进 Neon */
+function lsGet(k){ try{ var s=localStorage.getItem(k); return s?JSON.parse(s):null; }catch(e){ return null; } }
+
+/* ---------------- data ---------------- */
+var STORE = "shipAgencyData_v2";
+var seed = [
+  {id:1, vesselId:1, cn:"中远海运之星", en:"COSCO Star", imo:"9789089", mmsi:"413123456", flag:"中国 CHINA", loa:"366", beam:"51", nt:"101274",
+   principal:"中远海运集装箱运输有限公司", principalType:"国内总代", localAgent:"洋山港船务代理有限公司", voy:"V.2608E", terminal:"洋山深水港 一期", berth:"3# 泊位",
+   eta:"2026-10-08 06:30", etd:"2026-10-08 22:00", status:"in",
+   todos:[
+     {title:"船员更换",detail:"计划 10/09 上下 8 名船员，需办理边检、工作许可及行李清关。代理：王经理 138-xxxx-xxxx。",done:false},
+     {title:"申请 SSCEC",detail:"向中国船东互保协会申请船舶证书（SSCEC），资料已邮件发送，截止 10/08 18:00。",done:false},
+     {title:"CTM 燃油加注",detail:"联系供应商安排 300MT VLSFO，靠泊后 2 小时内完成。",done:true}
+   ]},
+  {id:2, vesselId:2, cn:"马士基杭州", en:"Maersk Hangzhou", imo:"9456472", mmsi:"412567890", flag:"新加坡 SINGAPORE", loa:"399", beam:"59", nt:"115437",
+   principal:"马士基（中国）航运", principalType:"船东", localAgent:"宁波港船务代理有限公司", voy:"V.4412W", terminal:"宁波舟山港 北仑", berth:"7# 泊位",
+   eta:"2026-10-08 09:00", etd:"2026-10-09 04:30", status:"in",
+   todos:[
+     {title:"联检安排",detail:"海关、边检、海事联合检查，预计靠泊后 1 小时。",done:false},
+     {title:"CTM 淡水供应",detail:"加淡水 200 吨，联系码头水车。",done:false}
+   ]},
+  {id:3, vesselId:3, cn:"地中海航运凤凰", en:"MSC Phoenix", imo:"9313571", mmsi:"355671000", flag:"巴拿马 PANAMA", loa:"366", beam:"48", nt:"99820",
+   principal:"地中海航运（MSC）", principalType:"船管", localAgent:"上海外代外高桥分公司", voy:"V.8801", terminal:"上海外高桥 二期", berth:"2# 泊位",
+   eta:"2026-10-08 14:00", etd:"2026-10-09 10:00", status:"arr",
+   todos:[
+     {title:"船员更换",detail:"更换船长及 3 名高级船员，需提前报备边检。",done:false},
+     {title:"申请 SSCEC",detail:"证书续期，资料待船东提供。",done:false}
+   ]},
+  {id:4, vesselId:4, cn:"长荣翡翠", en:"Evergreen Jade", imo:"9234721", mmsi:"416123000", flag:"中国台湾 TAIWAN", loa:"334", beam:"43", nt:"89211",
+   principal:"长荣海运", principalType:"租家", localAgent:"盐田国际船务代理有限公司", voy:"V.1255", terminal:"盐田国际 西港", berth:"9# 泊位",
+   eta:"2026-10-07 20:00", etd:"2026-10-08 16:00", status:"out",
+   todos:[{title:"离港手续",detail:"已办结关、吨税及离港证。",done:true}]},
+  {id:5, vesselId:5, cn:"达飞路易斯", en:"CMA CGM Louis", imo:"9451238", mmsi:"228123456", flag:"法国 FRANCE", loa:"396", beam:"54", nt:"108765",
+   principal:"达飞轮船（CMA CGM）", principalType:"船东", localAgent:"青岛港船务代理有限公司", voy:"V.7330", terminal:"青岛前湾 三期", berth:"11# 泊位",
+   eta:"2026-10-08 11:30", etd:"2026-10-08 19:30", status:"in",
+   todos:[
+     {title:"加油代理",detail:"加油 500MT，联检与加油同步办理中。",done:false},
+     {title:"CTM 物料供应",detail:"补给伙食及备件，联系供货商。",done:false}
+   ]},
+  {id:6, vesselId:6, cn:"中海环球", en:"China Shipping Globe", imo:"9700156", mmsi:"413987654", flag:"中国 CHINA", loa:"400", beam:"58", nt:"119302",
+   principal:"中海集运", principalType:"国内总代", localAgent:"天津港船务代理有限公司", voy:"V.3099N", terminal:"天津港 集装箱", berth:"5# 泊位",
+   eta:"2026-10-08 16:45", etd:"2026-10-09 08:00", status:"arr",
+   todos:[{title:"冷藏箱检修",detail:"600 TEU 冷藏箱温度巡检，联系冷藏工程师。",done:false}]}
+];
+function save(d){ persist("ships", d); }
+/* data 由 boot() 从 Neon 拉取后填充；proc→in 的迁移也在 boot() 里做 */
+var data = [];
+
+/* ---------------- vessel master ---------------- */
+var VSTORE = "vesselMaster_v1";
+var vesselSeed = seed.map(function(s){ return {id:s.id, cn:s.cn, en:s.en, imo:s.imo, mmsi:s.mmsi, flag:s.flag, loa:s.loa, beam:s.beam, nt:s.nt}; });
+function saveVessels(d){ persist("vessels", d); }
+var vessels = [];
+
+/* ---------------- local agent master ---------------- */
+var ASTORE = "localAgentMaster_v1";
+var agentSeed = [
+  {id:1, company:"洋山港船务代理有限公司", companyEn:"Yangshan Port Shipping Agency Co., Ltd.", contact:"王经理", phone:"138-0210-0001", email:"ops@yangshan-agent.com",
+   address:"上海市浦东新区临港新片区环湖西一路 99 号", addressEn:"No.99 West Huanhu Rd, Lin-gang Special Area, Pudong New Area, Shanghai", postcode:"201306",
+   remark:"24 小时值班，可协调引航 / 拖轮",
+   fees:[
+     {item:"船舶代理费", unit:"每艘次", cost:"2,800", price:"3,500", currency:"CNY", note:"含联检、单证、靠离泊协调"},
+     {item:"港口使费代办", unit:"每艘次", cost:"900", price:"1,200", currency:"CNY", note:"代缴港建费、吨税"},
+     {item:"淡水供应", unit:"每吨", cost:"60", price:"80", currency:"CNY", note:"码头水车直供"}
+   ]},
+  {id:2, company:"宁波港船务代理有限公司", companyEn:"Ningbo Port Shipping Agency Co., Ltd.", contact:"李主管", phone:"0574-8765-0002", email:"service@nbport-agent.com",
+   address:"浙江省宁波市北仑区明州路 168 号", addressEn:"No.168 Mingzhou Rd, Beilun District, Ningbo, Zhejiang", postcode:"315800",
+   remark:"擅长集装箱班轮代理",
+   fees:[
+     {item:"船舶代理费", unit:"每艘次", cost:"2,600", price:"3,200", currency:"CNY", note:"标准集装箱班轮"},
+     {item:"燃油加注协调", unit:"每艘次", cost:"600", price:"800", currency:"CNY", note:"联系供应商 VLSFO"}
+   ]},
+  {id:3, company:"青岛港船务代理有限公司", companyEn:"Qingdao Port Shipping Agency Co., Ltd.", contact:"张经理", phone:"0532-8288-0003", email:"agency@qingdao-port.com",
+   address:"山东省青岛市市南区香港中路 12 号", addressEn:"No.12 Xianggang Middle Rd, Shinan District, Qingdao, Shandong", postcode:"266071",
+   remark:"可协助船员更换 / 备件清关",
+   fees:[
+     {item:"船舶代理费", unit:"每艘次", cost:"2,400", price:"3,000", currency:"CNY", note:""},
+     {item:"船员更换协助", unit:"每人次", cost:"100", price:"150", currency:"CNY", note:"边检/工作许可办理"}
+   ]}
+];
+function backfillAgents(arr){
+  /* 非破坏性补齐：旧数据缺 companyEn/addressEn/postcode/remark 时，从同公司名的种子回填 */
+  arr.forEach(function(a){
+    if(a.companyEn||a.addressEn||a.postcode||a.remark) return;
+    var s=agentSeed.find(function(x){return x.company===a.company;});
+    if(s){ a.companyEn=s.companyEn; a.addressEn=s.addressEn; a.postcode=s.postcode; a.remark=s.remark; }
+  });
+  return arr;
+}
+function saveAgents(d){ persist("agents", d); }
+var localAgents = [];
+
+/* ---------------- client (委托方) master ---------------- */
+var CSTORE = "clientMaster_v1";
+var clientSeed = [
+  {id:1, company:"中远海运集装箱运输有限公司", name:"陈志远", title:"船务部经理", phone:"021-6596-1001", mobile:"139-0180-1001", email:"ops@cosco-cs.com", address:"上海市虹口区东大名路 700 号", remark:"国内总代，结算账期 30 天"},
+  {id:2, company:"马士基（中国）航运", name:"林嘉怡", title:"华东区运营主管", phone:"021-2306-2002", mobile:"138-1620-2002", email:"ops@maersk-china.com", address:"上海市浦东新区世纪大道 1198 号", remark:"船东直委，优先回复"},
+  {id:3, company:"地中海航运（MSC）", name:"周文彬", title:"船代事务专员", phone:"021-6104-3003", mobile:"137-1120-3003", email:"agency@msc-china.com", address:"上海市黄浦区南京东路 61 号", remark:"船管方，需同步船东代表"},
+  {id:4, company:"长荣海运", name:"吴雅婷", title:"运务部课长", phone:"0755-2688-4004", mobile:"135-3010-4004", email:"ops@evergreen-sz.com", address:"广东省深圳市盐田区明珠大道 1 号", remark:"租家，关注靠离泊准点率"},
+  {id:5, company:"达飞轮船（CMA CGM）", name:"赵鹏", title:"华北区船务经理", phone:"0532-8098-5005", mobile:"136-5320-5005", email:"agency@cma-cgm.cn", address:"山东省青岛市市南区香港中路 76 号", remark:"船东，月结"},
+  {id:6, company:"中海集运", name:"孙浩", title:"船代主管", phone:"022-5832-6006", mobile:"133-1200-6006", email:"ops@cscl-tj.com", address:"天津市滨海新区新港二号路 35 号", remark:"国内总代，需提供中英双语单证"}
+];
+function backfillClients(arr){
+  /* 非破坏性补齐：旧数据缺 remark 时从同公司名的种子回填 */
+  arr.forEach(function(c){
+    if(c.remark) return;
+    var s=clientSeed.find(function(x){return x.company===c.company;});
+    if(s) c.remark=s.remark;
+  });
+  return arr;
+}
+function saveClients(d){ persist("clients", d); }
+var localClients = [];
+function clientOpts(){
+  var o = localClients.map(function(c){ return {v:c.company, t:c.company}; });
+  o.unshift({v:"", t:"— 请选择委托方 —"});
+  return o;
+}
+
+/* ---------------- field schema ---------------- */
+var statusOpts = [
+  {v:"in",   t:"在港"},
+  {v:"arr",  t:"即将到港"},
+  {v:"out",  t:"已离港"}
+];
+var flagOptsDefault = [
+  {v:"中国 CHINA", t:"中国 CHINA"},
+  {v:"中国香港 HONG KONG", t:"中国香港 HONG KONG"},
+  {v:"中国台湾 TAIWAN", t:"中国台湾 TAIWAN"},
+  {v:"新加坡 SINGAPORE", t:"新加坡 SINGAPORE"},
+  {v:"巴拿马 PANAMA", t:"巴拿马 PANAMA"},
+  {v:"利比里亚 LIBERIA", t:"利比里亚 LIBERIA"},
+  {v:"马绍尔群岛 MARSHALL ISLANDS", t:"马绍尔群岛 MARSHALL ISLANDS"},
+  {v:"马耳他 MALTA", t:"马耳他 MALTA"},
+  {v:"希腊 GREECE", t:"希腊 GREECE"},
+  {v:"日本 JAPAN", t:"日本 JAPAN"},
+  {v:"韩国 KOREA", t:"韩国 KOREA"},
+  {v:"德国 GERMANY", t:"德国 GERMANY"},
+  {v:"英国 UK", t:"英国 UK"},
+  {v:"法国 FRANCE", t:"法国 FRANCE"},
+  {v:"美国 USA", t:"美国 USA"},
+  {v:"丹麦 DENMARK", t:"丹麦 DENMARK"},
+  {v:"挪威 NORWAY", t:"挪威 NORWAY"},
+  {v:"塞浦路斯 CYPRUS", t:"塞浦路斯 CYPRUS"},
+  {v:"巴哈马 BAHAMAS", t:"巴哈马 BAHAMAS"},
+  {v:"马恩岛 ISLE OF MAN", t:"马恩岛 ISLE OF MAN"}
+];
+var flagOpts = flagOptsDefault.slice();
+/* 自定义国籍由 boot() 从 Neon 载入；这里只提供应用与提取的纯函数 */
+function applyCustomFlags(arr){
+  flagOpts = flagOptsDefault.slice();
+  (Array.isArray(arr)?arr:[]).forEach(function(o){
+    if(o && o.v && !flagOpts.some(function(x){return x.v===o.v;})) flagOpts.push({v:o.v, t:o.t||o.v});
+  });
+}
+function customFlagsList(){
+  return flagOpts.filter(function(o){ return !flagOptsDefault.some(function(d){ return d.v===o.v; }); });
+}
+function saveCustomFlags(){ persist("flags", customFlagsList()); }
+var basicFields = [
+  {key:"cn",   label:"船名（中）", en:"Name (CN)", type:"text", req:true, ph:"如：中远海运之星"},
+  {key:"en",   label:"船名（英）", en:"Name (EN)", type:"text", req:true, ph:"e.g. COSCO Star"},
+  {key:"imo",  label:"IMO 编号", en:"IMO Number", type:"text", ph:"如：9789089"},
+  {key:"mmsi", label:"MMSI", en:"MMSI", type:"text", ph:"如：413123456"},
+  {key:"flag", label:"国籍", en:"Flag State", type:"select", opts:flagOpts},
+  {key:"loa",  label:"船长(m)", en:"Length Overall", type:"text", ph:"如：366"},
+  {key:"beam", label:"船宽(m)", en:"Beam", type:"text", ph:"如：51"},
+  {key:"nt",   label:"净吨", en:"Net Tonnage", type:"text", ph:"如：101274"}
+];
+var principalTypeOpts = [
+  {v:"国内总代", t:"国内总代"},
+  {v:"船管",     t:"船管"},
+  {v:"船东",     t:"船东"},
+  {v:"租家",     t:"租家"}
+];
+var voyageFields = [
+  {key:"principal",     label:"委托方", en:"Principal", type:"select", opts:clientOpts},
+  {key:"principalType", label:"委托方类别", en:"Client Type", type:"select", opts:principalTypeOpts},
+  {key:"localAgent",    label:"本港代理", en:"Local Agent", type:"select", opts:localAgentOpts},
+  {key:"voy",       label:"航次号", en:"Voyage No.", type:"text", ph:"如：V.2608E"},
+  {key:"terminal",  label:"码头", en:"Terminal", type:"text", ph:"如：洋山深水港 一期"},
+  {key:"berth",     label:"泊位", en:"Berth", type:"text", ph:"如：3# 泊位"},
+  {key:"eta",       label:"靠泊 ETA", en:"Berthing Time", type:"datetime"},
+  {key:"etd",       label:"离泊 ETD", en:"Departure Time", type:"datetime"},
+  {key:"status", label:"状态", en:"Status", type:"select", opts:statusOpts}
+];
+var allFields = basicFields.concat(voyageFields);
+
+/* ---------------- helpers ---------------- */
+function fmt(s){ if(!s) return "—"; return s.replace("T"," ").slice(0,16); }
+function toast(m){ var t=document.getElementById("toast"); t.textContent=m; t.classList.add("show"); setTimeout(function(){t.classList.remove("show");},1800); }
+function esc(s){ return (s||"").replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c];}); }
+function statusBadge(st){ var cls={in:"b-in",arr:"b-arr",out:"b-out",proc:"b-proc"}[st]; return '<span class="badge '+cls+'">'+(L[lang][st]||st)+'</span>'; }
+
+/* ---------------- stats ---------------- */
+function updateStats(){
+  var inN=0,arrN=0,outN=0;
+  data.forEach(function(s){
+    if(s.status==="in") inN++; else if(s.status==="arr") arrN++; else if(s.status==="out") outN++;
+  });
+  document.getElementById("st-in").textContent=inN;
+  document.getElementById("st-arr").textContent=arrN;
+  document.getElementById("st-out").textContent=outN;
+  document.getElementById("st-total").textContent=data.length;
+}
+
+/* ---------------- dashboard list ---------------- */
+function renderDashboard(){
+  var q=(document.getElementById("search").value||"").toLowerCase();
+  var fs=document.getElementById("filter-status").value;
+  var tb=document.getElementById("ship-tbody");
+  var list=data.filter(function(s){
+    if(fs && s.status!==fs) return false;
+    var hay=(s.cn+s.en+(s.terminal||"")+(s.berth||"")+s.voy).toLowerCase();
+    if(q && !hay.includes(q)) return false;
+    return true;
+  });
+  if(!list.length){ tb.innerHTML='<tr><td colspan="6" class="empty">暂无匹配的代理船舶</td></tr>'; updateStats(); return; }
+  tb.innerHTML = list.map(function(s){
+    var loc=[s.terminal,s.berth].filter(Boolean).join(" · ");
+    return '<tr onclick="openDetail('+s.id+')">'+
+      '<td>'+esc(s.cn)+'</td><td>'+esc(s.en)+'</td><td>'+esc(loc)+'</td>'+
+      '<td class="mono">'+fmt(s.eta)+'</td><td class="mono">'+fmt(s.etd)+'</td>'+
+      '<td>'+statusBadge(s.status)+'</td></tr>';
+  }).join("");
+  updateStats();
+}
+
+/* ---------------- detail + inline edit ---------------- */
+var currentId=null, editing=false, editTodos=[];
+function openDetail(id){
+  currentId=id; editing=false;
+  showPage("detail");
+  renderDetail();
+}
+function rowHTML(f, val){
+  return '<div class="field"><div class="flbl">'+f.label+'<span class="fen">'+f.en+'</span></div><div class="fval">'+val+'</div></div>';
+}
+function selOpts(f, cur){
+  var opts = f.opts.slice();
+  if(cur && !opts.some(function(o){return o.v===cur;})) opts.push({v:cur, t:cur});
+  return opts.map(function(o){ return '<option value="'+esc(o.v)+'"'+(o.v===cur?' selected':'')+'>'+esc(o.t)+'</option>'; }).join('');
+}
+function buildSelect(id, opts, cur){
+  return '<select id="'+id+'">'+selOpts({opts:opts}, cur)+'</select>';
+}
+function localAgentOpts(){
+  var o = localAgents.map(function(a){ return {v:a.company, t:a.company}; });
+  o.unshift({v:"", t:"— 请选择本港代理 —"});
+  return o;
+}
+function blockHTML(fields, s, editable){
+  var editMode = editing && (editable!==false);
+  return fields.map(function(f){
+    var v = s[f.key]||"";
+    if(editMode){
+      var ctrl;
+      if(f.type==="datetime"){
+        ctrl = '<input id="d-'+f.key+'" type="datetime-local" value="'+(v?v.replace(' ','T').slice(0,16):'')+'">';
+      } else if(f.type==="select"){
+        var sopts = (typeof f.opts==="function") ? f.opts() : (f.opts||[]);
+        ctrl = buildSelect("d-"+f.key, sopts, v);
+      } else {
+        ctrl = '<input id="d-'+f.key+'" type="text" value="'+esc(v)+'">';
+      }
+      return rowHTML(f, ctrl);
+    }
+    var disp;
+    if(f.type==="datetime") disp = fmt(v);
+    else if(f.key==="status") disp = (L[lang][v]||v);
+    else disp = v||"—";
+    return rowHTML(f, disp);
+  }).join("");
+}
+function renderTodoBlock(){
+  var box=document.getElementById("blk-todo");
+  var s = data.find(function(x){return x.id===currentId;});
+  if(editing){
+    box.innerHTML = editTodos.map(function(t,i){
+      return '<div class="todo-edit">'+
+        '<div class="todo-edit-head">'+
+          '<input class="ti" placeholder="待办标题" value="'+esc(t.title)+'" oninput="updTodo('+i+',\'title\',this.value)">'+
+          '<label class="ck"><input type="checkbox" '+(t.done?'checked':'')+' onchange="updTodo('+i+',\'done\',this.checked)"> 完成</label>'+
+          '<button class="icon-btn danger" onclick="delTodo('+i+')">✕</button>'+
+        '</div>'+
+        '<textarea class="td" placeholder="详细内容（流程、联系人、截止时间…）" oninput="updTodo('+i+',\'detail\',this.value)">'+esc(t.detail)+'</textarea>'+
+      '</div>';
+    }).join('') + '<button class="btn sm ghost" style="margin-top:10px" onclick="addTodo()">＋ 添加待办</button>';
+  } else {
+    var todos = s.todos||[];
+    if(!todos.length){ box.innerHTML='<div class="empty" style="padding:18px">暂无待办事项</div>'; }
+    else {
+      box.innerHTML = todos.map(function(t,i){
+        return '<div class="todo">'+
+          '<div class="todo-row" onclick="toggleTodo('+i+')">'+
+            '<span class="todo-ck '+(t.done?'on':'')+'">'+(t.done?'✓':'')+'</span>'+
+            '<span class="todo-title">'+esc(t.title||'(未命名)')+'</span>'+
+            '<span class="todo-arrow" id="ta-'+i+'">▾</span>'+
+          '</div>'+
+          '<div class="todo-detail hidden" id="td-'+i+'">'+esc(t.detail||'（无详细内容）')+'</div>'+
+        '</div>';
+      }).join('');
+    }
+  }
+  var cnt=document.getElementById("todo-count");
+  if(cnt){ var n=(s.todos||[]).length; cnt.textContent = n? (n+" 项") : ""; }
+}
+function toggleTodo(i){
+  var d=document.getElementById("td-"+i); if(!d) return;
+  d.classList.toggle("hidden");
+  var a=document.getElementById("ta-"+i);
+  if(a) a.textContent = d.classList.contains("hidden")?"▾":"▴";
+}
+function updTodo(i,key,val){ if(editTodos[i]) editTodos[i][key]=val; }
+function addTodo(){ editTodos.push({title:"",detail:"",done:false}); renderTodoBlock(); }
+function delTodo(i){ editTodos.splice(i,1); renderTodoBlock(); }
+
+function renderDetail(){
+  var s = data.find(function(x){return x.id===currentId;});
+  if(!s){ showPage("dashboard"); renderDashboard(); return; }
+  document.getElementById("detail-title").innerHTML = esc(s.cn)+'<span class="en">'+esc(s.en)+'</span>';
+  document.getElementById("detail-status").innerHTML = editing ? "" : statusBadge(s.status);
+  document.getElementById("blk-basic").innerHTML = blockHTML(basicFields, s, false);
+  document.getElementById("blk-voyage").innerHTML = blockHTML(voyageFields, s, true);
+  document.getElementById("blk-profit").innerHTML = profitHTML(s);
+  renderTodoBlock();
+
+  var eb=document.getElementById("detail-edit-btn");
+  var cb=document.getElementById("detail-cancel-btn");
+  var db=document.getElementById("detail-delete-btn");
+  if(editing){
+    eb.textContent = lang==="zh"?"保存":"Save";
+    eb.className="btn sm sv"; eb.onclick=saveDetail;
+    cb.classList.remove("hidden"); db.classList.add("hidden");
+  } else {
+    eb.textContent = lang==="zh"?"编辑":"Edit";
+    eb.className="btn sm sv"; eb.onclick=startEdit;
+    cb.classList.add("hidden"); db.classList.remove("hidden");
+  }
+}
+/* ---------------- 预估毛利（仅详情页内部显示） ---------------- */
+function profitHTML(s){
+  if(editing) return '<div class="profit-empty">编辑中暂不显示，保存后按最新本港代理重新核算。</div>';
+  var agent = localAgents.find(function(a){return a.company===s.localAgent;});
+  if(!agent) return '<div class="profit-empty">当前航次未选择本港代理，无法核算毛利。</div>';
+  var fees = agent.fees||[];
+  if(!fees.length) return '<div class="profit-empty">该本港代理尚未维护收费标准。</div>';
+  var costSum=0, quoteSum=0, hasCost=false, hasQuote=false, cur="";
+  fees.forEach(function(f){
+    var q=parseFloat(String(f.price||"").replace(/[^0-9.]/g,""));
+    var c=parseFloat(String(f.cost||"").replace(/[^0-9.]/g,""));
+    if(!isNaN(q)){ quoteSum+=q; hasQuote=true; }
+    if(!isNaN(c)){ costSum+=c; hasCost=true; }
+    if(!cur && f.currency) cur = (f.currency==="USD" ? "USD" : "CNY");
+  });
+  cur = cur || "CNY";
+  var margin = quoteSum - costSum;
+  var rate = quoteSum>0 ? (margin/quoteSum*100) : 0;
+  function card(k,v,cls){ return '<div class="profit-card'+(cls?" "+cls:"")+'"><div class="pk">'+k+'</div><div class="pv">'+v+'</div></div>'; }
+  var html = '<div class="profit-grid">';
+  html += card("成本合计 Cost", hasCost ? (fmtMoney(costSum)+" "+cur) : "—");
+  html += card("对外报价合计 Quote", hasQuote ? (fmtMoney(quoteSum)+" "+cur) : "—");
+  if(hasCost && hasQuote){
+    html += card("预估毛利 Margin", fmtMoney(margin)+" "+cur, margin>=0?"pos":"neg");
+    html += card("毛利率 Margin %", rate.toFixed(1)+"%", margin>=0?"pos":"neg");
+  } else {
+    html += card("预估毛利 Margin", "—");
+    html += card("毛利率 Margin %", "—");
+  }
+  html += '</div>';
+  return html;
+}
+function startEdit(){
+  var s=data.find(function(x){return x.id===currentId;}); if(!s) return;
+  editTodos = (s.todos||[]).map(function(t){return {title:t.title||"",detail:t.detail||"",done:!!t.done};});
+  editing=true; renderDetail();
+}
+function cancelEdit(){ editing=false; renderDetail(); }
+function saveDetail(){
+  var s=data.find(function(x){return x.id===currentId;}); if(!s) return;
+  var upd={};
+  allFields.forEach(function(f){
+    var el=document.getElementById("d-"+f.key);
+    upd[f.key]= el ? el.value.trim() : (s[f.key]||"");
+  });
+  if(!upd.cn||!upd.en){ toast("请填写船名"); return; }
+  if(upd.eta) upd.eta=upd.eta.replace("T"," ");
+  if(upd.etd) upd.etd=upd.etd.replace("T"," ");
+  upd.todos = editTodos.map(function(t){return {title:t.title,detail:t.detail,done:!!t.done};});
+  Object.assign(s,upd);
+  save(data); editing=false; renderDetail(); refresh(); toast("已保存");
+}
+function detailDelete(){
+  if(!confirm("确认删除该代理船舶记录？")) return;
+  data=data.filter(function(x){return x.id!==currentId;});
+  save(data); showPage("dashboard"); refresh(); toast("已删除");
+}
+
+/* ---------------- quote ---------------- */
+function pad2(n){ return (n<10?"0":"")+n; }
+function fmtMoney(n){ return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g,","); }
+function qk(t){ return '<span class="k">'+t+'</span>'; }
+function qval(v){ return '<span>'+esc(v==null?"" : v)+'</span>'; }
+function qline(k,v){ return '<div>'+qk(k)+qval(v==null?"—":v)+'</div>'; }
+function closeQuote(){ document.getElementById("quote-mask").classList.add("hidden"); }
+var quoteItems = [];
+var quoteCurrency = "CNY";
+function buildQuoteFeeRows(){
+  var tb=document.getElementById("quote-fee-body"); if(!tb) return;
+  if(!quoteItems.length){
+    tb.innerHTML='<tr><td colspan="7" class="empty">暂无收费项，点击下方「＋ 添加收费项」手动添加。</td></tr>';
+    return;
+  }
+  tb.innerHTML = quoteItems.map(function(it,i){
+    return '<tr class="'+(it.inc?"":"off")+'">'+
+      '<td class="col-chk"><input type="checkbox" class="q-fee-chk" '+(it.inc?"checked":"")+' onchange="toggleQuoteItem('+i+',this)"></td>'+
+      '<td><input type="text" value="'+esc(it.item)+'" placeholder="收费项目" oninput="updQuoteItem('+i+',\'item\',this)"></td>'+
+      '<td><input type="text" value="'+esc(it.unit)+'" placeholder="计费单位" oninput="updQuoteItem('+i+',\'unit\',this)"></td>'+
+      '<td class="num"><input type="text" value="'+esc(it.price)+'" placeholder="单价" oninput="updQuoteItem('+i+',\'price\',this)"></td>'+
+      '<td class="q-cur">'+esc(quoteCurrency)+'</td>'+
+      '<td><input type="text" value="'+esc(it.note)+'" placeholder="备注" oninput="updQuoteItem('+i+',\'note\',this)"></td>'+
+      '<td class="col-del"><button type="button" class="q-fee-del" onclick="delQuoteItem('+i+')">✕</button></td>'+
+    '</tr>';
+  }).join("");
+}
+function setQuoteCurrency(v){ quoteCurrency = (v==="USD")?"USD":"CNY"; buildQuoteFeeRows(); renderQuoteTotal(); }
+function updQuoteItem(i,key,el){ if(!quoteItems[i]) return; quoteItems[i][key]=el.value; if(key==="price") renderQuoteTotal(); }
+function toggleQuoteItem(i,el){ if(!quoteItems[i]) return; quoteItems[i].inc=el.checked; var tr=el.closest("tr"); if(tr) tr.classList.toggle("off",!el.checked); renderQuoteTotal(); }
+function addQuoteItem(){ quoteItems.push({item:"",unit:"",price:"",note:"",inc:true}); buildQuoteFeeRows(); renderQuoteTotal(); }
+function delQuoteItem(i){ quoteItems.splice(i,1); buildQuoteFeeRows(); renderQuoteTotal(); }
+function renderQuoteTotal(){
+  var total=0, ok=false;
+  quoteItems.filter(function(x){return x.inc;}).forEach(function(f){
+    var n=parseFloat((f.price||"").replace(/[^0-9.]/g,""));
+    if(!isNaN(n)){ total+=n; ok=true; }
+  });
+  var el=document.getElementById("quote-total");
+  if(el) el.textContent = "TOTAL: "+(ok?(fmtMoney(total)+" "+quoteCurrency) : "—");
+}
+function generateQuote(){
+  var s = data.find(function(x){return x.id===currentId;}); if(!s) return;
+  var agent = localAgents.find(function(a){return a.company===s.localAgent;});
+  var now = new Date();
+  var ymd = now.getFullYear()+"-"+pad2(now.getMonth()+1)+"-"+pad2(now.getDate());
+  var firstCur = (agent && agent.fees && agent.fees.length) ? agent.fees[0].currency : "";
+  quoteCurrency = (firstCur==="USD") ? "USD" : "CNY";
+  quoteItems = (agent?(agent.fees||[]):[]).map(function(f){
+    return {item:f.item||"",unit:f.unit||"",price:f.price||"",note:f.note||"",inc:true};
+  });
+  var hint = agent
+    ? "已按该本港代理维护的「对外报价」载入收费项；勾选需计入的项（取消勾选即排除），可直接修改单价/备注，或点击「＋ 添加收费项」自定义。"
+    : "当前航次未选择本港代理，请点击「＋ 添加收费项」手动录入。";
+  var curSel = '<span class="q-curwrap">Currency '+
+    '<select id="quote-cur" onchange="setQuoteCurrency(this.value)">'+
+      ['CNY','USD'].map(function(c){ return '<option value="'+c+'"'+(quoteCurrency===c?' selected':'')+'>'+c+'</option>'; }).join('')+
+    '</select></span>';
+  var html =
+    '<div class="quote">'+
+      '<h2>QUOTATION</h2>'+
+      '<div class="q-meta"><span>Client: '+esc(s.principal||"—")+'</span><span>Date: '+ymd+'</span></div>'+
+      '<div class="q-sec"><div class="q-sec-t">VESSEL PARTICULARS</div><div class="q-grid">'+
+        qline("Vessel Name", s.en)+
+        qline("IMO", s.imo)+
+        qline("Flag", s.flag)+
+        qline("Port of Call", [s.terminal,s.berth].filter(Boolean).join(" / "))+
+      '</div></div>'+
+      '<div class="q-sec"><div class="q-sec-t">FEE SCHEDULE</div>'+
+        '<div class="q-feebar"><span class="q-hint">'+hint+'</span>'+curSel+'</div>'+
+        '<table class="q-fee"><thead><tr>'+
+          '<th class="col-chk"></th><th>Item</th><th>Unit</th><th style="text-align:right">Unit Price</th><th>Currency</th><th>Remarks</th><th class="col-del"></th>'+
+        '</tr></thead><tbody id="quote-fee-body"></tbody></table>'+
+        '<button type="button" class="btn sm ghost q-fee-add" onclick="addQuoteItem()">＋ 添加收费项</button>'+
+        '<div class="q-total" id="quote-total">TOTAL: —</div>'+
+      '</div>'+
+    '</div>';
+  document.getElementById("quote-body").innerHTML = html;
+  buildQuoteFeeRows();
+  renderQuoteTotal();
+  document.getElementById("quote-mask").classList.remove("hidden");
+}
+
+/* ---------------- page switch ---------------- */
+function showPage(p){
+  document.querySelectorAll(".page").forEach(function(el){el.classList.add("hidden");});
+  document.getElementById("page-"+p).classList.remove("hidden");
+  document.querySelectorAll(".side .nav").forEach(function(n){n.classList.remove("active");});
+  var nav=document.querySelector('.nav[data-page="'+p+'"]');
+  if(nav) nav.classList.add("active");
+}
+function refresh(){ updateStats(); renderDashboard(); }
+
+/* ---------------- modal (新增) ---------------- */
+var newTodos=[];
+function blockShell(title, en, bodyHTML){
+  return '<div class="block"><div class="block-h">'+title+' <span class="en">'+en+'</span></div><div class="block-b"><div class="fields-grid">'+bodyHTML+'</div></div></div>';
+}
+function modalInput(f){
+  if(f.type==="datetime") return '<input id="f-'+f.key+'" type="datetime-local">';
+  if(f.type==="select"){ var aopts=(typeof f.opts==="function")?f.opts():(f.opts||[]); return buildSelect("f-"+f.key, aopts, ""); }
+  return '<input id="f-'+f.key+'" type="text" placeholder="'+esc(f.ph||'')+'">';
+}
+function modalField(f){
+  return '<div class="field"><div class="flbl">'+f.label+'<span class="fen">'+f.en+'</span></div><div class="fval">'+modalInput(f)+'</div></div>';
+}
+function modalBasicView(){
+  return basicFields.map(function(f){
+    return '<div class="field"><div class="flbl">'+f.label+'<span class="fen">'+f.en+'</span></div><div class="fval" id="f-'+f.key+'">—</div></div>';
+  }).join('');
+}
+function openModal(){
+  newTodos=[];
+  var sel = '<div class="block"><div class="block-h">🚢 选择船舶 <span class="en">Select Vessel</span></div>'+
+    '<div class="block-b" style="padding:14px 20px"><select id="f-vessel" onchange="prefillFromVessel()" style="width:100%;padding:9px 10px;border:1px solid var(--brand);border-radius:7px;font-size:14px;background:#fff">'+
+    '<option value="">— 请选择船舶（无则先到「船舶基本信息维护」添加）—</option>'+
+    vessels.map(function(v){return '<option value="'+v.id+'">'+esc(v.cn)+' / '+esc(v.en)+'</option>';}).join('')+
+    '</select></div></div>';
+  var html = sel + blockShell("🚢 船舶基本信息","Basic Information（从船舶库选取，不可手动修改）", modalBasicView());
+  html += blockShell("📋 船舶航次信息","Voyage Information", voyageFields.map(modalField).join(''));
+  html += '<div class="block"><div class="block-h">📝 待办事项 <span class="en">To-do List</span></div><div class="block-b" id="modal-todos"></div></div>';
+  document.getElementById("modal-body").innerHTML = html;
+  renderModalTodos();
+  document.getElementById("mask").classList.remove("hidden");
+}
+function prefillFromVessel(){
+  basicFields.forEach(function(f){ var el=document.getElementById("f-"+f.key); if(el) el.textContent="—"; });
+  var id=document.getElementById("f-vessel").value; if(!id) return;
+  var v=vessels.find(function(x){return String(x.id)===String(id);}); if(!v) return;
+  basicFields.forEach(function(f){ var el=document.getElementById("f-"+f.key); if(el) el.textContent = v[f.key]||"—"; });
+}
+function closeModal(){ document.getElementById("mask").classList.add("hidden"); }
+function renderModalTodos(){
+  var box=document.getElementById("modal-todos"); if(!box) return;
+  box.innerHTML = newTodos.map(function(t,i){
+    return '<div class="todo-edit">'+
+      '<div class="todo-edit-head">'+
+        '<input class="ti" placeholder="待办标题" value="'+esc(t.title)+'" oninput="updNewTodo('+i+',\'title\',this.value)">'+
+        '<label class="ck"><input type="checkbox" '+(t.done?'checked':'')+' onchange="updNewTodo('+i+',\'done\',this.checked)"> 完成</label>'+
+        '<button class="icon-btn danger" onclick="delNewTodo('+i+')">✕</button>'+
+      '</div>'+
+      '<textarea class="td" placeholder="详细内容（流程、联系人、截止时间…）" oninput="updNewTodo('+i+',\'detail\',this.value)">'+esc(t.detail)+'</textarea>'+
+    '</div>';
+  }).join('') + '<button class="btn sm ghost" style="margin-top:8px" onclick="addNewTodo()">＋ 添加待办</button>';
+}
+function addNewTodo(){ newTodos.push({title:"",detail:"",done:false}); renderModalTodos(); }
+function updNewTodo(i,k,v){ if(newTodos[i]) newTodos[i][k]=v; }
+function delNewTodo(i){ newTodos.splice(i,1); renderModalTodos(); }
+function val(id){ var el=document.getElementById(id); return el?el.value.trim():""; }
+function dtVal(id){ var el=document.getElementById(id); return el&&el.value? el.value.replace("T"," ") : ""; }
+function saveNew(){
+  var vid=document.getElementById("f-vessel").value;
+  if(!vid){ toast("请先选择船舶（无则到「船舶基本信息维护」新增）"); return; }
+  var v=vessels.find(function(x){return String(x.id)===String(vid);});
+  if(!v){ toast("所选船舶不存在"); return; }
+  var obj={
+    cn:v.cn, en:v.en,
+    imo:v.imo||"", mmsi:v.mmsi||"", flag:v.flag||"",
+    loa:v.loa||"", beam:v.beam||"", nt:v.nt||"",
+    vesselId:String(v.id),
+    status:document.getElementById("f-status").value,
+    principal:val("f-principal"), principalType:val("f-principalType"), voy:val("f-voy"),
+    terminal:val("f-terminal"), berth:val("f-berth"),
+    eta:dtVal("f-eta"), etd:dtVal("f-etd"),
+    todos:newTodos.filter(function(t){return t.title||t.detail;}).map(function(t){return {title:t.title,detail:t.detail,done:!!t.done};})
+  };
+  obj.id = data.length? Math.max.apply(null,data.map(function(x){return x.id;}))+1 : 1;
+  data.push(obj); save(data); closeModal(); refresh(); toast("已新增");
+}
+
+/* ---------------- vessel master (CRUD) ---------------- */
+function renderVessels(){
+  var q=(document.getElementById("search-v").value||"").toLowerCase();
+  var tb=document.getElementById("vessel-tbody");
+  var list=vessels.filter(function(v){ return !q || (v.cn+v.en+(v.imo||"")+(v.mmsi||"")).toLowerCase().includes(q); });
+  if(!list.length){ tb.innerHTML='<tr><td colspan="9" class="empty">暂无船舶主数据，点击右上角「＋ 新增船舶」添加</td></tr>'; return; }
+  tb.innerHTML=list.map(function(v){
+    return '<tr>'+
+      '<td>'+esc(v.cn)+'</td><td>'+esc(v.en)+'</td><td>'+esc(v.imo||"—")+'</td>'+
+      '<td>'+esc(v.mmsi||"—")+'</td><td>'+esc(v.flag||"—")+'</td>'+
+      '<td class="mono">'+(v.loa||"—")+'</td><td class="mono">'+(v.beam||"—")+'</td>'+
+      '<td class="mono">'+(v.nt||"—")+'</td>'+
+      '<td><button class="icon-btn" onclick="editVessel('+v.id+')">编辑</button> '+
+      '<button class="icon-btn danger" onclick="deleteVessel('+v.id+')">删除</button></td>'+
+    '</tr>';
+  }).join("");
+}
+var editingVesselId=null;
+var flagPrevValue="";
+function flagSelectHTML(cur){
+  flagPrevValue = cur||"";
+  var opts = flagOpts.map(function(o){ return '<option value="'+esc(o.v)+'"'+(o.v===cur?' selected':'')+'>'+esc(o.t)+'</option>'; }).join('');
+  return '<select id="vf-flag" onchange="onFlagChange(this)">'+opts+
+    '<option value="__add__">➕ 添加新国籍…</option>'+
+    '<option value="__del__">🗑 删除当前国籍</option></select>';
+}
+function onFlagChange(el){
+  var v=el.value;
+  if(v==="__add__"){
+    var nv=prompt("输入新国籍（建议格式：中文 英文，如：荷兰 NETHERLANDS）");
+    if(nv && nv.trim()){
+      nv=nv.trim();
+      if(!flagOpts.some(function(o){return o.v===nv;})) flagOpts.push({v:nv,t:nv});
+      el.value=nv; flagPrevValue=nv; saveCustomFlags();
+    } else { el.value=flagPrevValue; }
+    rebuildFlagSelect(el, el.value); return;
+  }
+  if(v==="__del__"){
+    var cur=flagPrevValue;
+    if(!cur){ el.value=""; rebuildFlagSelect(el,""); return; }
+    if(flagOptsDefault.some(function(d){return d.v===cur;})){ toast("内置国籍不可删除"); el.value=cur; rebuildFlagSelect(el,cur); return; }
+    var used=vessels.filter(function(v){return v.flag===cur;}).length;
+    var warn = used? "（注意：已有 "+used+" 条船舶记录该国籍，删除后仅移除下拉选项，船舶原值保留）" : "";
+    if(!confirm("删除国籍「"+cur+"」？该选项将从下拉中移除。"+warn)){ el.value=cur; rebuildFlagSelect(el,cur); return; }
+    flagOpts=flagOpts.filter(function(o){return o.v!==cur;}); saveCustomFlags();
+    el.value=""; flagPrevValue=""; rebuildFlagSelect(el,"");
+    toast("已删除国籍："+cur); return;
+  }
+  flagPrevValue=v;
+}
+function rebuildFlagSelect(el, cur){
+  el.innerHTML = flagOpts.map(function(o){ return '<option value="'+esc(o.v)+'"'+(o.v===cur?' selected':'')+'>'+esc(o.t)+'</option>'; }).join('') +
+    '<option value="__add__">➕ 添加新国籍…</option>'+
+    '<option value="__del__">🗑 删除当前国籍</option>';
+}
+function vesselField(f, cur){
+  if(f.type==="select"){
+    return '<div class="field"><div class="flbl">'+f.label+'<span class="fen">'+f.en+'</span></div><div class="fval">'+flagSelectHTML(cur||"")+'</div></div>';
+  }
+  return '<div class="field"><div class="flbl">'+f.label+'<span class="fen">'+f.en+'</span></div><div class="fval"><input id="vf-'+f.key+'" type="text" value="'+esc(cur||"")+'" placeholder="'+esc(f.ph||'')+'"></div></div>';
+}
+function openVesselModal(){
+  editingVesselId=null;
+  document.getElementById("vessel-mh").textContent="新增船舶";
+  document.getElementById("vessel-body").innerHTML='<div class="fields-grid">'+basicFields.map(function(f){return vesselField(f,"");}).join('')+'</div>';
+  document.getElementById("vessel-mask").classList.remove("hidden");
+}
+function editVessel(id){
+  var v=vessels.find(function(x){return x.id===id;}); if(!v) return;
+  editingVesselId=id;
+  document.getElementById("vessel-mh").textContent="编辑船舶";
+  document.getElementById("vessel-body").innerHTML='<div class="fields-grid">'+basicFields.map(function(f){return vesselField(f, v[f.key]);}).join('')+'</div>';
+  document.getElementById("vessel-mask").classList.remove("hidden");
+}
+function closeVesselModal(){ document.getElementById("vessel-mask").classList.add("hidden"); }
+function saveVessel(){
+  var obj={};
+  basicFields.forEach(function(f){ var el=document.getElementById("vf-"+f.key); obj[f.key]=el?el.value.trim():""; });
+  if(!obj.cn||!obj.en){ toast("请填写船名"); return; }
+  if(editingVesselId){
+    var v=vessels.find(function(x){return x.id===editingVesselId;}); if(v) Object.assign(v,obj);
+  } else {
+    obj.id = vessels.length? Math.max.apply(null,vessels.map(function(x){return x.id;}))+1 : 1;
+    vessels.push(obj);
+  }
+  saveVessels(vessels); closeVesselModal(); renderVessels(); toast("已保存");
+}
+function deleteVessel(id){
+  var refs = data.filter(function(s){ return String(s.vesselId)===String(id); });
+  if(refs.length){
+    var names = refs.slice(0,5).map(function(s){return s.cn;}).join("、");
+    if(refs.length>5) names += " 等";
+    toast("无法删除：该船已被 "+refs.length+" 条代理记录引用（"+names+"）");
+    return;
+  }
+  if(!confirm("确认删除该船舶主数据？此操作不可撤销。")) return;
+  vessels=vessels.filter(function(x){return x.id!==id;});
+  saveVessels(vessels); renderVessels(); toast("已删除");
+}
+
+/* ---------------- local agent master (CRUD) ---------------- */
+var editingAgentId=null;
+var agentFees=[];
+function renderAgents(){
+  var q=(document.getElementById("search-a").value||"").toLowerCase();
+  var tb=document.getElementById("agent-tbody");
+  var list=localAgents.filter(function(a){ return !q || (a.company+(a.companyEn||"")+a.contact+(a.phone||"")+(a.email||"")+(a.address||"")+(a.addressEn||"")+(a.postcode||"")).toLowerCase().includes(q); });
+  if(!list.length){ tb.innerHTML='<tr><td colspan="8" class="empty">暂无本港代理，点击右上角「＋ 新增代理」添加</td></tr>'; return; }
+  var sub='font-size:12px;color:var(--muted);margin-top:2px';
+  tb.innerHTML=list.map(function(a){
+    var comp=esc(a.company)+(a.companyEn?'<div style="'+sub+'">'+esc(a.companyEn)+'</div>':'');
+    var addr=esc(a.address||"—")+(a.addressEn?'<div style="'+sub+'">'+esc(a.addressEn)+'</div>':'')+
+      (a.postcode?'<div style="'+sub+'">邮编 '+esc(a.postcode)+'</div>':'');
+    return '<tr>'+
+      '<td>'+comp+'</td><td>'+esc(a.contact||"—")+'</td><td class="mono">'+(a.phone||"—")+'</td>'+
+      '<td>'+esc(a.email||"—")+'</td><td>'+addr+'</td>'+
+      '<td class="mono">'+((a.fees||[]).length)+'</td>'+
+      '<td>'+esc(a.remark||"—")+'</td>'+
+      '<td><button class="icon-btn" onclick="editAgent('+a.id+')">编辑</button> '+
+      '<button class="icon-btn danger" onclick="deleteAgent('+a.id+')">删除</button></td>'+
+    '</tr>';
+  }).join("");
+}
+function renderAgentFees(){
+  var box=document.getElementById("agent-fees"); if(!box) return;
+  if(!agentFees.length){ box.innerHTML='<div class="fee-empty" style="padding:10px 4px;color:var(--muted)">暂无收费项，点击下方「＋ 添加收费项」</div>'; return; }
+  box.innerHTML=agentFees.map(function(t,i){
+    return '<div class="fee-row">'+
+      '<input placeholder="如：船舶代理费" value="'+esc(t.item)+'" oninput="updAgentFee('+i+',\'item\',this.value)">'+
+      '<input placeholder="如：每艘次" value="'+esc(t.unit)+'" oninput="updAgentFee('+i+',\'unit\',this.value)">'+
+      '<input placeholder="成本价" value="'+esc(t.cost||"")+'" oninput="updAgentFee('+i+',\'cost\',this.value)">'+
+      '<input placeholder="对外报价" value="'+esc(t.price)+'" oninput="updAgentFee('+i+',\'price\',this.value)">'+
+      '<select onchange="updAgentFee('+i+',\'currency\',this.value)">'+
+        ['CNY','USD'].map(function(c){ return '<option value="'+c+'"'+((t.currency==="USD"?"USD":"CNY")===c?' selected':'')+'>'+c+'</option>'; }).join('')+
+      '</select>'+
+      '<input placeholder="备注" value="'+esc(t.note)+'" oninput="updAgentFee('+i+',\'note\',this.value)">'+
+      '<button class="icon-btn danger" onclick="delAgentFee('+i+')">✕</button>'+
+    '</div>';
+  }).join("");
+}
+function addAgentFee(){ agentFees.push({item:"",unit:"",cost:"",price:"",currency:"CNY",note:""}); renderAgentFees(); }
+function updAgentFee(i,k,v){ if(agentFees[i]) agentFees[i][k]=v; }
+function delAgentFee(i){ agentFees.splice(i,1); renderAgentFees(); }
+function openAgentModal(){
+  editingAgentId=null;
+  document.getElementById("agent-mh").textContent="新增本港代理";
+  document.getElementById("ag-company").value="";
+  document.getElementById("ag-company-en").value="";
+  document.getElementById("ag-contact").value="";
+  document.getElementById("ag-phone").value="";
+  document.getElementById("ag-email").value="";
+  document.getElementById("ag-address").value="";
+  document.getElementById("ag-address-en").value="";
+  document.getElementById("ag-postcode").value="";
+  document.getElementById("ag-remark").value="";
+  agentFees=[]; renderAgentFees();
+  document.getElementById("agent-mask").classList.remove("hidden");
+}
+function editAgent(id){
+  var a=localAgents.find(function(x){return x.id===id;}); if(!a) return;
+  editingAgentId=id;
+  document.getElementById("agent-mh").textContent="编辑本港代理";
+  document.getElementById("ag-company").value=a.company||"";
+  document.getElementById("ag-company-en").value=a.companyEn||"";
+  document.getElementById("ag-contact").value=a.contact||"";
+  document.getElementById("ag-phone").value=a.phone||"";
+  document.getElementById("ag-email").value=a.email||"";
+  document.getElementById("ag-address").value=a.address||"";
+  document.getElementById("ag-address-en").value=a.addressEn||"";
+  document.getElementById("ag-postcode").value=a.postcode||"";
+  document.getElementById("ag-remark").value=a.remark||"";
+  agentFees=(a.fees||[]).map(function(t){return {item:t.item||"",unit:t.unit||"",cost:t.cost||"",price:t.price||"",currency:(t.currency==="USD"?"USD":"CNY"),note:t.note||""};});
+  renderAgentFees();
+  document.getElementById("agent-mask").classList.remove("hidden");
+}
+function closeAgentModal(){ document.getElementById("agent-mask").classList.add("hidden"); }
+function saveAgent(){
+  var company=(document.getElementById("ag-company").value||"").trim();
+  if(!company){ toast("请填写公司名"); return; }
+  /* cost=成本价（内部）；price=对外报价（生成报价单时引用） */
+  var fees=agentFees.filter(function(t){return t.item||t.unit||t.cost||t.price||t.currency||t.note;}).map(function(t){
+    return {item:t.item,unit:t.unit,cost:t.cost,price:t.price,currency:t.currency,note:t.note};
+  });
+  var obj={
+    company:company,
+    companyEn:(document.getElementById("ag-company-en").value||"").trim(),
+    contact:(document.getElementById("ag-contact").value||"").trim(),
+    phone:(document.getElementById("ag-phone").value||"").trim(),
+    email:(document.getElementById("ag-email").value||"").trim(),
+    address:(document.getElementById("ag-address").value||"").trim(),
+    addressEn:(document.getElementById("ag-address-en").value||"").trim(),
+    postcode:(document.getElementById("ag-postcode").value||"").trim(),
+    remark:(document.getElementById("ag-remark").value||"").trim(),
+    fees:fees
+  };
+  if(editingAgentId){
+    var a=localAgents.find(function(x){return x.id===editingAgentId;}); if(a) Object.assign(a,obj);
+  } else {
+    obj.id = localAgents.length? Math.max.apply(null,localAgents.map(function(x){return x.id;}))+1 : 1;
+    localAgents.push(obj);
+  }
+  saveAgents(localAgents); closeAgentModal(); renderAgents(); toast("已保存");
+}
+function deleteAgent(id){
+  var a=localAgents.find(function(x){return x.id===id;}); if(!a) return;
+  var refs=data.filter(function(s){ return s.localAgent===a.company; });
+  if(refs.length){
+    var names=refs.slice(0,5).map(function(s){return s.cn;}).join("、");
+    if(refs.length>5) names+=" 等";
+    toast("无法删除：该代理已被 "+refs.length+" 条代理记录引用（"+names+"）");
+    return;
+  }
+  if(!confirm("确认删除该本港代理？此操作不可撤销。")) return;
+  localAgents=localAgents.filter(function(x){return x.id!==id;});
+  saveAgents(localAgents); renderAgents(); toast("已删除");
+}
+
+/* ---------------- client (委托方) master (CRUD) ---------------- */
+var editingClientId=null;
+var clientFieldIds=["company","name","title","phone","mobile","address","email","remark"];
+function renderClients(){
+  var q=(document.getElementById("search-c").value||"").toLowerCase();
+  var tb=document.getElementById("client-tbody");
+  var list=localClients.filter(function(c){
+    var hay=((c.company||"")+(c.name||"")+(c.title||"")+(c.phone||"")+(c.mobile||"")+(c.email||"")+(c.address||"")+(c.remark||"")).toLowerCase();
+    return !q || hay.includes(q);
+  });
+  if(!list.length){ tb.innerHTML='<tr><td colspan="9" class="empty">暂无委托方，点击右上角「＋ 新增委托方」添加</td></tr>'; return; }
+  tb.innerHTML=list.map(function(c){
+    return '<tr>'+
+      '<td>'+esc(c.company)+'</td><td>'+esc(c.name||"—")+'</td><td>'+esc(c.title||"—")+'</td>'+
+      '<td class="mono">'+esc(c.phone||"—")+'</td><td class="mono">'+esc(c.mobile||"—")+'</td>'+
+      '<td>'+esc(c.email||"—")+'</td><td>'+esc(c.address||"—")+'</td>'+
+      '<td>'+esc(c.remark||"—")+'</td>'+
+      '<td><button class="icon-btn" onclick="editClient('+c.id+')">编辑</button> '+
+      '<button class="icon-btn danger" onclick="deleteClient('+c.id+')">删除</button></td>'+
+    '</tr>';
+  }).join("");
+}
+function openClientModal(){
+  editingClientId=null;
+  document.getElementById("client-mh").textContent="新增委托方";
+  clientFieldIds.forEach(function(k){ document.getElementById("cl-"+k).value=""; });
+  document.getElementById("client-mask").classList.remove("hidden");
+}
+function editClient(id){
+  var c=localClients.find(function(x){return x.id===id;}); if(!c) return;
+  editingClientId=id;
+  document.getElementById("client-mh").textContent="编辑委托方";
+  clientFieldIds.forEach(function(k){ document.getElementById("cl-"+k).value=c[k]||""; });
+  document.getElementById("client-mask").classList.remove("hidden");
+}
+function closeClientModal(){ document.getElementById("client-mask").classList.add("hidden"); }
+function saveClient(){
+  var obj={};
+  clientFieldIds.forEach(function(k){ obj[k]=(document.getElementById("cl-"+k).value||"").trim(); });
+  if(!obj.company){ toast("请填写公司名称"); return; }
+  if(editingClientId){
+    var c=localClients.find(function(x){return x.id===editingClientId;}); if(c) Object.assign(c,obj);
+  } else {
+    obj.id = localClients.length? Math.max.apply(null,localClients.map(function(x){return x.id;}))+1 : 1;
+    localClients.push(obj);
+  }
+  saveClients(localClients); closeClientModal(); renderClients(); toast("已保存");
+}
+function deleteClient(id){
+  var c=localClients.find(function(x){return x.id===id;}); if(!c) return;
+  var refs=data.filter(function(s){ return s.principal===c.company; });
+  if(refs.length){
+    var names=refs.slice(0,5).map(function(s){return s.cn;}).join("、");
+    if(refs.length>5) names+=" 等";
+    toast("无法删除：该委托方已被 "+refs.length+" 条代理记录引用（"+names+"）");
+    return;
+  }
+  if(!confirm("确认删除该委托方？此操作不可撤销。")) return;
+  localClients=localClients.filter(function(x){return x.id!==id;});
+  saveClients(localClients); renderClients(); toast("已删除");
+}
+
+/* ---------------- auth ---------------- */
+function doLogin(){
+  var u=document.getElementById("lg-user").value.trim();
+  var p=document.getElementById("lg-pass").value;
+  var err=document.getElementById("lg-err");
+  if(!u||!p){ err.textContent="请输入邮箱和密码"; return; }
+  err.textContent = "正在登录…";
+  signIn(u, p, true).then(function(){
+    err.textContent="";
+    document.getElementById("login").classList.add("hidden");
+    document.getElementById("app").classList.remove("hidden");
+    document.getElementById("uname").textContent=u;
+    document.getElementById("av").textContent=(u[0]||"A").toUpperCase();
+    boot();
+    startClock();
+  }).catch(function(e){
+    var m=(e && e.message) || "登录失败";
+    var hint = m;
+    if(/MISSING_OR_NULL_ORIGIN/.test(m))
+      hint = "页面是用 file:// 直接打开的，Neon Auth 会拒绝。请改用 http 访问：运行 start-server.cmd，然后打开 http://localhost:8787";
+    else if(/INVALID_ORIGIN/.test(m))
+      hint = "当前访问地址不在 Neon Auth 的可信来源里。请改用 http://localhost:8787 访问；如需用别的地址，去 Neon 控制台 Better Auth → Trusted Origins 添加。";
+    else if(/HTTP 4\d\d/.test(m))
+      hint = "邮箱或密码不正确";
+    err.textContent = hint;
+  });
+}
+function doLogout(){ signOut(); document.getElementById("app").classList.add("hidden"); document.getElementById("login").classList.remove("hidden"); }
+function startClock(){
+  function tick(){ document.getElementById("clock").textContent=new Date().toLocaleString("zh-CN",{hour12:false}); }
+  tick(); setInterval(tick,1000);
+}
+function exportJSON(){ var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}); var a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="ship-agency-data.json"; a.click(); toast("已导出 JSON"); }
+function resetData(){ if(!confirm("重置为演示数据？当前修改将丢失。")) return; data=seed.slice(); save(data); vessels=vesselSeed.slice(); saveVessels(vessels); localAgents=agentSeed.slice(); saveAgents(localAgents); localClients=clientSeed.slice(); saveClients(localClients); refresh(); renderVessels(); renderAgents(); renderClients(); toast("已重置"); }
+
+/* ---------------- boot：从 Neon 载入全量数据 ----------------
+   首次运行且库为空时：优先把浏览器遗留的 localStorage 搬进 Neon，
+   没有遗留数据才写入演示种子。proc→in 的状态迁移也在这里完成。 */
+function boot(){
+  apiRpc("api_bootstrap").then(function(b){
+    var jobs = [];
+    data      = Array.isArray(b.ships)   ? b.ships   : [];
+    vessels   = Array.isArray(b.vessels) ? b.vessels : [];
+    localAgents = Array.isArray(b.agents) ? b.agents : [];
+    localClients = Array.isArray(b.clients) ? b.clients : [];
+    applyCustomFlags(Array.isArray(b.flags) ? b.flags : []);
+
+    if(!data.length){        data = lsGet(STORE) || seed.slice();            jobs.push(persist("ships", data)); }
+    if(!vessels.length){    vessels = lsGet(VSTORE) || vesselSeed.slice();  jobs.push(persist("vessels", vessels)); }
+    if(!localAgents.length){ localAgents = backfillAgents(lsGet(ASTORE) || agentSeed.slice()); jobs.push(persist("agents", localAgents)); }
+    if(!localClients.length){ localClients = backfillClients(lsGet(CSTORE) || clientSeed.slice()); jobs.push(persist("clients", localClients)); }
+    if(!customFlagsList().length){
+      var legacyFlags = lsGet("customFlags_v1");
+      if(legacyFlags && legacyFlags.length){ applyCustomFlags(legacyFlags); jobs.push(persist("flags", legacyFlags)); }
+    }
+
+    /* 迁移：「办理中(proc)」已下线，历史数据统一归为「在港」 */
+    var changed = false;
+    data.forEach(function(s){ if(s.status==="proc"){ s.status="in"; changed=true; } });
+    if(changed) jobs.push(persist("ships", data));
+
+    dbRecover();
+    refresh();
+    return Promise.all(jobs.map(function(p){ return p.catch(function(){}); }));
+  }).catch(function(e){
+    var m=(e && e.message) || String(e);
+    /* 42501 = 函数存在但角色没有 EXECUTE，属于 schema.sql 的授权段没生效 */
+    if(/42501/.test(m)) m += "　→ 函数已存在但当前角色无 EXECUTE 权限，请在 Neon SQL Editor 执行 fix-permissions.sql";
+    dbFail(m);
+    data = []; vessels = []; localAgents = []; localClients = [];
+    applyCustomFlags([]);
+    refresh();
+  });
+}
+/* 注意：不再在脚本加载时启动 boot()，数据必须在登录成功之后才拉取 */
+</script>
+</body>
+</html>
