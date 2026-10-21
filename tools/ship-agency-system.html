@@ -59,6 +59,8 @@
   .topbar .brand .logo{background:rgba(255,255,255,.18)}
   .topbar .right{display:flex;align-items:center;gap:16px;font-size:13px}
   .topbar .clock{font-variant-numeric:tabular-nums}
+  .topbar .online{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.16);padding:3px 11px;border-radius:999px;font-variant-numeric:tabular-nums;cursor:default;white-space:nowrap}
+  .topbar .online::before{content:"";width:7px;height:7px;border-radius:50%;background:#7dffa8;box-shadow:0 0 6px #7dffa8;flex:0 0 auto}
   .topbar .user{display:flex;align-items:center;gap:8px}
   .topbar .user .av{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.2);display:grid;place-items:center;font-weight:700}
 
@@ -587,6 +589,7 @@
     <div class="brand"><span class="logo">船</span> 船舶代理管理系统</div>
     <div class="right">
       <span class="clock" id="clock"></span>
+      <span class="online" id="onlineCount" title="当前在线人数">在线 — 人</span>
       <div class="user"><span class="av" id="av">A</span><span id="uname">agency</span></div>
       <button class="lang" onclick="doLogout()">退出</button>
     </div>
@@ -2832,6 +2835,7 @@ function doLogin(){
     document.getElementById("av").textContent=(u[0]||"A").toUpperCase();
     boot();
     startClock();
+    startPresence(u);
   }).catch(function(e){
     var m=(e && e.message) || "登录失败";
     var hint = m;
@@ -2851,6 +2855,8 @@ var quitting = false;
 function doLogout(){
   if(!confirm("确定要退出登录吗？未保存的报价单编辑内容将会丢失。")) return;
   quitting = true;
+  stopPresence();
+  if(CURRENT_USER_EMAIL) apiRpc("api_leave_presence",{p_email:CURRENT_USER_EMAIL}).catch(function(){});
   signOut();
   document.getElementById("app").classList.add("hidden");
   document.getElementById("login").classList.remove("hidden");
@@ -2869,6 +2875,47 @@ window.addEventListener("beforeunload", function(e){
 function startClock(){
   function tick(){ document.getElementById("clock").textContent=new Date().toLocaleString("zh-CN",{hour12:false}); }
   tick(); setInterval(tick,1000);
+}
+/* ---------- 在线人数（presence）----------
+   登录后每 30 秒向 Neon 上报一次心跳（api_touch_presence），
+   并刷新顶栏「在线 N 人」。依赖 schema-presence.sql 里的 api_* 函数；
+   该 SQL 未执行时优雅降级为「在线 — 人」。 */
+var CURRENT_USER_EMAIL = null;
+var presenceTimer = null;
+function startPresence(email){
+  CURRENT_USER_EMAIL = email;
+  stopPresence();
+  apiTouchPresence(email);
+  apiRefreshOnline();
+  presenceTimer = setInterval(function(){
+    apiTouchPresence(email);
+    apiRefreshOnline();
+  }, 30000);
+}
+function stopPresence(){
+  if(presenceTimer){ clearInterval(presenceTimer); presenceTimer = null; }
+}
+function apiTouchPresence(email){
+  if(!email) return;
+  apiRpc("api_touch_presence", {p_email: email}).catch(function(){});
+}
+function apiRefreshOnline(){
+  var el = document.getElementById("onlineCount");
+  if(!el) return;
+  apiRpc("api_online_count", {p_window_min: 5}).then(function(n){
+    var c = (n && typeof n === "object") ? (n.api_online_count || n.count || 0) : (n || 0);
+    el.textContent = "在线 " + c + " 人";
+    apiRpc("api_list_online", {p_window_min: 5}).then(function(list){
+      if(Array.isArray(list) && list.length){
+        el.title = "当前在线（" + list.length + "）：\n" + list.join("\n");
+      } else {
+        el.title = "当前在线人数";
+      }
+    }).catch(function(){ el.title = "当前在线人数"; });
+  }).catch(function(){
+    el.textContent = "在线 — 人";
+    el.title = "在线状态获取失败（请确认已在 Neon 执行 schema-presence.sql）";
+  });
 }
 /* ---------------- 导入数据 ----------------
    支持三种 JSON 形态：
