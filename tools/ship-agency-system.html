@@ -57,6 +57,7 @@
   .topbar{background:var(--brand);color:#fff;padding:0 22px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20}
   .topbar .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px}
   .topbar .brand .logo{background:rgba(255,255,255,.18)}
+  .topbar .brand .ver{font-size:11px;font-weight:600;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);color:#fff;padding:1px 7px;border-radius:999px;letter-spacing:.3px;font-variant-numeric:tabular-nums}
   .topbar .right{display:flex;align-items:center;gap:16px;font-size:13px}
   .topbar .clock{font-variant-numeric:tabular-nums}
   .topbar .online{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.16);padding:3px 11px;border-radius:999px;font-variant-numeric:tabular-nums;cursor:default;white-space:nowrap}
@@ -586,11 +587,12 @@
 <!-- ===================== APP ===================== -->
 <div id="app" class="hidden">
   <div class="topbar">
-    <div class="brand"><span class="logo">船</span> 船舶代理管理系统</div>
+    <div class="brand"><span class="logo">船</span> 船舶代理管理系统<span class="ver" id="appVer"></span></div>
     <div class="right">
       <span class="clock" id="clock"></span>
       <span class="online" id="onlineCount" title="当前在线人数">在线 — 人</span>
       <div class="user"><span class="av" id="av">A</span><span id="uname">agency</span></div>
+      <button class="lang" id="btn-refresh" onclick="manualRefresh()" title="立即从服务器拉取最新数据">↻ 刷新数据</button>
       <button class="lang" onclick="doLogout()">退出</button>
     </div>
   </div>
@@ -1007,6 +1009,12 @@
 
 <script src="config.js"></script>
 <script>
+/* ---------------- 版本号 ----------------
+   显示在左上角系统名称右侧。每次做了可见改动，往上加：
+   小修：末位 +1；新增功能：中间位 +1。 */
+var APP_VERSION = "v1.7.0";
+(function(){ var el=document.getElementById("appVer"); if(el) el.textContent=APP_VERSION; })();
+
 /* ---------------- i18n ---------------- */
 var L = {
   zh:{in:"在港",arr:"即将到港",out:"已离港",proc:"办理中"},
@@ -2908,6 +2916,31 @@ function apiTouchPresence(email){
   if(!email) return;
   apiRpc("api_touch_presence", {p_email: email}).catch(function(){});
 }
+function pullData(){ return apiRpc("api_bootstrap").then(pullDataApply); }
+/* 只重渲染当前可见的那张列表，避免整页闪动 */
+function renderVisible(){
+  updateStats();
+  var vis = document.querySelector(".page:not(.hidden)");
+  var pid = vis ? (vis.id || "") : "";
+  if(pid === "page-agents")           renderAgents();
+  else if(pid === "page-clients")     renderClients();
+  else if(pid === "page-vessels")     renderVessels();
+  else if(pid === "page-dashboard")   renderDashboard();
+  else if(pid === "page-detail" && !editing) renderDetail();   /* 编辑中不重渲染，免得冲掉输入 */
+}
+/* 手动刷新数据（顶栏「↻ 刷新数据」）：强制拉一次，不看数据签名 */
+function manualRefresh(){
+  var btn = document.getElementById("btn-refresh");
+  if(btn){ btn.disabled = true; btn.textContent = "⟳ 刷新中…"; }
+  pullData().then(function(){
+    renderVisible();
+    toast("数据已刷新");
+  }).catch(function(e){
+    toast("刷新失败：" + ((e && e.message) || String(e)));
+  }).then(function(){
+    if(btn){ btn.disabled = false; btn.textContent = "↻ 刷新数据"; }
+  });
+}
 function syncData(){
   if(dataSyncing) return;
   /* 编辑面打开时不刷：弹窗（新增/编辑/报价单/导入/抬头等）或 详情页/凭证页，
@@ -2920,18 +2953,18 @@ function syncData(){
   apiRpc("api_bootstrap").then(function(b){
     var sig = JSON.stringify([b.ships, b.vessels, b.agents, b.clients]);
     if(sig !== lastDataSig){
-      lastDataSig = sig;
-      data         = Array.isArray(b.ships)   ? b.ships   : data;
-      vessels      = Array.isArray(b.vessels) ? b.vessels : vessels;
-      localAgents  = Array.isArray(b.agents)  ? b.agents  : localAgents;
-      localClients = Array.isArray(b.clients) ? b.clients : localClients;
-      /* 只重渲染当前可见列表，避免整页闪动 */
-      if(pid === "page-agents")      renderAgents();
-      else if(pid === "page-clients")    renderClients();
-      else if(pid === "page-vessels")    renderVessels();
-      else if(pid === "page-dashboard"){ renderDashboard(); updateStats(); }
+      pullDataApply(b);
+      renderVisible();
     }
   }).catch(function(){}).then(function(){ dataSyncing = false; });
+}
+function pullDataApply(b){
+  data         = Array.isArray(b.ships)   ? b.ships   : data;
+  vessels      = Array.isArray(b.vessels) ? b.vessels : vessels;
+  localAgents  = Array.isArray(b.agents)  ? b.agents  : localAgents;
+  localClients = Array.isArray(b.clients) ? b.clients : localClients;
+  ports        = Array.isArray(b.ports)   ? b.ports   : ports;
+  lastDataSig  = JSON.stringify([data, vessels, localAgents, localClients]);
 }
 function apiRefreshOnline(){
   var el = document.getElementById("onlineCount");
