@@ -321,8 +321,22 @@
     #quote-mask .modal{position:static !important;transform:none !important;width:auto !important;max-width:100% !important;max-height:none !important;height:auto !important;box-shadow:none !important;border:none !important;border-radius:0 !important;margin:0 !important;overflow:visible !important}
     #quote-mask .mh,#quote-mask .mf{display:none !important}
     #quote-mask .mb{position:static !important;padding:0 !important;max-height:none !important;height:auto !important;overflow:visible !important}
-    .quote{border:none !important;padding:14mm !important}
-    .quote .q-sec,.quote table{break-inside:avoid;page-break-inside:avoid}
+    /* 纸边距改由 @page doc 提供（上 26mm 放信纸抬头、下 12mm 放页码），
+       所以这里 padding 归零，宽度也不强制，任其撑满 182mm 内容区。 */
+    .quote{border:none !important;padding:0 !important;width:auto !important;max-width:100% !important}
+    /* 信纸抬头改由 @page doc 的顶部边距盒输出 —— 这样每一页都有抬头。
+       页面内嵌的那份（.q-lh）只在屏幕预览时显示，打印时隐藏，避免第 1 页重复。 */
+    .quote .q-lh,.quote .q-rule{display:none !important}
+    /* 报价单用命名页面 doc，与凭证打印块的通用 @page{size:A4;margin:0} 互不干扰 */
+    #quote-mask{page:doc}
+    /* 分页规则：费用表项多时必然跨页。
+       不能给 .q-sec / table 设 break-inside:avoid —— 整张表会被推到新页，
+       留下「第 2 页只有一行标题」的大量空白（22 项时实测 4 页变 3 页）。
+       正确做法：只保证「行内不分断」+「章节标题不落在页尾」+「每页重复表头」。 */
+    .quote .q-sec-t{break-after:avoid;page-break-after:avoid}
+    .quote .q-fee tr{break-inside:avoid;page-break-inside:avoid}
+    .quote .q-fee thead{display:table-header-group}
+    .quote .q-grid{break-inside:avoid;page-break-inside:avoid}
     .quote input[type=text]{border:none !important;background:transparent !important;padding:0 !important;height:auto !important;color:#1d2939 !important;font-size:13px !important}
     /* 占位符（收费项目/计费单位/单价/备注）只在屏幕上提示，打印时不出现 */
     .quote input::placeholder{color:transparent !important}
@@ -349,6 +363,8 @@
     .quote .q-fee th.col-qty,.quote .q-fee td.col-qty{width:6%}
     .quote .q-fee th.col-up,.quote .q-fee td.col-up{width:17%}
     .quote .q-fee th.col-amt,.quote .q-fee td.col-amt{display:table-cell !important;width:12%}
+    /* No. 列同样只在打印稿出现（基础样式里 .col-no 是 display:none，这里捞回来） */
+    .quote .q-fee th.col-no,.quote .q-fee td.col-no{display:table-cell !important}
     .quote .q-fee th.col-rem,.quote .q-fee td.col-rem{width:12%}
     /* 打印时用可换行的纯文本替代单行 input，与 INVOICE 的表格观感一致 */
     .quote .q-fee td input[type=text]{display:none !important}
@@ -516,8 +532,9 @@
     body.inv-print #invoice-print{display:block !important;visibility:visible !important}
     body.inv-print #quote-mask{display:none !important}
     body.inv-print #voucher-print{display:none !important}
-    /* 与报价单同一套打印规则：同样的 14mm 纸边距与隐藏项 */
-    #invoice-print .quote{padding:14mm !important;border:none !important}
+    /* 与报价单同一套打印规则：纸边距 / 信纸抬头 / 页码全部来自 @page doc */
+    #invoice-print{page:doc}
+    #invoice-print .quote{padding:0 !important;border:none !important;width:auto !important;max-width:100% !important}
   }
 
   .mask{position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:flex-start;justify-content:center;z-index:50;padding:40px 16px;overflow:auto}
@@ -540,6 +557,7 @@
   #db-banner.show{display:block}
   @media(max-width:900px){.side{display:none}.stats{grid-template-columns:repeat(2,1fr)}.modal .grid2{grid-template-columns:1fr}.drow{grid-template-columns:120px 1fr}}
 </style>
+<style id="doc-print-style"></style>
 </head>
 <body>
 <div id="db-banner"></div>
@@ -1134,11 +1152,12 @@ function dbNeedMigration(fn, raw){
   if(el){
     el.innerHTML = "⚠ <b>Data API 找不到函数：<code>"+String(fn).replace(/</g,"&lt;")+"</code></b><br>"+
       "只有两种可能，按顺序排查：<br>"+
-      "① <b>函数没建到这个库</b>——请在 Neon 控制台 SQL Editor 执行下面的自检，看三行结果是否都在：<br>"+
+      "① <b>函数没建到这个库</b>——请在 Neon 控制台 SQL Editor 执行下面的自检，看结果行是否都在：<br>"+
       '<code class="db-code">SELECT proname FROM pg_proc WHERE pronamespace=&#39;public&#39;::regnamespace '+
-      'AND proname IN (&#39;api_save_ports&#39;,&#39;api_save_vsettings&#39;,&#39;api_save_vtrips&#39;);</code><br>'+
-      "查出 0 行 → schema-voucher.sql 没执行成功（或跑到了别的项目 / 分支的 SQL Editor 里，"+
-      "注意要和 config.js 里 <code>ep-purple-surf-b3n0of19</code> 同一个项目同一个分支）；查出 3 行 → 是 ②。<br>"+
+      'AND proname IN (&#39;api_save_ports&#39;,&#39;api_save_vsettings&#39;,&#39;api_save_vtrips&#39;,&#39;api_save_uisettings&#39;);</code><br>'+
+      "查出缺行 → 对应的建库脚本没执行成功（或跑到了别的项目 / 分支的 SQL Editor 里，"+
+      "注意要和 config.js 里 <code>ep-purple-surf-b3n0of19</code> 同一个项目同一个分支）；"+
+      "凭证三件套缺 → 执行 schema-voucher.sql；<code>api_save_uisettings</code> 缺 → 执行 schema-ui-settings.sql。查全 → 是 ②。<br>"+
       "② <b>schema 缓存没刷新</b>——在 SQL Editor 执行 <code>NOTIFY pgrst, &#39;reload schema&#39;;</code> 后点「重新检测」；"+
       "仍不行就在 Neon 控制台把 Data API 关掉再打开（强制重建缓存），或过几分钟再点。"+ 
       '<button class="db-retry" onclick="retryMigration()">↻ 重新检测</button>'+
@@ -1146,14 +1165,14 @@ function dbNeedMigration(fn, raw){
     el.classList.add("show");
   }
 }
-/* 重新检测：把凭证三件套按当前内存数据原样写回（都是幂等写，不会产生脏数据）。
-   三个函数都在，写成功 → dbRecover() 摘掉横幅；任何一个还缺，横幅会再次弹出。 */
+/* 重新检测：把凭证三件套 + 列表偏好按当前内存数据原样写回（都是幂等写，不会产生脏数据）。
+   函数都在，写成功 → dbRecover() 摘掉横幅；任何一个还缺，横幅会再次弹出。 */
 function retryMigration(){
   var el=document.getElementById("db-banner");
   if(el) el.classList.remove("show");
   toast("正在重新检测数据库函数…");
-  Promise.all([persist("ports",ports), persist("vsettings",vset), persist("vtrips",trips)])
-    .then(function(){ toast("检测通过：凭证功能已可用"); })
+  Promise.all([persist("ports",ports), persist("vsettings",vset), persist("vtrips",trips), persist("uisettings",UI)])
+    .then(function(){ toast("检测通过：凭证与列表设置已可用"); })
     .catch(function(){ /* persist 内部已处理横幅与提示 */ });
 }
 /* 仅用于把浏览器里遗留的 localStorage 数据一次性搬进 Neon */
@@ -1361,22 +1380,56 @@ function updateStats(){
 }
 
 /* ---------------- dashboard list ---------------- */
-/* ---------------- 列表分页 + 每页数量 + 表头排序（按表分别保存到本机 localStorage） ----------------
-   设置按表独立存储于 shipAgencyUI_v1：{ ship:{size,sortKey,sortDir}, vessel:{...}, agent:{...}, client:{...} }
+/* ---------------- 列表分页 + 每页数量 + 表头排序（按表分别保存到 Neon） ----------------
+   设置按表独立存储：{ ship:{size,sortKey,sortDir}, vessel:{...}, agent:{...}, client:{...} }
    size 为每页条数，0 表示全部；sortKey/sortDir 记录各表当前排序列与方向。
+   数据走 app_settings 的 uiSettings 键（api_save_uisettings），与业务数据同一库，
+   换设备 / 清缓存都不丢；写库带 800ms 防抖，连续翻页不会把请求打爆。
    pager 记录各列表当前页码；搜索/筛选/改每页数量或排序时回到第 1 页。 */
-var UI_KEY = "shipAgencyUI_v1";
-var UI = lsGet(UI_KEY) || {};
+var UI = {};
 function uiState(key){ if(!UI[key]) UI[key]={size:20,sortKey:null,sortDir:null}; return UI[key]; }
-function uiSave(){ try{ localStorage.setItem(UI_KEY, JSON.stringify(UI)); }catch(e){} }
-["ship","vessel","agent","client"].forEach(uiState);
-/* 兼容旧版：曾用 shipAgencyPageSize_v1 存全局每页数量，迁移到各表 */
-(function(){
-  try{
-    var old = localStorage.getItem("shipAgencyPageSize_v1");
-    if(old){ var o=JSON.parse(old); if(o&&o.size){ ["ship","vessel","agent","client"].forEach(function(k){ uiState(k).size=o.size; }); uiSave(); localStorage.removeItem("shipAgencyPageSize_v1"); } }
-  }catch(e){}
-})();
+var _uiSaveTimer = null;
+function uiSave(){
+  if(_uiSaveTimer) clearTimeout(_uiSaveTimer);
+  _uiSaveTimer = setTimeout(function(){
+    _uiSaveTimer = null;
+    persist("uisettings", UI).catch(function(){});
+  }, 800);
+}
+/* boot 时把库里的设置灌进 UI（缺的表补默认值）；
+   localLegacy = 浏览器里遗留的旧 localStorage 数据，仅首次迁移用。 */
+function applyUISettings(fromDb, localLegacy){
+  UI = {};
+  ["ship","vessel","agent","client"].forEach(function(k){
+    var d = (fromDb && fromDb[k]) || {};
+    UI[k] = {
+      size:      (typeof d.size === "number" && d.size >= 0) ? d.size : 20,
+      sortKey:   (typeof d.sortKey === "string" && d.sortKey) ? d.sortKey : null,
+      sortDir:   (d.sortDir === "desc") ? "desc" : (d.sortKey ? "asc" : null)
+    };
+  });
+  /* 首次迁移：库里没有任何设置（四个表都是默认值）而本地有旧数据 → 搬上去 */
+  if(localLegacy && Object.keys(localLegacy).length){
+    var dbEmpty = ["ship","vessel","agent","client"].every(function(k){ return !fromDb || !fromDb[k]; });
+    if(dbEmpty){
+      Object.keys(localLegacy).forEach(function(k){
+        if(!UI[k]) return;
+        var o = localLegacy[k] || {};
+        if(typeof o.size === "number" && o.size >= 0) UI[k].size = o.size;
+        if(typeof o.sortKey === "string" && o.sortKey){
+          UI[k].sortKey = o.sortKey;
+          UI[k].sortDir = (o.sortDir === "desc") ? "desc" : "asc";
+        }
+      });
+      uiSave();   /* 立即排一次写库（防抖 800ms 后发出） */
+    }
+    /* 无论是否迁移，旧键都不再需要 */
+    try{
+      localStorage.removeItem("shipAgencyUI_v1");
+      localStorage.removeItem("shipAgencyPageSize_v1");
+    }catch(e){}
+  }
+}
 var pager = {ship:1, vessel:1, agent:1, client:1};
 function renderByKey(key){
   if(key==="ship") renderDashboard();
@@ -1980,7 +2033,7 @@ function saveQuote(){
    数据源 = 该航次的本港代理 + 已勾选的服务商，三方价格表汇总到一个下拉框。
    点开是一个带复选框的列表，每项显示「公司名 — 项目（单位）报价 / 成本价」，
    可勾选任意多项（不用按 Ctrl），点「＋ 加入」批量追加到报价单。
-   同名项会跳过，避免重复累加；加入后清空勾选，方便继续挑。
+   允许重复添加：同一项目可按不同数量 / 备注出现多行；加入后清空勾选，方便继续挑。
    勾选状态存 qPickSel（数组，存 公司名||下标），点外面/取消时收起下拉。 */
 var qPickSel = [];
 function quoteSourceCompanies(s){
@@ -2075,19 +2128,18 @@ document.addEventListener("click", function(e){
 function updQuoteFx(v){ quoteFxRate = (v||"").trim(); renderQuoteTotal(); }
 function addQuoteItemFromPrice(){
   if(!qPickSel.length){ toast("请先勾选要添加的收费项"); return; }
-  var added = 0, skipped = 0, lastName = "";
+  var added = 0, lastName = "";
+  /* 允许重复添加：同一收费项可按不同数量/备注出现多行，由「⧉ 复制」与直接勾选共同支持 */
   qPickSel.forEach(function(v){
     var p = v.split("||"), company = p[0], idx = parseInt(p[1],10);
     var a = localAgents.find(function(x){return x.company===company;});
     var f = a && (a.fees||[])[idx];
     if(!f) return;
-    var name = (f.item||"").trim();
-    if(name && quoteItems.some(function(it){ return (it.item||"").trim()===name; })){ skipped++; return; }
     quoteItems.push({
       item:f.item||"", unit:f.unit||"", qty:"1",
       price:f.price||"", cost:(f.cost||""), note:f.note||"", inc:true
     });
-    added++; lastName = name;
+    added++; lastName = (f.item||"").trim();
   });
   buildQuoteFeeRows(); renderQuoteTotal();
   /* 加入后清空勾选，方便继续挑 */
@@ -2100,11 +2152,70 @@ function addQuoteItemFromPrice(){
   }
   var btn=document.getElementById("q-dd-btn");
   if(btn) btn.textContent = qPickLabel(0);
-  if(added && skipped)      toast("已添加 "+added+" 项，"+skipped+" 项已存在未重复添加");
-  else if(added)            toast("已添加 "+added+" 项（含「"+(lastName||"未命名")+"」）");
-  else                      toast("所选项目已在费用表中，未重复添加");
+  toast(added ? "已添加 "+added+" 项（含「"+(lastName||"未命名")+"」）" : "未找到所选收费项");
 }
 
+/* ---------- 信纸抬头 / 页码：动态生成 @page doc 规则 ----------
+   为什么用 @page 边距盒而不是 position:fixed：
+   fixed 在 Chrome 打印里无法进入页边距区（top:0 落在内容区顶会盖住内容，
+   负 top / transform / margin-top 都会被夹到内容区底部，子元素 transform 直接不渲染），
+   而 @top-left / @bottom-center 边距盒天生在边距区且每页重复。
+   额外好处：把 @top-left 与 @bottom-center 都占上后，Chrome 自带的页眉页脚
+   （日期/标题/网址）会被抑制，用户无需在打印对话框手动取消「页眉和页脚」。
+   命名页面 doc 与凭证打印块的通用 @page{size:A4;margin:0} 是两套规则，互不覆盖。
+
+   信头用 SVG 而不是边距盒文字：
+   - 边距盒只有 content 一个字符串，做不出「logo + 大号 ANSUD + 小号副标题 +
+     右对齐三行联系方式 + 金色分隔线」的版面，和屏幕上的 .q-lh 对不起来。
+   - SVG 可以 1:1 复刻屏幕 .q-lh：屏幕 1px = 1/96 inch，182mm 内容宽 = 688px，
+     所以 SVG 用 688 宽、按屏幕像素尺寸摆放，打印出来和屏幕预览完全一致。
+   - SVG 里文字是矢量的，打印清晰；logo 以 data URI 内嵌，按 52px 摆放。
+   - 实测 Chrome 边距盒里的图片按固有像素尺寸渲染（96dpi）：688px 正好 182mm，
+     铺满内容宽；所以 SVG 高度与 @page doc 上边距取同一值，图片恰好填满边距区
+     —— 无论 Chrome 把边距盒内容顶对齐还是底对齐，效果都一样。
+
+   顶部留白：上边距 32mm、SVG 高 121px(=32mm)，其中信头内容上方留 10mm(38px)、
+   金色线下方留 4.8mm(18px)。这样纸边到 logo 有 10mm 呼吸空间，不会顶到切割边。 */
+var ANSUD_LH_SVG = "";
+/* 抬头联系方式的原始字段（letterheadContact 的 HTML 版供页面用，这里供 SVG 用） */
+function letterheadContactParts(){
+  var c = (vset && vset.contact) || {};
+  function g(k, def){ var v = c[k]; return (v==null) ? def : v; }
+  return { email:g("email","agency@ansud.cn"), tel:g("tel","+86 13378410401"), web:g("web","www.ansud.cn") };
+}
+/* 生成信纸抬头 SVG data URI（内容与 .q-lh 一致，尺寸按屏幕像素 1:1） */
+function buildLetterheadSVG(){
+  var p = letterheadContactParts();
+  var W = 688, H = 121;          /* 121px = 32mm，与 @page doc 上边距一致 */
+  var TOP = 38;                  /* 信头内容距纸边 10mm */
+  function xe(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+  var FF = "Segoe UI, Microsoft YaHei, Arial, sans-serif";
+  var s = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"" + W + "\" height=\"" + H + "\" viewBox=\"0 0 " + W + " " + H + "\">";
+  s += "<rect width=\"" + W + "\" height=\"" + H + "\" fill=\"#ffffff\"/>";
+  var tx = 0;
+  if(ANSUD_LOGO){ s += "<image x=\"0\" y=\"" + TOP + "\" width=\"52\" height=\"52\" href=\"" + ANSUD_LOGO + "\"/>"; tx = 62; }
+  s += "<text x=\"" + tx + "\" y=\"" + (TOP + 27) + "\" font-family=\"" + FF + "\" font-size=\"25\" font-weight=\"800\" fill=\"#39093d\" letter-spacing=\"1\">ANSUD</text>";
+  s += "<text x=\"" + tx + "\" y=\"" + (TOP + 46) + "\" font-family=\"" + FF + "\" font-size=\"10.5\" font-weight=\"700\" fill=\"#39093d\" letter-spacing=\"0.4\">SHIPPING AGENCY CO., LTD.</text>";
+  var lines = ["E-mail: " + p.email, "Tel: " + p.tel, "Web: " + p.web];
+  lines.forEach(function(t, i){
+    s += "<text x=\"" + W + "\" y=\"" + (TOP + 12 + i*19) + "\" text-anchor=\"end\" font-family=\"" + FF + "\" font-size=\"11.5\" fill=\"#666\">" + xe(t) + "</text>";
+  });
+  s += "<rect x=\"0\" y=\"100\" width=\"" + W + "\" height=\"3\" fill=\"#d39f16\"/>";
+  s += "</svg>";
+  return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(s);
+}
+function syncDocPrintStyle(){
+  var el = document.getElementById("doc-print-style");
+  if(!el) return;
+  ANSUD_LH_SVG = buildLetterheadSVG();
+  el.textContent =
+    "@media print{\n" +
+    "@page doc{size:A4;margin:32mm 14mm 12mm 14mm;\n" +
+    "  @top-left{content:url(" + ANSUD_LH_SVG + ")}\n" +
+    "  @bottom-center{content:'Page ' counter(page) ' / ' counter(pages);font-size:9pt;color:#666}\n" +
+    "}\n" +
+    "}\n";
+}
 /* ---------------- INVOICE 打印（内容取自报价单） ----------------
    版式完全复用报价单的 .quote 样式（同一套信头 / 金色分隔线 / BILL TO /
    章节标题 / 费用表格），只把大标题换成 INVOICE、表格多一列 Amount。
@@ -2113,32 +2224,39 @@ function addQuoteItemFromPrice(){
    —— 账户信息属收款信息，只在 INVOICE 打印稿显示。 */
 function invAddr(v){ return esc(String(v==null?"":v)).replace(/&lt;br\s*\/?&gt;/gi,"<br>"); }
 
-/* 我方收款账户与抬头联系方式：实际取自 vset.bank / vset.contact，
-   可在「单据抬头 / 银行信息」页面维护；此处保留一份兜底常量以防 vset 尚未载入。 */
+/* 我方收款账户与抬头联系方式：取自 vset.bank / vset.contact，
+   可在「单据抬头 / 银行信息」页面维护。
+   注意：必须用 ==null 判断而非 || —— 用户把维护项清空后空串也是合法值，
+   用 || 会把空串判假并回落到旧值，导致「删除了却还在」。
+   仅当 vset 本身尚未载入（undefined）时才回落默认值。 */
 function bankInfo(){
   var b = (vset && vset.bank) || {};
+  function g(k, def){ var v = b[k]; return (v==null) ? def : v; }
   return {
-    beneficiary: b.beneficiaryEn || "ANSUD SHIPPING AGENCY CO., LTD.",
-    bank:        b.bankEn        || "CHINA MERCHANTS BANK XINSHIDAI SUBBRANCH",
-    account:     b.accountEn     || "USD:755983936732001",
-    swift:       b.swift         || "CMBCCNBS",
-    address:     b.addressEn     || "ROOM 3219, PENGRUN PLAZA, HOUHAIBIN ROAD, SHENZHEN, PR OF CHINA, 518067"
+    beneficiary: g("beneficiaryEn", "ANSUD SHIPPING AGENCY CO., LTD."),
+    bank:        g("bankEn",        "CHINA MERCHANTS BANK XINSHIDAI SUBBRANCH"),
+    account:     g("accountEn",     "USD:755983936732001"),
+    swift:       g("swift",         "CMBCCNBS"),
+    address:     g("addressEn",     "ROOM 3219, PENGRUN PLAZA, HOUHAIBIN ROAD, SHENZHEN, PR OF CHINA, 518067")
   };
 }
 function bankInfoCn(){
   var b = (vset && vset.bank) || {};
+  function g(k, def){ var v = b[k]; return (v==null) ? def : v; }
   return {
-    beneficiary: b.beneficiaryCn || "\u6df1\u5733\u5b89\u901f\u8fbe\u8239\u8236\u4ee3\u7406\u6709\u9650\u516c\u53f8",
-    account:     b.accountCn     || "755983936710000",
-    bank:        b.bankCn        || "\u62db\u5546\u94f6\u884c\u80a1\u4efd\u6709\u9650\u516c\u53f8\u6df1\u5733\u65b0\u65f6\u4ee3\u652f\u884c",
-    address:     b.addressCn     || "\u6df1\u5733\u5e02\u5357\u5c71\u533a\u540e\u6d77\u6ee8\u8def\u9e4f\u6da6\u5e7f\u573a3219"
+    beneficiary: g("beneficiaryCn", "深圳安速达船舶代理有限公司"),
+    account:     g("accountCn",     "755983936710000"),
+    bank:        g("bankCn",        "招商银行股份有限公司深圳新时代支行"),
+    address:     g("addressCn",     "深圳市南山区后海滨路鹏润广场3219")
   };
 }
 /* 信纸右上角联系方式 */
 function letterheadContact(){
   var c = (vset && vset.contact) || {};
-  var em = c.email || "agency@ansud.cn", tel = c.tel || "+86 13378410401", web = c.web || "www.ansud.cn";
-  return 'E-mail: '+esc(em)+'<br>Tel: '+esc(tel)+'<br>Web: '+esc(web);
+  function g(k, def){ var v = c[k]; return (v==null) ? def : v; }
+  return 'E-mail: '+esc(g("email","agency@ansud.cn"))+
+         '<br>Tel: '+esc(g("tel","+86 13378410401"))+
+         '<br>Web: '+esc(g("web","www.ansud.cn"));
 }
 /* 汇率：留空则不显示换算行 */
 var quoteFxRate = "";
@@ -2159,24 +2277,33 @@ function invAmountBlock(m, currency){
   h += '</div>';
   return h;
 }
-/* 收款账户信息（仅 INVOICE 打印稿出现） */
+/* 收款账户信息（仅 INVOICE 打印稿出现）。
+   用户把维护项清空后，对应行不再输出；中英文都整段为空时返回空串，
+   避免打印出一个只有标题的空块。 */
 function invBankBlock(){
   var U = bankInfo(), C = bankInfoCn();
+  function nz(v){ return (v==null) ? "" : String(v).trim(); }
+  var en = [
+    ["Beneficiary Name : ", nz(U.beneficiary)],
+    ["Bank Name : ",        nz(U.bank)],
+    ["Account No.: ",       nz(U.account)],
+    ["SWIFT Code : ",       nz(U.swift)],
+    ["Company Address:",    nz(U.address)]
+  ];
+  var cn = [
+    ["\u8d26\u6237\u540d\u79f0\uff1a", nz(C.beneficiary)],
+    ["\u8d26\u6237\u53f7\u7801\uff1a", nz(C.account)],
+    ["\u5f00\u6237\u94f6\u884c\uff1a", nz(C.bank)],
+    ["\u516c\u53f8\u5730\u5740\uff1a", nz(C.address)]
+  ];
+  var enHtml = en.filter(function(r){ return r[1]; })
+                .map(function(r){ return '<div>'+r[0]+esc(r[1])+'</div>'; }).join("");
+  var cnHtml = cn.filter(function(r){ return r[1]; })
+                .map(function(r){ return '<div>'+r[0]+esc(r[1])+'</div>'; }).join("");
+  if(!enHtml && !cnHtml) return "";
   return '<div class="q-bank">'+
-    '<div class="q-bank-t">Our banking details as following:</div>'+
-    '<div class="q-bank-en">'+
-      '<div>Beneficiary Name : '+esc(U.beneficiary)+'</div>'+
-      '<div>Bank Name : '+esc(U.bank)+'</div>'+
-      '<div>Account No.: '+esc(U.account)+'</div>'+
-      '<div>SWIFT Code : '+esc(U.swift)+'</div>'+
-      '<div>Company Address:'+esc(U.address)+'</div>'+
-    '</div>'+
-    '<div class="q-bank-cn">'+
-      '<div>\u8d26\u6237\u540d\u79f0\uff1a'+esc(C.beneficiary)+'</div>'+
-      '<div>\u8d26\u6237\u53f7\u7801\uff1a'+esc(C.account)+'</div>'+
-      '<div>\u5f00\u6237\u94f6\u884c\uff1a'+esc(C.bank)+'</div>'+
-      '<div>\u516c\u53f8\u5730\u5740\uff1a'+esc(C.address)+'</div>'+
-    '</div>'+
+    (enHtml ? '<div class="q-bank-t">Our banking details as following:</div><div class="q-bank-en">'+enHtml+'</div>' : '')+
+    (cnHtml ? '<div class="q-bank-cn">'+cnHtml+'</div>' : '')+
   '</div>';
 }
 function buildInvoiceHtml(s, items, currency, qno, qdate){
@@ -3257,6 +3384,7 @@ function saveLetterhead(){
     accountCn:get("bk-accCn"),     addressCn:get("bk-addrCn")
   };
   persistVSet();
+  syncDocPrintStyle();   /* 抬头改了，@page doc 里的联系方式也要跟着改 */
   autoGrowAllTA(document.getElementById("letterhead-mask"));
   closeLetterhead();
   toast("已保存，报价单与 INVOICE 的抬头、收款账户已更新");
@@ -3469,7 +3597,23 @@ function boot(){
     applyCustomFlags(Array.isArray(b.flags) ? b.flags : []);
     ports      = Array.isArray(b.ports) ? b.ports : [];
     vset       = normalizeVSettings(b.vsettings);
+    /* 信纸抬头（SVG）与页码规则依赖 vset.contact，载入后立即生成 */
+    syncDocPrintStyle();
     trips      = Array.isArray(b.vtrips) ? b.vtrips : [];
+    /* 列表偏好（每页条数 / 排序列）：从库里的 uiSettings 载入；
+       首次运行时若浏览器还留着旧的 localStorage 设置，一并搬上来。 */
+    var legacyUI = lsGet("shipAgencyUI_v1") || (function(){
+      try{
+        var o = JSON.parse(localStorage.getItem("shipAgencyPageSize_v1") || "null");
+        if(o && typeof o.size === "number"){
+          var t = {};
+          ["ship","vessel","agent","client"].forEach(function(k){ t[k] = {size:o.size, sortKey:null, sortDir:null}; });
+          return t;
+        }
+      }catch(e){}
+      return null;
+    })();
+    applyUISettings(b.uisettings, legacyUI);
     var seeded = (b.seeded === true || b.seeded === "true");
 
     if(!seeded){
