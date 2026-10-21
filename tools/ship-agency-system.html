@@ -2882,18 +2882,23 @@ function startClock(){
    该 SQL 未执行时优雅降级为「在线 — 人」。 */
 var CURRENT_USER_EMAIL = null;
 var presenceTimer = null;
+var currentOnlineCount = 1;
 function startPresence(email){
   CURRENT_USER_EMAIL = email;
   stopPresence();
   apiTouchPresence(email);
-  apiRefreshOnline();
-  presenceTimer = setInterval(function(){
-    apiTouchPresence(email);
-    apiRefreshOnline();
-  }, 30000);
+  apiRefreshOnline().then(schedulePresence);
+}
+function schedulePresence(){
+  if(!CURRENT_USER_EMAIL) return;
+  var delay = (currentOnlineCount > 1) ? 5000 : 30000;
+  presenceTimer = setTimeout(function(){
+    apiTouchPresence(CURRENT_USER_EMAIL);
+    apiRefreshOnline().then(schedulePresence);
+  }, delay);
 }
 function stopPresence(){
-  if(presenceTimer){ clearInterval(presenceTimer); presenceTimer = null; }
+  if(presenceTimer){ clearTimeout(presenceTimer); presenceTimer = null; }
 }
 function apiTouchPresence(email){
   if(!email) return;
@@ -2901,11 +2906,12 @@ function apiTouchPresence(email){
 }
 function apiRefreshOnline(){
   var el = document.getElementById("onlineCount");
-  if(!el) return;
-  apiRpc("api_online_count", {p_window_min: 5}).then(function(n){
+  if(!el) return Promise.resolve();
+  return apiRpc("api_online_count", {p_window_min: 5}).then(function(n){
     var c = (n && typeof n === "object") ? (n.api_online_count || n.count || 0) : (n || 0);
+    currentOnlineCount = c;
     el.textContent = "在线 " + c + " 人";
-    apiRpc("api_list_online", {p_window_min: 5}).then(function(list){
+    return apiRpc("api_list_online", {p_window_min: 5}).then(function(list){
       if(Array.isArray(list) && list.length){
         el.title = "当前在线（" + list.length + "）：\n" + list.join("\n");
       } else {
