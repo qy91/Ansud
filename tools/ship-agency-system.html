@@ -1012,7 +1012,7 @@
 /* ---------------- 版本号 ----------------
    显示在左上角系统名称右侧。每次做了可见改动，往上加：
    小修：末位 +1；新增功能：中间位 +1。 */
-var APP_VERSION = "v1.7.2";
+var APP_VERSION = "v1.7.5";
 (function(){ var el=document.getElementById("appVer"); if(el) el.textContent=APP_VERSION; })();
 
 /* ---------------- i18n ---------------- */
@@ -1092,7 +1092,9 @@ function signIn(email, password, force){
     });
   }).then(function(t){
     var jwt = t && t.token;
-    if(!jwt) throw new Error("Neon Auth 未返回 JWT：" + JSON.stringify(t).slice(0,200));
+    /* 必须是三段式 JWT；坏 token 静默使用会让后续所有 RPC 一起 400，这里直接报清楚 */
+    if(!jwt || typeof jwt !== "string" || jwt.split(".").length !== 3)
+      throw new Error("Neon Auth 未返回有效 JWT：" + JSON.stringify(t).slice(0,200));
     TOKEN = jwt;
     TOKEN_EXP = jwtExp(jwt) || (Date.now()/1000 + 900);
     return TOKEN;
@@ -2902,14 +2904,25 @@ window.addEventListener("pagehide", function(){
   markOffline();
   CURRENT_USER_EMAIL = null;
 });
+/* 标签页重新回到前台：浏览器会把后台标签页的定时器降速甚至冻结，
+   导致心跳停发、在线状态过期（别人看你就是离线）。一回到前台就立刻补一次
+   心跳并重新查询 —— 本人瞬间恢复在线，本机也立刻看到其他人的最新状态。 */
+document.addEventListener("visibilitychange", function(){
+  if(document.visibilityState !== "visible") return;
+  if(!CURRENT_USER_EMAIL) return;
+  if(!presenceTimer) schedulePresence();   /* 循环意外中止时重启 */
+  apiTouchPresence(CURRENT_USER_EMAIL);
+  apiRefreshOnline();
+});
 function startClock(){
   function tick(){ document.getElementById("clock").textContent=new Date().toLocaleString("zh-CN",{hour12:false}); }
   tick(); setInterval(tick,1000);
 }
 /* ---------- 在线人数（presence）----------
-   登录后每 30 秒向 Neon 上报一次心跳（api_touch_presence），
-   并刷新顶栏「在线 N 人」。依赖 schema-presence.sql 里的 api_* 函数；
-   该 SQL 未执行时优雅降级为「在线 — 人」。 */
+   登录后向 Neon 上报心跳（api_touch_presence），并刷新顶栏「在线 N 人」。
+   单人时每 15 秒一次、多人在线时每 5 秒一次；标签页回到前台也立即补一次
+   （后台标签页会被浏览器节流/冻结，心跳停发会让在线状态过期）。
+   依赖 schema-presence.sql 里的 api_* 函数；该 SQL 未执行时优雅降级为「在线 — 人」。 */
 var CURRENT_USER_EMAIL = null;
 var presenceTimer = null;
 var currentOnlineCount = 1;
@@ -2917,12 +2930,12 @@ var dataSyncing = false, lastDataSig = "";
 function startPresence(email){
   CURRENT_USER_EMAIL = email;
   stopPresence();
-  apiTouchPresence(email);
-  apiRefreshOnline().then(schedulePresence);
+  /* 先确保自己的心跳落库，再查在线列表：避免刚登录时自己的行还没写入就被查 → 把自己的在线漏算 */
+  apiTouchPresence(email).then(function(){ return apiRefreshOnline(); }).then(schedulePresence);
 }
 function schedulePresence(){
   if(!CURRENT_USER_EMAIL) return;
-  var delay = (currentOnlineCount > 1) ? 5000 : 30000;
+  var delay = (currentOnlineCount > 1) ? 5000 : 15000;
   presenceTimer = setTimeout(function(){
     apiTouchPresence(CURRENT_USER_EMAIL);
     apiRefreshOnline().then(function(){
@@ -2935,8 +2948,9 @@ function stopPresence(){
   if(presenceTimer){ clearTimeout(presenceTimer); presenceTimer = null; }
 }
 function apiTouchPresence(email){
-  if(!email) return;
-  apiRpc("api_touch_presence", {p_email: email}).catch(function(){});
+  /* 必须 return：startPresence 登录链要 await 它落库后再查在线列表（缺 return 曾致登录即抛错、心跳链整个不启动） */
+  if(!email) return Promise.resolve();
+  return apiRpc("api_touch_presence", {p_email: email}).catch(function(){});
 }
 function pullData(){ return apiRpc("api_bootstrap").then(pullDataApply); }
 /* 只重渲染当前可见的那张列表，避免整页闪动 */
@@ -2989,9 +3003,10 @@ function pullDataApply(b){
   lastDataSig  = JSON.stringify([data, vessels, localAgents, localClients]);
 }
 var onlineSeq = 0; /* 响应序号：只认最新一次，慢到的旧响应直接丢弃，防止数字/列表时序错乱 */
-function apiRefreshOnline(){
+function apiRefreshOnline(retryLeft){
   var el = document.getElementById("onlineCount");
   if(!el) return Promise.resolve();
+  if(retryLeft === undefined) retryLeft = 2;
   var seq = ++onlineSeq;
   /* 只调 api_list_online 一个 RPC，人数 = 列表长度：
      数字和悬浮列表出自同一响应，结构上不会出现「显示 1 人、列表 3 人」的矛盾 */
@@ -3001,10 +3016,16 @@ function apiRefreshOnline(){
     currentOnlineCount = arr.length;
     el.textContent = "在线 " + arr.length + " 人";
     el.title = arr.length ? ("当前在线（" + arr.length + "）：\n" + arr.join("\n")) : "当前无人在线";
-  }).catch(function(){
+  }).catch(function(e){
     if(seq !== onlineSeq) return;
+    /* 刚登录后的首次请求偶发瞬时失败（冷启动 / 抖动）：
+       别一次失败就降级「在线 — 人」干等 15 秒，1 秒后自动重试 */
+    if(retryLeft > 0){
+      setTimeout(function(){ apiRefreshOnline(retryLeft - 1); }, 1000);
+      return;
+    }
     el.textContent = "在线 — 人";
-    el.title = "在线状态获取失败（请确认已在 Neon 执行 schema-presence.sql）";
+    el.title = "在线状态获取失败：" + ((e && e.message) || e);
   });
 }
 /* ---------------- 导入数据 ----------------
