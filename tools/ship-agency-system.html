@@ -1012,7 +1012,7 @@
 /* ---------------- 版本号 ----------------
    显示在左上角系统名称右侧。每次做了可见改动，往上加：
    小修：末位 +1；新增功能：中间位 +1。 */
-var APP_VERSION = "v1.7.0";
+var APP_VERSION = "v1.7.2";
 (function(){ var el=document.getElementById("appVer"); if(el) el.textContent=APP_VERSION; })();
 
 /* ---------------- i18n ---------------- */
@@ -2860,12 +2860,28 @@ function doLogin(){
 }
 /* 退出前确认：防止误点直接登出。留一个 flag 让 beforeunload 跳过本次提示。 */
 var quitting = false;
+/* 把当前账号标记为离线。用 keepalive 的 fetch 直接发，
+   这样在「关闭页面 / 刷新」的卸载时机也能可靠送达（此时不能等 Promise）。
+   token 过期时该请求可能 401 —— 没关系，presence 有 5 分钟窗口会自动清理。 */
+function markOffline(){
+  if(!CURRENT_USER_EMAIL || !dataReady() || !TOKEN) return;
+  try{
+    var base = NEON.url.replace(/\/+$/,"");
+    fetch(base + "/rpc/api_leave_presence", {
+      method:"POST",
+      headers:{"Authorization":"Bearer "+TOKEN,"Content-Type":"application/json","Accept":"application/json"},
+      body: JSON.stringify({p_email: CURRENT_USER_EMAIL}),
+      keepalive: true
+    }).catch(function(){});
+  }catch(e){}
+}
 function doLogout(){
   if(!confirm("确定要退出登录吗？未保存的报价单编辑内容将会丢失。")) return;
   quitting = true;
   stopPresence();
-  if(CURRENT_USER_EMAIL) apiRpc("api_leave_presence",{p_email:CURRENT_USER_EMAIL}).catch(function(){});
+  markOffline();
   signOut();
+  CURRENT_USER_EMAIL = null;
   document.getElementById("app").classList.add("hidden");
   document.getElementById("login").classList.remove("hidden");
   setTimeout(function(){ quitting = false; }, 50);
@@ -2879,6 +2895,12 @@ window.addEventListener("beforeunload", function(e){
   e.preventDefault();
   e.returnValue = "";
   return "";
+});
+/* 关闭 / 跳走页面时把账号标记为离线（keepalive 请求在卸载后仍能送达） */
+window.addEventListener("pagehide", function(){
+  if(quitting) return;        /* 主动退出已经 markOffline 过了 */
+  markOffline();
+  CURRENT_USER_EMAIL = null;
 });
 function startClock(){
   function tick(){ document.getElementById("clock").textContent=new Date().toLocaleString("zh-CN",{hour12:false}); }
@@ -2966,21 +2988,21 @@ function pullDataApply(b){
   ports        = Array.isArray(b.ports)   ? b.ports   : ports;
   lastDataSig  = JSON.stringify([data, vessels, localAgents, localClients]);
 }
+var onlineSeq = 0; /* 响应序号：只认最新一次，慢到的旧响应直接丢弃，防止数字/列表时序错乱 */
 function apiRefreshOnline(){
   var el = document.getElementById("onlineCount");
   if(!el) return Promise.resolve();
-  return apiRpc("api_online_count", {p_window_min: 5}).then(function(n){
-    var c = (n && typeof n === "object") ? (n.api_online_count || n.count || 0) : (n || 0);
-    currentOnlineCount = c;
-    el.textContent = "在线 " + c + " 人";
-    return apiRpc("api_list_online", {p_window_min: 5}).then(function(list){
-      if(Array.isArray(list) && list.length){
-        el.title = "当前在线（" + list.length + "）：\n" + list.join("\n");
-      } else {
-        el.title = "当前在线人数";
-      }
-    }).catch(function(){ el.title = "当前在线人数"; });
+  var seq = ++onlineSeq;
+  /* 只调 api_list_online 一个 RPC，人数 = 列表长度：
+     数字和悬浮列表出自同一响应，结构上不会出现「显示 1 人、列表 3 人」的矛盾 */
+  return apiRpc("api_list_online", {p_window_min: 5}).then(function(list){
+    if(seq !== onlineSeq) return;
+    var arr = Array.isArray(list) ? list : [];
+    currentOnlineCount = arr.length;
+    el.textContent = "在线 " + arr.length + " 人";
+    el.title = arr.length ? ("当前在线（" + arr.length + "）：\n" + arr.join("\n")) : "当前无人在线";
   }).catch(function(){
+    if(seq !== onlineSeq) return;
     el.textContent = "在线 — 人";
     el.title = "在线状态获取失败（请确认已在 Neon 执行 schema-presence.sql）";
   });
