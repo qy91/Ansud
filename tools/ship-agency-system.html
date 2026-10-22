@@ -232,6 +232,20 @@
   .voy-cell .voy-ref:hover:not(:disabled){background:#e6f0ff;border-color:var(--brand)}
   .voy-cell .voy-ref:disabled{color:var(--muted);cursor:default;background:#f8fafc;border-color:var(--line)}
   .voy-na{color:var(--muted);font-size:12px}
+  /* 船期查询页 */
+  .vq-card{border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:14px;background:var(--panel)}
+  .vq-row{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap}
+  .vq-row .vb{display:flex;flex-direction:column;gap:4px}
+  .vq-row .vb label{font-size:12px;color:var(--muted);font-weight:600}
+  .vq-row .vb select,.vq-row .vb input{padding:8px 10px;border:1px solid var(--line);border-radius:7px;font-size:13px;background:#fff;min-width:180px}
+  .vq-row .vb select:focus,.vq-row .vb input:focus{outline:none;border-color:var(--brand)}
+  .vq-hint{margin-top:11px;font-size:12px;color:var(--muted);line-height:1.7}
+  .vq-tbl{width:100%;border-collapse:collapse;font-size:13px;background:var(--panel)}
+  .vq-tbl th{background:#f8fafc;text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);font-size:12px;color:var(--muted);font-weight:600;white-space:nowrap}
+  .vq-tbl td{padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+  .vq-tbl tbody tr:hover td{background:#f6f9ff}
+  .vq-state{padding:30px 0;text-align:center;color:var(--muted);font-size:13px;line-height:1.8}
+  .vq-pick{margin-top:10px;padding:11px 13px;border:1px dashed var(--brand);border-radius:8px;background:#fbfcff;font-size:13px;line-height:1.9}
   .block-b{padding:6px 20px}
   .fields-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:6px 24px;padding:12px 20px}
   .field{padding:6px 0}
@@ -678,6 +692,7 @@
     <div class="side">
       <div class="sec">导航菜单</div>
       <a class="nav active" data-page="dashboard" onclick="showPage('dashboard');renderDashboard()">📋 当前代理船舶</a>
+      <a class="nav" data-page="voyage" onclick="showPage('voyage');initVoyagePage()">🚢 船期查询</a>
       <a class="nav" data-page="vessels" onclick="showPage('vessels');renderVessels()">🛠 船舶基本信息维护</a>
       <a class="nav" data-page="agents" onclick="showPage('agents');renderAgents()">🤝 本港代理/服务商维护</a>
       <a class="nav" data-page="clients" onclick="showPage('clients');renderClients()">🏢 委托方信息维护</a>
@@ -720,6 +735,24 @@
           <tbody id="ship-tbody"></tbody>
         </table>
         <div id="ship-pager"></div>
+      </div>
+
+      <!-- VOYAGE QUERY -->
+      <div id="page-voyage" class="page hidden">
+        <div class="page-title">船期查询 <span class="en">Voyage Schedule</span></div>
+        <div class="page-desc">按港口查询未来船期（预计停靠 / 预计离港 / 闸口 / 船代），命中后可一键写入对应代理船舶的靠泊与离泊时间。</div>
+
+        <div class="vq-card">
+          <div class="vq-row">
+            <div class="vb"><label>港口 PORT</label><select id="vq-port" onchange="vqPortChange()"></select></div>
+            <div class="vb"><label>英文船名（支持模糊）</label><input id="vq-ship" placeholder="如：YM WORTHINESS 或 MSC"></div>
+            <div class="vb"><label>码头航次</label><input id="vq-voy" placeholder="如：003W"></div>
+            <div class="vb"><label>起始日期 yyyymmdd</label><input id="vq-date" placeholder="如：20261023"></div>
+            <button class="btn sm" id="vq-go" onclick="runVoyageQuery()">查询</button>
+          </div>
+          <div class="vq-hint">船名与码头航次至少填一个；留空起始日期则按今天。该查询只返回「今天及之后离港」的航次，历史航次查不到。</div>
+        </div>
+        <div id="vq-result"></div>
       </div>
 
       <!-- VESSEL MASTER -->
@@ -2920,6 +2953,140 @@ function quickVoyage(id){
       if(btn){ btn.disabled=false; btn.textContent="🔄 刷新"; }
       toast("连不上本地取数服务，请用 start-server.cmd 启动系统");
     });
+}
+
+/* ---------- 船期查询页（独立入口：选港口 → 查船期 → 可写入记录） ----------
+   目前只接入了盐田港（易物流盐田 156yt.cn）的公众船期；其它港口在下拉里置灰，
+   选了会给出明确提示，不会静默发一个注定失败的请求。 */
+var vqRows = [], vqPick = null;      /* vqPick = 等待用户选择写入哪条记录 */
+function vqPortList(){
+  var list = (ports||[]).map(function(p){ return {v:p.v, t:p.t||p.v}; });
+  if(!list.length) list = [{v:"YANTIAN", t:"盐田 YANTIAN"}];
+  var seen = {}, out = [];
+  list.forEach(function(o){
+    var k = String(o.v).toUpperCase();
+    if(seen[k]) return; seen[k]=1; out.push(o);
+  });
+  /* 有盐田就排到最前，省得用户翻 */
+  out.sort(function(a,b){ return (isYantian(b.v)?1:0)-(isYantian(a.v)?1:0); });
+  return out;
+}
+function initVoyagePage(){
+  var sel = document.getElementById("vq-port");
+  if(sel){
+    var cur = sel.value;
+    var opts = vqPortList().map(function(o){
+      var ok = isYantian(o.v);
+      return '<option value="'+esc(o.v)+'"'+(ok?'':' disabled')+(o.v===cur?' selected':'')+'>'+
+             esc(o.t||o.v)+(ok?'':'（暂未接入）')+'</option>';
+    }).join('');
+    sel.innerHTML = opts;
+    if(!cur || !isYantian(cur)){
+      var first = vqPortList().filter(function(o){ return isYantian(o.v); })[0];
+      sel.value = first ? first.v : "";
+    }
+  }
+  var d = document.getElementById("vq-date");
+  if(d && !d.value) d.value = yyyymmdd();
+  if(!vqRows.length && !vqPick){
+    document.getElementById("vq-result").innerHTML =
+      '<div class="vq-state">选择港口、填写船名或码头航次后点「查询」。</div>';
+  }
+}
+function vqPortChange(){
+  var p = document.getElementById("vq-port").value;
+  vqPick = null;
+  if(!isYantian(p)){
+    document.getElementById("vq-result").innerHTML =
+      '<div class="vq-state">'+esc(p||"该港口")+' 的船期暂未接入。<br>目前支持：盐田港（易物流盐田）。</div>';
+  } else {
+    document.getElementById("vq-result").innerHTML =
+      '<div class="vq-state">已选择盐田港，填写船名或码头航次后点「查询」。</div>';
+  }
+}
+function runVoyageQuery(){
+  var port = document.getElementById("vq-port").value;
+  var ship = (document.getElementById("vq-ship").value||"").trim();
+  var voy  = (document.getElementById("vq-voy").value||"").trim();
+  var date = (document.getElementById("vq-date").value||"").trim() || yyyymmdd();
+  vqPick = null;
+  if(!isYantian(port)){ toast("目前只接入了盐田港的船期查询"); return; }
+  if(!ship && !voy){ toast("船名和码头航次至少要填一个"); return; }
+  document.getElementById("vq-go").disabled = true;
+  document.getElementById("vq-result").innerHTML =
+    '<div class="vq-state">正在从易物流盐田取数…<br>首次调用会拉起本机浏览器，约需 10~20 秒</div>';
+  fetch("/api/voyage?ship="+encodeURIComponent(ship)+"&voy="+encodeURIComponent(voy)+"&date="+encodeURIComponent(date))
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      document.getElementById("vq-go").disabled = false;
+      if(!j || !j.ok){
+        document.getElementById("vq-result").innerHTML =
+          '<div class="vq-state">取数失败：'+esc((j&&j.error)||"未知错误")+'</div>';
+        return;
+      }
+      vqRows = j.rows||[];
+      renderVoyResult(j, ship, voy, date);
+    })
+    .catch(function(e){
+      document.getElementById("vq-go").disabled = false;
+      document.getElementById("vq-result").innerHTML =
+        '<div class="vq-state">连不上本地取数服务：'+esc(String((e&&e.message)||e))+
+        '<br>请用 start-server.cmd 启动系统后再试。</div>';
+    });
+}
+function renderVoyResult(j, ship, voy, date){
+  var box = document.getElementById("vq-result");
+  var head = '<div class="vq-hint" style="margin:0 0 8px">查询条件：船名 '+(ship?esc(ship):'（空）')+
+             ' · 航次 '+(voy?esc(voy):'（空）')+' · 起始日期 '+esc(date)+
+             '　|　共 '+j.total+' 条，第 '+j.page+'/'+j.pages+' 页</div>';
+  if(!j.rows.length){
+    box.innerHTML = head + '<div class="vq-state">没查到船期记录。<br>换个起始日期，或核对一下船名 / 航次。</div>';
+    return;
+  }
+  var h = head+'<table class="vq-tbl"><thead><tr>'+
+    '<th>码头航次</th><th>船名</th><th>闸口</th><th>预计停靠 ETB</th><th>预计离港 ETD</th><th>船代</th><th style="text-align:right">操作</th>'+
+    '</tr></thead><tbody>';
+  j.rows.forEach(function(r,i){
+    h += '<tr><td class="mono">'+esc(r.voyage)+'</td><td>'+esc(r.ship)+'</td><td>'+esc(r.gate)+'</td>'+
+         '<td>'+esc(r.etb)+'</td><td>'+esc(r.etd)+'</td><td>'+esc(r.agent)+'</td>'+
+         '<td style="text-align:right"><button class="icon-btn" onclick="vqApply('+i+')">写入记录</button></td></tr>';
+  });
+  box.innerHTML = h+'</tbody></table>';
+}
+/* 把这一行船期写进代理记录：按英文船名完全匹配，唯一命中直接写，多条让用户选 */
+function vqApply(i){
+  var r = vqRows[i]; if(!r) return;
+  var want = String(r.ship||"").toUpperCase();
+  var hits = data.filter(function(s){ return String(s.en||"").toUpperCase()===want; });
+  if(!hits.length){
+    toast("系统里没有英文船名为 "+r.ship+" 的代理记录");
+    return;
+  }
+  if(hits.length===1){ vqWrite(hits[0].id, r); return; }
+  /* 多条：列出可选项 */
+  vqPick = {row:r, ids:hits.map(function(s){return s.id;})};
+  var box=document.getElementById("vq-result");
+  var h='<div class="vq-pick"><b>'+esc(r.ship)+'</b> 匹配到 '+hits.length+' 条代理记录，请选择写入哪一条：<br>';
+  hits.forEach(function(s){
+    h += '<button class="icon-btn" style="margin:4px 6px 0 0" onclick="vqWrite('+s.id+')">'+
+         esc(s.cn||s.en)+'（'+esc(s.port||"—")+' · '+esc(s.status||"—")+'）</button> ';
+  });
+  h += '<button class="icon-btn" style="margin-left:6px" onclick="vqCancelPick()">取消</button></div>';
+  box.insertAdjacentHTML('afterend', '');
+  box.innerHTML = box.innerHTML + h;
+}
+function vqCancelPick(){ vqPick=null; var b=document.querySelector('.vq-pick'); if(b) b.remove(); }
+function vqWrite(id, row){
+  var s = data.find(function(x){ return x.id===id; });
+  if(!s){ toast("记录不存在"); return; }
+  var r = row || (vqPick && vqPick.row);
+  if(!r){ toast("没有可写入的船期"); return; }
+  s.eta = normDT(r.etb);
+  s.etd = normDT(r.etd);
+  save(data); refresh();
+  vqPick = null;
+  var b=document.querySelector('.vq-pick'); if(b) b.remove();
+  toast((s.cn||s.en)+" 已更新：ETA "+normDT(r.etb)+" · ETD "+normDT(r.etd));
 }
 
 /* ---------------- vessel master (CRUD) ---------------- */
