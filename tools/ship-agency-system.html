@@ -1012,7 +1012,7 @@
 /* ---------------- 版本号 ----------------
    显示在左上角系统名称右侧。每次做了可见改动，往上加：
    小修：末位 +1；新增功能：中间位 +1。 */
-var APP_VERSION = "v1.7.5";
+var APP_VERSION = "v1.8.1";
 (function(){ var el=document.getElementById("appVer"); if(el) el.textContent=APP_VERSION; })();
 
 /* ---------------- i18n ---------------- */
@@ -1313,6 +1313,10 @@ var basicFields = [
   {key:"imo",  label:"IMO 编号", en:"IMO Number", type:"text", ph:"如：9789089"},
   {key:"mmsi", label:"MMSI", en:"MMSI", type:"text", ph:"如：413123456"},
   {key:"flag", label:"国籍", en:"Flag State", type:"select", opts:flagOpts},
+  {key:"type", label:"船舶类型", en:"Vessel Type", type:"select", opts:[
+    {v:"散货", t:"散货"}, {v:"油轮", t:"油轮"}, {v:"集装箱", t:"集装箱"},
+    {v:"滚装船", t:"滚装船"}, {v:"化学品", t:"化学品"}, {v:"其它", t:"其它"}
+  ]},
   {key:"loa",  label:"船长(m)", en:"Length Overall", type:"text", ph:"如：366"},
   {key:"beam", label:"船宽(m)", en:"Beam", type:"text", ph:"如：51"},
   {key:"nt",   label:"净吨", en:"Net Tonnage", type:"text", ph:"如：101274"}
@@ -1453,14 +1457,14 @@ function renderByKey(key){
 /* 排序列配置：表 -> 列key -> 数据字段（__fees 表示代理收费项数量） */
 var SORT_CFG = {
   ship:   {cn:"cn", en:"en", port:"port", berth:"berth", eta:"eta", etd:"etd", status:"status"},
-  vessel: {cn:"cn", en:"en", imo:"imo", mmsi:"mmsi", flag:"flag", loa:"loa", beam:"beam", nt:"nt"},
+  vessel: {cn:"cn", en:"en", imo:"imo", mmsi:"mmsi", flag:"flag", type:"type", loa:"loa", beam:"beam", nt:"nt"},
   agent:  {company:"company", kind:"__kind", contact:"contact", phone:"phone", email:"email", address:"address", fees:"__fees", remark:"remark"},
   client: {company:"company", name:"name", title:"title", phone:"phone", mobile:"mobile", email:"email", address:"address", remark:"remark"}
 };
 /* 表头列定义：非排序列 k 为 null */
 var COLS = {
   ship:   [{t:"#",w:"44px"},{k:"cn",t:"中文船名"},{k:"en",t:"英文船名"},{k:"port",t:"港口 PORT"},{k:"berth",t:"泊位"},{k:"eta",t:"靠泊时间 ETA"},{k:"etd",t:"离泊时间 ETD"},{k:"status",t:"状态"}],
-  vessel: [{t:"#",w:"44px"},{k:"cn",t:"中文船名"},{k:"en",t:"英文船名"},{k:"imo",t:"IMO"},{k:"mmsi",t:"MMSI"},{k:"flag",t:"国籍"},{k:"loa",t:"船长(m)"},{k:"beam",t:"船宽(m)"},{k:"nt",t:"净吨"},{t:"操作"}],
+  vessel: [{t:"#",w:"44px"},{k:"cn",t:"中文船名"},{k:"en",t:"英文船名"},{k:"imo",t:"IMO"},{k:"mmsi",t:"MMSI"},{k:"flag",t:"国籍"},{k:"type",t:"类型"},{k:"loa",t:"船长(m)"},{k:"beam",t:"船宽(m)"},{k:"nt",t:"净吨"},{t:"操作"}],
   agent:  [{t:"#",w:"44px"},{k:"company",t:"公司名"},{k:"kind",t:"类型"},{k:"contact",t:"联系人"},{k:"phone",t:"电话"},{k:"email",t:"邮箱"},{k:"address",t:"地址 / 邮编"},{k:"fees",t:"收费项目数"},{k:"remark",t:"备注"},{t:"操作"}],
   client: [{t:"#",w:"44px"},{k:"company",t:"公司名称"},{k:"name",t:"姓名"},{k:"title",t:"职位"},{k:"phone",t:"电话"},{k:"mobile",t:"手机"},{k:"email",t:"邮箱"},{k:"address",t:"地址"},{k:"remark",t:"备注"},{t:"操作"}]
 };
@@ -1729,7 +1733,12 @@ function renderDetail(){
   autoGrowAllTA();
   document.getElementById("detail-title").innerHTML = esc(s.cn)+'<span class="en">'+esc(s.en)+'</span>';
   document.getElementById("detail-status").innerHTML = editing ? "" : statusBadge(s.status);
-  document.getElementById("blk-basic").innerHTML = blockHTML(basicFields, s, false);
+  /* 船舶基本信息块：优先用记录自身存值；缺项（如早期记录漏存的 type）回退到关联船舶主数据，
+     这样无需重存记录即可立即显示正确的船舶类型等基本信息。 */
+  var sBasic = Object.assign({}, s);
+  var vlink = (s.vesselId!=null) ? vessels.find(function(x){return String(x.id)===String(s.vesselId);}) : null;
+  if(vlink) basicFields.forEach(function(f){ if(!sBasic[f.key] && vlink[f.key]) sBasic[f.key]=vlink[f.key]; });
+  document.getElementById("blk-basic").innerHTML = blockHTML(basicFields, sBasic, false);
   document.getElementById("blk-voyage").innerHTML = blockHTML(voyageFields, s, true);
   document.getElementById("blk-profit").innerHTML = profitHTML(s);
   renderTodoBlock();
@@ -2510,6 +2519,7 @@ function saveNew(){
   var obj={
     cn:v.cn, en:v.en,
     imo:v.imo||"", mmsi:v.mmsi||"", flag:v.flag||"",
+    type:v.type||"",
     loa:v.loa||"", beam:v.beam||"", nt:v.nt||"",
     vesselId:String(v.id),
     status:document.getElementById("f-status").value,
@@ -2528,15 +2538,16 @@ function renderVessels(){
   var q=(document.getElementById("search-v").value||"").toLowerCase();
   var tb=document.getElementById("vessel-tbody");
   setHead("vessel"); renderPageSizeSel("vessel");
-  var list=vessels.filter(function(v){ return !q || (v.cn+v.en+(v.imo||"")+(v.mmsi||"")).toLowerCase().includes(q); });
+  var list=vessels.filter(function(v){ return !q || (v.cn+v.en+(v.imo||"")+(v.mmsi||"")+(v.type||"")).toLowerCase().includes(q); });
   list = applySort("vessel", list);
-  if(!list.length){ tb.innerHTML='<tr><td colspan="10" class="empty">暂无船舶主数据，点击右上角「＋ 新增船舶」添加</td></tr>'; setPagerHTML("vessel",0); return; }
+  if(!list.length){ tb.innerHTML='<tr><td colspan="11" class="empty">暂无船舶主数据，点击右上角「＋ 新增船舶」添加</td></tr>'; setPagerHTML("vessel",0); return; }
   var pg=pageSlice("vessel", list);
   tb.innerHTML=pg.view.map(function(v,i){
     return '<tr>'+
       '<td class="mono">'+(pg.start+i+1)+'</td>'+
       '<td>'+esc(v.cn)+'</td><td>'+esc(v.en)+'</td><td>'+esc(v.imo||"—")+'</td>'+
       '<td>'+esc(v.mmsi||"—")+'</td><td>'+esc(v.flag||"—")+'</td>'+
+      '<td>'+esc(v.type||"—")+'</td>'+
       '<td class="mono">'+(v.loa||"—")+'</td><td class="mono">'+(v.beam||"—")+'</td>'+
       '<td class="mono">'+(v.nt||"—")+'</td>'+
       '<td><button class="icon-btn" onclick="editVessel('+v.id+')">编辑</button> '+
@@ -2585,7 +2596,10 @@ function rebuildFlagSelect(el, cur){
 }
 function vesselField(f, cur){
   if(f.type==="select"){
-    return '<div class="field"><div class="flbl">'+f.label+'<span class="fen">'+f.en+'</span></div><div class="fval">'+flagSelectHTML(cur||"")+'</div></div>';
+    var ctrl;
+    if(f.key==="flag") ctrl = flagSelectHTML(cur||"");
+    else ctrl = buildSelect("vf-"+f.key, (typeof f.opts==="function")?f.opts():(f.opts||[]), cur||"");
+    return '<div class="field"><div class="flbl">'+f.label+'<span class="fen">'+f.en+'</span></div><div class="fval">'+ctrl+'</div></div>';
   }
   return '<div class="field"><div class="flbl">'+f.label+'<span class="fen">'+f.en+'</span></div><div class="fval"><input id="vf-'+f.key+'" type="text" value="'+esc(cur||"")+'" placeholder="'+esc(f.ph||'')+'"></div></div>';
 }
