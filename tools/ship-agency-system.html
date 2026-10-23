@@ -3050,7 +3050,6 @@ function quickVoyage(id){
       s.etd  = normDT(r.etd);
       save(data); renderDashboard();
       toast(s.cn+" 已更新：ETA "+normDT(r.etb)+" · ETD "+normDT(r.etd));
-      toast(s.cn+" 已更新：ETA "+normDT(r.etb)+" · ETD "+normDT(r.etd)+from);
     })
     .catch(function(e){
       clearTimeout(slowTimer);
