@@ -67,7 +67,7 @@ window.VOYAGE_CONFIG = {
 
      ★ 已填：你的 Cloudflare Worker（2026-10-23 部署并验证通过：
        /ping 200、/api/voyage 真实取数 542ms 返回 003W|YM WORTHINESS|外代）
-         "https://ansud-voyage-song-687.workers.dev"
+         "https://ansud-voyage.song-687.workers.dev"
 
      ★ 国内网络环境提示：workers.dev 在部分网络下可能不稳。
        若给 Worker 绑了自定义域名（如 api.ansud.cn），
@@ -76,6 +76,6 @@ window.VOYAGE_CONFIG = {
      ★ 不要填 Neon Functions 的 *.compute.*.aws.neon.tech 地址：
        2026-10-23 实测该域名一律返回 403（网关层拦截），填了只会白白等超时。 */
   apiBase: [
-    "https://ansud-voyage-song-687.workers.dev"
+    "https://ansud-voyage.song-687.workers.dev"
   ]
 };
