@@ -38,36 +38,16 @@ window.NEON_CONFIG = {
  *  该站实测**不返回任何 Access-Control-* 头**，且有 JS 反爬挑战页、
  *  必须先建会话才能 POST 查询 —— 所以浏览器无法直接取，必须有服务端代理。
  *
- *  ★ 两条路径（页面会实时优先、快照兜底）：
- *  ① 实时接口：点「🔄 刷新」或「查询」时立刻取最新船期。
- *     推荐 Cloudflare Worker（worker-voyage.js）—— 部署快、出口 IP 信誉好、
- *     内置会话池与限流退避。部署完把地址填到下面 apiBase 的第一项：
- *         "https://ansud-voyage.<你的子域>.workers.dev"
- *     （结尾不要加 /api/voyage，页面会自动拼）
- *
- *  ② 静态快照：GitHub Actions 定时抓取后提交的 voyage-cache.json，
- *     与页面同域、零后端。实时接口不可用时自动顶上（页面会提示"实时暂不可用"）。
+ *  ★ 唯一的取数通道：Cloudflare Worker
+ *    部署源码：web/worker-src/worker-voyage-single.js（单文件版，直接粘贴）
+ *    Worker 内置会话池 + 限流退避（盐田站有 HTTP 567 频率风控）。
  *
  *  多个 apiBase 地址会按顺序尝试，第一个通的即生效；
  *  末尾自动回退同源 /api/voyage（需本机跑 start-server.cmd）。
  * ============================================================ */
 window.VOYAGE_CONFIG = {
-  /* 静态快照（兜底通道 ③）：GitHub Actions 定时抓取后提交的 voyage-cache.json。
-     与页面同域，GitHub Pages 上直接可达。 */
-  snapshot: "voyage-cache.json",
-
-  /* 准实时触发器（可选，通道 ②）：实时接口不通时，POST 到这个地址，
-     它去触发 GitHub Actions 抓一次盐田船期，1~3 分钟后页面轮询到新数据。
-     —— 触发器源码见 trigger-worker.js（token 放服务端，页面不持有凭据）。
-     留空 = 不用这条通道。 */
-  trigger: "",
-
-  /* 实时接口（首选，通道 ①）：点「🔄 刷新」或「查询」时走这里，按顺序尝试，
-     第一个通的即生效。留空数组 = 只用快照。
-
-     ★ 已填：你的 Cloudflare Worker（2026-10-23 部署并验证通过：
-       /ping 200、/api/voyage 真实取数 542ms 返回 003W|YM WORTHINESS|外代）
-         "https://ansud-voyage.song-687.workers.dev"
+  /* 实时接口：点「🔄 刷新」或「查询」时走这里，按顺序尝试。
+     结尾不要加 /api/voyage，页面会自动拼。
 
      ★ 国内网络环境提示：workers.dev 在部分网络下可能不稳。
        若给 Worker 绑了自定义域名（如 api.ansud.cn），
