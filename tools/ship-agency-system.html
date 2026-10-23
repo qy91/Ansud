@@ -2889,8 +2889,9 @@ function saveNew(){
 
 /* ---------- 盐田船期一键刷新（易物流盐田 156yt.cn）----------
    该站有 JS 反爬挑战页，且 voyQuery.jsp 没有站内会话时会被服务端弹回首页，
-   页面里直接 fetch 是拿不到数据的（跨域 + 反爬）。改由本地服务 /api/voyage
-   驱动本机无头 Chrome 代取，页面与本服务同域，可直接调用。
+   浏览器直连取不到数据。线上版（GitHub Pages）由 Cloudflare Worker 代取
+   （worker-voyage.js），地址写在 config.js 的 VOYAGE_CONFIG.apiBase；
+   本地模式回退到同源 /api/voyage（需本机跑 start-server.cmd）。
    列表每行「🔄」= 一键刷新：只在该船挂靠港为 YANTIAN 时才取数并更新。 */
 function isYantian(port){
   /* 港口是用户在「港口维护」里自定义的，取值可能是 YANTIAN / 盐田 / 盐田YANTIAN，宽松匹配 */
@@ -2901,6 +2902,247 @@ function yyyymmdd(){
   var d=new Date(), p=function(n){return (n<10?"0":"")+n;};
   return ""+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate());
 }
+/* ---------- 取数来源：实时优先，静态快照兜底 ----------
+   两条路径：
+     ① 实时接口（首选）：Cloudflare Worker / Neon Function / 本地 serve.js，
+        点「🔄 刷新」或「查询」时立刻向盐田取最新船期。
+        地址写在 config.js 的 VOYAGE_CONFIG.apiBase，按序尝试，第一个通的即生效。
+     ② 静态快照（兜底）：voyage-snapshot.js 由 GitHub Actions 定时跑，
+        抓盐田船期写成 voyage-cache.json 提交进仓库；页面同域读这个 JSON。
+        实时接口不可用（没配 / 服务挂 / 被限流）时用它顶上。
+
+   ★ 限流：盐田站有频率风控（HTTP 567），Worker 内部有会话池+冷却退避。
+     页面遇到 429 时会读 Retry-After 自动退避重试一次，仍失败才回落快照。 */
+var voyageSnapshot = null;      /* 缓存的快照对象 */
+var voyageSnapshotTried = false;
+function voyageSnapshotUrl(){
+  var cfg = (typeof window!=="undefined") ? window.VOYAGE_CONFIG : null;
+  var u = cfg && cfg.snapshot ? String(cfg.snapshot) : "voyage-cache.json";
+  return u;
+}
+/* 读取静态快照（失败不报错，静默返回 null） */
+function voyageLoadSnapshot(){
+  if(voyageSnapshot || voyageSnapshotTried) return Promise.resolve(voyageSnapshot);
+  voyageSnapshotTried = true;
+  return fetch(voyageSnapshotUrl(), {headers:{"Accept":"application/json"}})
+    .then(function(r){
+      if(!r.ok) throw new Error("HTTP "+r.status);
+      var ct=r.headers.get("content-type")||"";
+      if(ct.indexOf("json")<0) throw new Error("不是 JSON");
+      return r.json();
+    })
+    .then(function(j){ voyageSnapshot = j; return j; })
+    .catch(function(e){ voyageSnapshot = null; return null; });
+}
+/* 在快照里找某条船的航次：先按英文船名完全一致，再按包含匹配，最后按码头航次 */
+function voyageFromSnapshot(snap, ship, voy){
+  if(!snap || !snap.voyages) return null;
+  var want = String(ship||"").toUpperCase();
+  var list = null;
+  if(want){
+    var exact = null;
+    Object.keys(snap.voyages).forEach(function(k){
+      if(String(k).toUpperCase()===want && !exact) exact = snap.voyages[k];
+    });
+    list = exact;
+    if(!list){
+      Object.keys(snap.voyages).forEach(function(k){
+        if(!list && String(k).toUpperCase().indexOf(want)>=0) list = snap.voyages[k];
+      });
+    }
+  }
+  if(!list && voy){
+    var found = null;
+    Object.keys(snap.voyages).forEach(function(k){
+      (snap.voyages[k].rows||[]).forEach(function(r){
+        if(!found && String(r.voyage||"").toUpperCase()===String(voy).toUpperCase()) found=[r];
+      });
+    });
+    list = found ? {rows: found} : null;
+  }
+  if(!list) return null;
+  var rows = list.rows || [];
+  return {
+    ok: true,
+    source: "snapshot",
+    updatedAt: snap.updatedAt,
+    total: rows.length, page: 1, pages: 1,
+    rows: rows
+  };
+}
+/* 取数服务候选地址：config.js 配的云端函数优先，最后兜底同源 /api/voyage */
+function voyageApiCandidates(){
+  var list=[];
+  var cfg = (typeof window!=="undefined") ? window.VOYAGE_CONFIG : null;
+  var arr = (cfg && cfg.apiBase) || [];
+  if(typeof arr==="string") arr=[arr];
+  arr.forEach(function(u){ var s=String(u||"").trim(); if(s) list.push(s.replace(/\/+$/,"")); });
+  list.push("");   /* 空串 = 同源相对路径 */
+  return list;
+}
+function voyageParseQuery(qs){
+  var qp={};
+  String(qs).split("&").forEach(function(kv){
+    var i=kv.indexOf("=");
+    if(i>0) qp[kv.slice(0,i)]=decodeURIComponent(kv.slice(i+1).replace(/\+/g," "));
+  });
+  return qp;
+}
+/* ---------- 准实时刷新（第三通道）----------
+   背景：实时接口（云函数）在部分网络/账户状态下不通，但「GitHub Actions 抓一次」
+   这条路是可靠的。于是做成三通道：
+     ① 实时接口   → 秒级，但依赖云函数可达
+     ② 准实时触发 → 触发 Actions 抓一次，1~3 分钟后拿到新数据
+     ③ 静态快照   → 定时抓的，兜底
+   点「🔄 刷新」/「查询」时：先试 ①，不通则试 ②，都不行才用 ③。
+
+   ★ 安全：页面**不持有 GitHub token**。触发器是用户单独部署的一个极简服务，
+     token 只在它内部。页面只发一个 POST，请求体带船名。 */
+function voyageTriggerUrl(){
+  var cfg = (typeof window!=="undefined") ? window.VOYAGE_CONFIG : null;
+  var u = cfg && cfg.trigger ? String(cfg.trigger) : "";
+  return u.trim();
+}
+/* 触发一次 Actions 抓取（返回 Promise，失败静默） */
+function voyageTriggerRefresh(ship){
+  var url = voyageTriggerUrl();
+  if(!url) return Promise.resolve(false);
+  return fetch(url, {
+    method: "POST",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({ ship: ship||"" })
+  }).then(function(r){ return r.ok; }).catch(function(e){ return false; });
+}
+/* 轮询快照，等 updatedAt 变化（最多等 maxWaitMs） */
+function voyageWaitSnapshotChange(oldUpdatedAt, maxWaitMs){
+  var max = maxWaitMs || 180000;
+  var step = 6000;
+  return new Promise(function(resolve){
+    var waited = 0;
+    function poll(){
+      if(waited >= max){ resolve(null); return; }
+      waited += step;
+      setTimeout(function(){
+        /* 绕过缓存重新拿 */
+        fetch(voyageSnapshotUrl()+"?t="+Date.now(), {headers:{"Accept":"application/json","Cache-Control":"no-cache"}})
+          .then(function(r){
+            if(!r.ok) throw new Error("HTTP "+r.status);
+            return r.json();
+          })
+          .then(function(j){
+            if(j && j.updatedAt && j.updatedAt !== oldUpdatedAt){
+              voyageSnapshot = j; voyageSnapshotTried = true;
+              resolve(j); return;
+            }
+            poll();
+          })
+          .catch(function(){ poll(); });
+      }, step);
+    }
+    poll();
+  });
+}
+/* 统一取数：实时 → 准实时触发 → 快照
+   opt.refresh=true 时，实时失败会尝试触发一次 Actions 并等待新数据（准实时） */
+function voyageFetch(qs, opt){
+  opt = opt || {};
+  var qp = voyageParseQuery(qs);
+  return voyageFetchLive(qs)
+    .catch(function(e){
+      var liveErr = String((e&&e.message)||e);
+      /* ② 准实时：触发 Actions 抓取，等新快照
+         ⚠️ 时序要点：**必须在触发之前**记下旧快照的 updatedAt。
+         若先触发再读快照，读到的已经是新值 → old == 新值 → 轮询检测不到变化 → 白等到超时。 */
+      if(opt.refresh !== false && voyageTriggerUrl()){
+        return voyageLoadSnapshot().then(function(snapBefore){
+          var old = snapBefore ? snapBefore.updatedAt : null;
+          return voyageTriggerRefresh(qp.ship).then(function(triggered){
+            if(!triggered) throw new Error(liveErr);
+            return voyageWaitSnapshotChange(old, 200000).then(function(newSnap){
+              if(!newSnap) throw new Error(liveErr);
+              var hit = voyageFromSnapshot(newSnap, qp.ship, qp.voy);
+              if(hit){ hit.source = "snapshot"; hit.refreshed = true; return hit; }
+              throw new Error(liveErr);
+            });
+          });
+        }).catch(function(e2){
+          /* 触发通道也失败 → ③ 回落现有快照 */
+          return voyageLoadSnapshot().then(function(snap){
+            var hit = voyageFromSnapshot(snap, qp.ship, qp.voy);
+            if(hit){ hit.fallbackFrom = liveErr; return hit; }
+            throw new Error(liveErr);
+          });
+        });
+      }
+      /* ③ 回落现有快照 */
+      return voyageLoadSnapshot().then(function(snap){
+        var hit = voyageFromSnapshot(snap, qp.ship, qp.voy);
+        if(hit){ hit.fallbackFrom = liveErr; return hit; }
+        throw new Error(liveErr);
+      });
+    });
+}
+
+/* 实时取数：按候选地址依次尝试；遇 429 限流按 Retry-After 退避重试一次 */
+function voyageFetchLive(qs){
+  var cands=voyageApiCandidates();
+  var lastErr="";
+  function attempt(i, retried){
+    if(i>=cands.length) return Promise.reject(new Error(lastErr||"没有可用的取数服务地址"));
+    var base=cands[i];
+    var url=base+"/api/voyage?"+qs;
+    return fetch(url, {headers:{"Accept":"application/json"}})
+      .then(function(r){
+        /* 先看状态码和 Content-Type，再决定要不要 parse —— 直接 r.json() 遇到
+           HTML 错误页会抛 "Unexpected token '<'"，看不出到底哪里错了 */
+        var ct=r.headers.get("content-type")||"";
+        if(r.status===429){
+          /* 限流：读 Retry-After 退避后重试一次（同地址） */
+          var ra=parseInt(r.headers.get("retry-after")||"",10);
+          if(!isNaN(ra) && ra>0 && ra<=60 && !retried){
+            return sleepMs(ra*1000).then(function(){ return attempt(i, true); });
+          }
+          return r.text().then(function(t){
+            var msg="";
+            try{ var j=JSON.parse(t); msg=(j&&j.error)||""; }catch(e){}
+            throw new Error("HTTP 429"+(msg?"："+msg:"（取数过于频繁，请稍后重试）"));
+          });
+        }
+        if(!r.ok) return r.text().then(function(t){
+          var msg="";
+          try{ var j=JSON.parse(t); msg=(j&&j.error)||""; }catch(e){ msg=t.slice(0,120); }
+          throw new Error("HTTP "+r.status+(msg?"："+msg:""));
+        });
+        if(ct.indexOf("json")<0){
+          return r.text().then(function(t){
+            throw new Error("返回的不是 JSON（"+ct.split(";")[0]+"）"+t.slice(0,60));
+          });
+        }
+        return r.json();
+      })
+      .then(function(j){
+        if(!j || !j.ok) throw new Error((j&&j.error)||"取数失败");
+        j.source = j.source || "live";
+        return j;
+      })
+      .catch(function(e){
+        lastErr=(e&&e.message)||String(e);
+        /* 只有「网络层失败/服务不可用」才换下一个地址；
+           业务错误（如「船名和航次至少填一个」「限流」）直接抛出，不重试 */
+        if(/至少要填一个|参数|限流|HTTP 429/.test(lastErr)) throw new Error(lastErr);
+        /* 浏览器把「连不上服务器」统一报成 Failed to fetch / NetworkError，
+           转成人话，否则用户看到英文报错会一头雾水。
+           同源候选（base 为空）显示成「本站 /api/voyage」，别显示成裸路径让人一头雾水 */
+        if(/Failed to fetch|NetworkError|Load failed|ERR_/.test(lastErr)){
+          lastErr="连不上取数服务（"+(base?(base+"/api/voyage"):"本站 /api/voyage")+"）";
+        }
+        return attempt(i+1, retried);
+      });
+  }
+  return attempt(0, false);
+}
+function sleepMs(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+
 /* 盐田返回值可能是 "2026-10-28" 也可能是 "2026-10-24 03:00"，统一成系统口径 "YYYY-MM-DD HH:mm" */
 function normDT(v){
   v=String(v||"").replace("T"," ").trim();
@@ -2918,8 +3160,13 @@ function pickVoyRow(rows, en){
 }
 function voyBtnHTML(s){
   if(!isYantian(s.port)) return '<span class="voy-na" title="挂靠港不是盐田，不适用于盐田船期查询">—</span>';
-  return '<button class="icon-btn voy-ref" id="voy-btn-'+s.id+'" title="一键刷新盐田船期（'+esc(s.en)+'）"'+
-         ' onclick="event.stopPropagation();quickVoyage('+s.id+')">🔄 刷新</button>';
+  /* ⚠️ id 要安全地嵌进 onclick 属性：
+     直接拼裸值 → 字符串 id 生成 quickVoyage(T1) → ReferenceError；
+     用双引号包 → JSON.stringify("T1") 的 " 会提前闭合 HTML 属性 → SyntaxError。
+     正确做法：数字 id 原样输出，字符串 id 用单引号包。 */
+  var sid = (typeof s.id === "number") ? String(s.id) : "'" + String(s.id).replace(/\\/g,"\\\\").replace(/'/g,"\\'") + "'";
+  return '<button class="icon-btn voy-ref" id="voy-btn-'+esc(String(s.id))+'" title="一键刷新盐田船期（'+esc(s.en)+'）"'+
+         ' onclick="event.stopPropagation();quickVoyage('+sid+')">🔄 刷新</button>';
 }
 var voyBusy = {};
 function quickVoyage(id){
@@ -2931,27 +3178,31 @@ function quickVoyage(id){
   var btn=document.getElementById("voy-btn-"+id);
   voyBusy[id]=true;
   if(btn){ btn.disabled=true; btn.textContent="⏳ 取数中"; }
-  fetch("/api/voyage?ship="+encodeURIComponent(s.en)+"&date="+yyyymmdd())
-    .then(function(r){ return r.json(); })
+  /* 慢时提示：实时接口不通时会自动改走「触发抓取」通道（1~3 分钟） */
+  var slowTimer=setTimeout(function(){
+    var b2=document.getElementById("voy-btn-"+id);
+    if(b2 && b2.disabled) b2.textContent="⏳ 等待中";
+  }, 6000);
+  voyageFetch("ship="+encodeURIComponent(s.en)+"&date="+yyyymmdd())
     .then(function(j){
+      clearTimeout(slowTimer);
       voyBusy[id]=false;
       if(btn){ btn.disabled=false; btn.textContent="🔄 刷新"; }
-      if(!j || !j.ok){
-        toast(((j&&j.error)||"取数失败")+"（请用 start-server.cmd 启动系统）");
-        return;
-      }
       var r = pickVoyRow(j.rows, s.en);
       if(!r){ toast("盐田暂无 "+s.en+" 今天及之后离港的航次"); return; }
       /* 只更新靠泊/离泊时间：航次号以本系统录入为准，不从盐田船期带 */
       s.eta  = normDT(r.etb);
       s.etd  = normDT(r.etd);
       save(data); renderDashboard();
-      toast(s.cn+" 已更新：ETA "+normDT(r.etb)+" · ETD "+normDT(r.etd));
+      var from = (j.source==="snapshot") ? "（快照 "+(j.updatedAt?String(j.updatedAt).replace("T"," ").slice(5,16):"")+"）"
+                                         : "（实时）";
+      toast(s.cn+" 已更新：ETA "+normDT(r.etb)+" · ETD "+normDT(r.etd)+from);
     })
     .catch(function(e){
+      clearTimeout(slowTimer);
       voyBusy[id]=false;
       if(btn){ btn.disabled=false; btn.textContent="🔄 刷新"; }
-      toast("连不上本地取数服务，请用 start-server.cmd 启动系统");
+      toast("取数失败："+voyageBriefError(String((e&&e.message)||e)));
     });
 }
 
@@ -3013,32 +3264,81 @@ function runVoyageQuery(){
   if(!isYantian(port)){ toast("目前只接入了盐田港的船期查询"); return; }
   if(!ship && !voy){ toast("船名和码头航次至少要填一个"); return; }
   document.getElementById("vq-go").disabled = true;
-  document.getElementById("vq-result").innerHTML =
-    '<div class="vq-state">正在从易物流盐田取数…<br>首次调用会拉起本机浏览器，约需 10~20 秒</div>';
-  fetch("/api/voyage?ship="+encodeURIComponent(ship)+"&voy="+encodeURIComponent(voy)+"&date="+encodeURIComponent(date))
-    .then(function(r){ return r.json(); })
+  var vqBox = document.getElementById("vq-result");
+  vqBox.innerHTML = '<div class="vq-state">正在从易物流盐田实时取数…<br>通常 1~3 秒</div>';
+  /* 若实时接口不通，会自动改走「触发抓取」通道 —— 那时要等 1~3 分钟，提示要换 */
+  var slowTimer = setTimeout(function(){
+    if(!document.getElementById("vq-go").disabled) return;
+    vqBox.innerHTML = '<div class="vq-state">实时接口较慢，正在等待…<br>'+
+      '若持续无结果，会自动改用「触发抓取」通道（约 1~3 分钟）</div>';
+  }, 6000);
+  voyageFetch("ship="+encodeURIComponent(ship)+"&voy="+encodeURIComponent(voy)+"&date="+encodeURIComponent(date))
     .then(function(j){
+      clearTimeout(slowTimer);
       document.getElementById("vq-go").disabled = false;
-      if(!j || !j.ok){
-        document.getElementById("vq-result").innerHTML =
-          '<div class="vq-state">取数失败：'+esc((j&&j.error)||"未知错误")+'</div>';
-        return;
-      }
       vqRows = j.rows||[];
       renderVoyResult(j, ship, voy, date);
     })
     .catch(function(e){
+      clearTimeout(slowTimer);
       document.getElementById("vq-go").disabled = false;
-      document.getElementById("vq-result").innerHTML =
-        '<div class="vq-state">连不上本地取数服务：'+esc(String((e&&e.message)||e))+
-        '<br>请用 start-server.cmd 启动系统后再试。</div>';
+      vqRows = [];
+      vqBox.innerHTML =
+        '<div class="vq-state">取数失败：'+esc(voyageBriefError(String((e&&e.message)||e)))+
+        '<br>可检查 config.js 的 VOYAGE_CONFIG：apiBase（实时接口）/ trigger（触发器）/ snapshot（快照）。</div>';
     });
+}
+/* 把底层错误压缩成一句人话（去掉嵌套的 HTTP 状态码） */
+function voyageBriefError(msg){
+  var t = String(msg||"");
+  /* "HTTP 429：盐田站点限流（HTTP 567 请勿频繁操作），请稍后重试" → "盐田限流，请稍后重试" */
+  var m = t.match(/盐田站点限流[^）]*）/);
+  if(m) return "盐田限流，请稍后重试";
+  m = t.match(/HTTP\s*\d+[：:]\s*(.+)/);
+  if(m) t = m[1];
+  t = t.replace(/（HTTP[^）]*）/g, "");
+  /* 常见的裸英文/框架默认文案 → 人话 */
+  if(/^not found$/i.test(t.trim()))            return "取数服务未找到该接口";
+  if(/^forbidden/i.test(t.trim()))             return "取数服务拒绝了访问";
+  if(/^unauthorized/i.test(t.trim()))          return "取数服务需要认证";
+  if(/^internal server error/i.test(t.trim())) return "取数服务内部错误";
+  if(/^bad gateway/i.test(t.trim()))           return "取数服务网关错误";
+  if(/^service unavailable/i.test(t.trim()))    return "取数服务暂不可用";
+  if(/^timeout|timed out/i.test(t.trim()))     return "取数服务超时";
+  if(/^no such host|getaddrinfo/i.test(t.trim())) return "取数服务域名解析失败";
+  if(/^connection refused/i.test(t.trim()))     return "取数服务未启动";
+  if(/^failed to fetch/i.test(t.trim()))        return "连不上取数服务";
+  /* ⚠️ 截断时不要切在括号中间 —— 先看要不要补右括号 */
+  if(t.length > 40){
+    t = t.slice(0, 40);
+    var open = (t.match(/（/g)||[]).length, close = (t.match(/）/g)||[]).length;
+    if(open > close) t += "）";
+    if(t.charAt(t.length-1) === "，") t = t.slice(0,-1);
+  }
+  return t;
+}
+/* 数据来源徽标：
+     实时 = 刚刚向盐田查到的最新数据（点「查询」/「🔄 刷新」的结果）
+     快照 = 定时抓的静态文件（实时不可用时的兜底）
+   快照兜底时额外提示「实时不可用」，让用户知道数据不是最新的。 */
+function voyageSourceBadge(j){
+  if(j && j.source==="snapshot"){
+    var t=j.updatedAt ? String(j.updatedAt).replace("T"," ").slice(0,16) : "";
+    var warn = j.fallbackFrom
+      ? '<span style="color:#b8860b"> · 实时暂不可用（'+esc(voyageBriefError(j.fallbackFrom))+'）</span>' : '';
+    var label = j.refreshed
+      ? '<span style="color:#185fa5;font-weight:600">刚刚抓取</span>'
+      : '<span style="color:#1d9e75;font-weight:600">快照数据</span>';
+    return label+(t? ' · 抓取于 '+esc(t) : '')+warn;
+  }
+  var el = j && j.elapsedMs ? (' · 耗时 '+j.elapsedMs+'ms') : '';
+  return '<span style="color:#185fa5;font-weight:600">实时查询</span>'+el;
 }
 function renderVoyResult(j, ship, voy, date){
   var box = document.getElementById("vq-result");
   var head = '<div class="vq-hint" style="margin:0 0 8px">查询条件：船名 '+(ship?esc(ship):'（空）')+
              ' · 航次 '+(voy?esc(voy):'（空）')+' · 起始日期 '+esc(date)+
-             '　|　共 '+j.total+' 条，第 '+j.page+'/'+j.pages+' 页</div>';
+             '　|　共 '+j.total+' 条，第 '+j.page+'/'+j.pages+' 页　|　来源：'+voyageSourceBadge(j)+'</div>';
   if(!j.rows.length){
     box.innerHTML = head + '<div class="vq-state">没查到船期记录。<br>换个起始日期，或核对一下船名 / 航次。</div>';
     return;
