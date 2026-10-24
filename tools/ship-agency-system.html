@@ -219,12 +219,38 @@
   .msel label{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--ink);cursor:pointer;padding:3px 0}
   .msel input[type=checkbox]{width:15px;height:15px;cursor:pointer;accent-color:var(--brand)}
   .msel .none{font-size:12px;color:var(--muted)}
+  /* 多选下拉（本港服务商）：形态沿用报价单「从价格表添加」的下拉 + 勾选框 */
+  .msel-dd{position:relative}
+  .msel-dd-btn{width:100%;text-align:left;padding:7px 28px 7px 10px;border:1px solid var(--line);border-radius:7px;
+    background:#fff;font-size:13px;font-family:inherit;color:var(--ink);cursor:pointer;position:relative;line-height:1.5}
+  .msel-dd-btn:hover{border-color:#c7d5e5}
+  .msel-dd-btn:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(11,94,156,.12)}
+  .msel-dd-btn::after{content:"▾";position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:11px}
+  .msel-dd-box{position:absolute;z-index:30;left:0;right:0;top:calc(100% + 4px);max-height:230px;overflow:auto;
+    background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:0 8px 24px rgba(16,24,40,.14);padding:6px}
+  /* 按钮太靠底（或服务商列表太长）时向上弹，避免浮层掉到滚动区外看不见 */
+  .msel-dd-box.up{top:auto;bottom:calc(100% + 4px)}
+  .msel-dd-opt{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;font-size:13px;cursor:pointer;color:var(--ink)}
+  .msel-dd-opt:hover{background:#eef2f7}
+  .msel-dd-opt input[type=checkbox]{flex:0 0 auto;width:15px;height:15px;accent-color:var(--brand);cursor:pointer;margin:0}
+  .msel-dd-opt.on{background:#eaf3fa}
+  .msel-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .msel-chip{display:inline-flex;align-items:center;gap:4px;padding:2px 5px 2px 9px;border-radius:6px;
+    background:#eaf7f1;color:#0e7a56;border:1px solid #cfe9de;font-size:12.5px}
+  .msel-chip button{border:none;background:transparent;color:#0e7a56;cursor:pointer;font-size:14px;line-height:1;padding:0 2px;font-family:inherit}
+  .msel-chip button:hover{color:var(--danger)}
+  .msel-none{font-size:12px;color:var(--muted)}
   .detail-head{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 22px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px}
   .detail-head .back{font-size:13px;color:var(--brand);cursor:pointer;display:inline-block;margin-bottom:8px}
   .detail-head .dtitle{font-size:22px;font-weight:700}
   .detail-head .dtitle .en{font-size:14px;color:var(--muted);font-weight:400;margin-left:8px}
   .block{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:16px;overflow:hidden}
-  .block-h{padding:13px 20px;background:#f8fafc;border-bottom:1px solid var(--line);font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px}
+  /* ★ 卡片里有下拉勾选浮层（本港服务商）时必须解除裁剪 —— 浮层是绝对定位的，
+     overflow:hidden 会把它卡在卡片底边，表现为下拉只显示一半。
+     只给需要的卡片加这个类，其余卡片保持 hidden 以保住圆角裁剪。 */
+  .block-drop{overflow:visible}
+  .block-h{padding:13px 20px;background:#f8fafc;border-bottom:1px solid var(--line);font-weight:700;font-size:15px;
+    display:flex;align-items:center;gap:8px;border-radius:var(--radius) var(--radius) 0 0}
   .block-h .en{font-weight:400;font-size:12px;color:var(--muted)}
   .block-h .count{margin-left:auto;font-size:12px;font-weight:600;color:var(--brand)}
   .voy-cell{text-align:right;white-space:nowrap}
@@ -516,6 +542,48 @@
   .icon-btn:hover{background:#f1f5f9}
   .icon-btn.danger:hover{background:#fee2e2;color:var(--danger);border-color:#fecaca}
 
+  /* ---------- Client master：公司分组行 + 展开的联系人列表 + VIP ---------- */
+  tr.cx-company td{background:#fbfdff}
+  tr.cx-company:hover td{background:#eef6fc}
+  .cx-caret{display:inline-block;width:14px;color:var(--muted);font-size:10px;transition:transform .12s}
+  tr.cx-open .cx-caret{transform:rotate(90deg)}
+  .cx-name{font-weight:600;color:var(--ink)}
+  tr.cx-open .cx-name{color:var(--brand)}
+  .vip-badge{display:inline-block;margin-left:7px;padding:1px 8px;border-radius:999px;font-size:11px;font-weight:700;
+    background:linear-gradient(135deg,#fde68a,#f59e0b);color:#7c4a03;border:1px solid #f0c069;letter-spacing:.3px;white-space:nowrap}
+  .cx-count{font-variant-numeric:tabular-nums;white-space:nowrap}
+  .cx-sub td{padding:0;background:#fff!important}
+  .cx-wrap{padding:10px 14px 14px 38px;background:#fbfdff;border-bottom:1px solid var(--line)}
+  .cx-sub table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .cx-sub th{padding:7px 11px;font-size:12px;white-space:nowrap}
+  .cx-sub td{padding:7px 11px;font-size:13px}
+  .cx-sub tr:hover td{background:#f4f8fc;cursor:default}
+  .cx-sub tr.cx-vip td{background:#fffbeb}
+  .cx-sub tr.cx-vip:hover td{background:#fdf3d4}
+  .cx-star{color:#d97706;font-size:13px}
+  .cx-add{border:1px dashed var(--brand);color:var(--brand);background:#fff;border-radius:7px;padding:5px 10px;font-size:12.5px;cursor:pointer;font-family:inherit}
+  .cx-add:hover{background:#eef6fc}
+  .cx-lock{background:#f4f6f9!important;color:var(--muted)}
+  .cx-hint{font-size:12px;color:var(--muted);margin-top:5px}
+  .cx-acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  .cx-ptype{display:inline-block;padding:2px 9px;border-radius:6px;font-size:12px;font-weight:600;
+    background:#eef6fc;color:var(--brand-d);border:1px solid #d3e6f5;white-space:nowrap}
+  /* 被代理客户：输入框 + 标签组 */
+  .cx-addrow{display:flex;gap:8px;align-items:center}
+  .cx-addrow input{flex:1;min-width:0}
+  .cx-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+  .cx-subcli{display:inline-flex;align-items:center;gap:5px;padding:2px 5px 2px 9px;border-radius:6px;
+    background:#eef6fc;color:var(--brand-d);border:1px solid #d3e6f5;font-size:12.5px}
+  .cx-tagx{border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:14px;line-height:1;padding:0 2px;font-family:inherit}
+  .cx-tagx:hover{color:var(--danger)}
+  .cx-none{color:var(--muted);font-size:12.5px}
+  /* 展开区的公司档案摘要 */
+  .cx-meta{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;margin-bottom:9px;font-size:12.5px;color:var(--muted)}
+  .cx-meta-i b{color:var(--ink);font-weight:600;margin-right:6px}
+  .cx-meta-i .cx-subcli{margin-right:2px}
+  .vip-check{display:flex;align-items:center;gap:9px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;cursor:pointer;background:#fff;font-size:13px}
+  .vip-check input[type=checkbox]{width:16px;height:16px;accent-color:#f59e0b;margin:0}
+
   /* ---------- Voucher ---------- */
   .v-tabs{display:flex;gap:4px;border-bottom:1px solid var(--line)}
   .v-tab{padding:9px 18px;cursor:pointer;background:transparent;border:none;border-bottom:2px solid transparent;
@@ -615,6 +683,8 @@
     body{background:#fff;padding:0;margin:0}
     html,body{height:auto}
     .topbar,.layout,.toast,.v-back{display:none!important}
+    /* 多选下拉是绝对定位浮层，打印时一律收起，避免压在单据上 */
+    .msel-dd-box{display:none!important}
     #voucher-print{display:block}
     body.v-print #voucher-print{display:block !important;visibility:visible !important}
     body.v-print #quote-mask{display:none !important}   /* 别把上次生成的报价单一起打出来 */
@@ -774,9 +844,9 @@
       <!-- LOCAL AGENT MASTER -->
       <div id="page-agents" class="page hidden">
         <div class="page-title">本港代理/服务商信息维护 <span class="en">Local Agent &amp; Service Provider Master</span></div>
-        <div class="page-desc">维护本港代理与服务商公司档案（中英文公司名 / 联系人 / 邮箱电话 / 中英文地址 / 邮编 / 备注 / 收费价格表）。「类型」选代理的可在航次「本港代理」中选取，选服务商的可在航次「本港服务商」中多选。</div>
+        <div class="page-desc">维护本港代理与服务商公司档案（中英文公司名 / 联系人 / 邮箱电话 / 中英文地址 / 邮编 / 备注 / 收费价格表）。「类型」的维护方式与「交通凭证 → 港口列表」相同，可自行增删：类型为「本港代理」的公司只会出现在航次表单的「本港代理」单选栏，其它类型只会出现在「本港服务商」多选栏。<b>点击列表任意一行</b>可展开详情（收费价格表 / 备注全文）。</div>
         <div class="toolbar">
-          <input id="search-a" placeholder="🔍 搜索公司 / 联系人 / 电话 / 邮箱…" oninput="agentPageReset();renderAgents()">
+          <input id="search-a" placeholder="🔍 搜索公司 / 联系人 / 电话 / 邮箱 / 备注…" oninput="agentPageReset();renderAgents()">
           <span data-psp="agent"></span>
           <div class="right"><button class="btn sm" onclick="openAgentModal()">＋ 新增代理/服务商</button></div>
         </div>
@@ -790,9 +860,9 @@
       <!-- CLIENT (委托方) MASTER -->
       <div id="page-clients" class="page hidden">
         <div class="page-title">委托方信息维护 <span class="en">Client Master</span></div>
-        <div class="page-desc">维护委托方档案（公司名称 / 姓名 / 职位 / 电话 / 手机 / 地址 / 邮箱 / 备注）。新增代理船舶时「委托方」可从此处选取。</div>
+        <div class="page-desc">维护委托方档案。<b>一家公司可以有多个联系人</b>——同一公司共用<b>公司名称</b>与<b>地址</b>，姓名 / 职位 / 电话 / 手机 / 邮箱 / 备注 / VIP 由每位联系人单独填写。点击公司行展开即可看到名下全部联系人，VIP 以 ★ 金色高亮。</div>
         <div class="toolbar">
-          <input id="search-c" placeholder="🔍 搜索公司 / 姓名 / 电话 / 邮箱…" oninput="clientPageReset();renderClients()">
+          <input id="search-c" placeholder="🔍 搜索公司 / 类别 / 地址 / 被代理客户 / 姓名 / 电话 / 邮箱…" oninput="clientPageReset();renderClients()">
           <span data-psp="client"></span>
           <div class="right"><button class="btn sm" onclick="openClientModal()">＋ 新增委托方</button></div>
         </div>
@@ -888,7 +958,7 @@
           <div class="block-b fields-grid" id="blk-basic"></div>
         </div>
 
-        <div class="block">
+        <div class="block block-drop">
           <div class="block-h">🧭 船舶航次信息 <span class="en">Voyage Information</span></div>
           <div class="block-b fields-grid" id="blk-voyage"></div>
         </div>
@@ -952,13 +1022,15 @@
         <div class="field"><div class="flbl">邮箱<span class="fen">Email</span></div><div class="fval"><input id="ag-email" type="text" placeholder="如：ops@agent.com"></div></div>
         <div class="field" style="grid-column:1/-1"><div class="flbl">地址<span class="fen">Address</span></div><div class="fval"><input id="ag-address" type="text" placeholder="如：上海市浦东新区某路 88 号"></div></div>
         <div class="field" style="grid-column:1/-1"><div class="flbl">英文地址<span class="fen">Address (EN)</span></div><div class="fval"><input id="ag-address-en" type="text" placeholder="e.g. No.99 West Huanhu Rd, Pudong New Area, Shanghai"></div></div>
-        <div class="field" style="grid-column:1/-1"><div class="flbl">类型<span class="fen">Type</span></div><div class="fval"><select id="ag-kind" style="width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;font-size:14px;background:#fff">
-          <option value="agent">本港代理</option>
-          <option value="provider">服务商</option>
-          <option value="both">代理 + 服务商</option>
-        </select><span style="font-size:12px;color:var(--muted);margin-top:5px;display:block">代理可在航次「本港代理」中单选；服务商可在航次「本港服务商」中多选。</span></div></div>
+        <div class="field" style="grid-column:1/-1"><div class="flbl">类型<span class="fen">Type</span></div><div class="fval">
+          <div class="v-row">
+            <select id="ag-kind"></select>
+            <button class="btn sm ghost" onclick="promptAddAgentType()">＋ 新增类型</button>
+            <button class="btn sm danger" onclick="promptDeleteAgentType()">🗑 删除</button>
+          </div>
+          <span style="font-size:12px;color:var(--muted);margin-top:5px;display:block">维护方式与「交通凭证 → 港口列表」相同，可直接新增或删除。选「本港代理」的公司只会出现在航次「本港代理」单选栏；其它类型（含新建的）只会出现在「本港服务商」多选栏。</span></div></div>
         <div class="field"><div class="flbl">邮编<span class="fen">Postcode</span></div><div class="fval"><input id="ag-postcode" type="text" placeholder="如：201306"></div></div>
-        <div class="field"><div class="flbl">备注<span class="fen">Remarks</span></div><div class="fval"><input id="ag-remark" type="text" placeholder="如：24 小时值班 / 兼营拖轮"></div></div>
+        <div class="field" style="grid-column:1/-1"><div class="flbl">备注<span class="fen">Remarks</span></div><div class="fval"><textarea id="ag-remark" rows="1" placeholder="如：24 小时值班 / 兼营拖轮&#10;支持多行输入，高度随内容自动调整"></textarea></div></div>
       </div>
       <div class="block" style="margin-top:14px">
         <div class="block-h">💰 收费价格表 <span class="en">Fee Schedule</span></div>
@@ -981,15 +1053,42 @@
   <div class="modal" style="width:720px;max-width:100%">
     <div class="mh" id="client-mh">新增委托方</div>
     <div class="mb">
+      <div class="v-hint" id="cl-tip" style="margin:0 0 14px"></div>
       <div class="fields-grid">
-        <div class="field" style="grid-column:1/-1"><div class="flbl">公司名称<span class="fen">Company</span></div><div class="fval"><input id="cl-company" type="text" placeholder="如：中远海运集装箱运输有限公司"></div></div>
-        <div class="field"><div class="flbl">姓名<span class="fen">Contact Name</span></div><div class="fval"><input id="cl-name" type="text" placeholder="如：陈志远"></div></div>
-        <div class="field"><div class="flbl">职位<span class="fen">Title</span></div><div class="fval"><input id="cl-title" type="text" placeholder="如：船务部经理"></div></div>
-        <div class="field"><div class="flbl">电话号码<span class="fen">Telephone</span></div><div class="fval"><input id="cl-phone" type="text" placeholder="如：021-6596-1001"></div></div>
-        <div class="field"><div class="flbl">手机号码<span class="fen">Mobile</span></div><div class="fval"><input id="cl-mobile" type="text" placeholder="如：139-0180-1001"></div></div>
-        <div class="field" style="grid-column:1/-1"><div class="flbl">地址<span class="fen">Address</span></div><div class="fval"><input id="cl-address" type="text" placeholder="如：上海市虹口区东大名路 700 号"></div></div>
-        <div class="field" style="grid-column:1/-1"><div class="flbl">邮箱<span class="fen">Email</span></div><div class="fval"><input id="cl-email" type="text" placeholder="如：ops@client.com"></div></div>
-        <div class="field" style="grid-column:1/-1"><div class="flbl">备注<span class="fen">Remarks</span></div><div class="fval"><input id="cl-remark" type="text" placeholder="如：优先联系人 / 结算账期 30 天"></div></div>
+        <div class="field" style="grid-column:1/-1"><div class="flbl">公司名称<span class="fen">Company</span></div><div class="fval">
+          <input id="cl-company" type="text" list="cl-company-list" placeholder="输入新公司名，或从下拉里选择已有公司" oninput="clCompanyChanged()">
+          <datalist id="cl-company-list"></datalist>
+          <div class="cx-hint" id="cl-company-hint"></div>
+        </div></div>
+        <div class="field" style="grid-column:1/-1"><div class="flbl">地址<span class="fen">Address（同一公司共用）</span></div><div class="fval">
+          <input id="cl-address" type="text" placeholder="如：上海市虹口区东大名路 700 号">
+          <div class="cx-hint" id="cl-address-hint"></div>
+        </div></div>
+        <div class="field clcf" id="cl-fld-ptype"><div class="flbl">委托方类别<span class="fen">Client Type（同一公司共用）</span></div><div class="fval">
+          <select id="cl-ptype" onchange="clPtypeChanged()"></select>
+          <div class="cx-hint" id="cl-ptype-hint">公司层级字段：新建代理船舶选了这家公司时会自动带出。</div>
+        </div></div>
+        <div class="field clcf hidden" id="cl-fld-subclients" style="grid-column:1/-1">
+          <div class="flbl">被代理客户<span class="fen">Sub-clients（同一公司共用，可添加多个）</span></div>
+          <div class="fval">
+            <div class="cx-addrow">
+              <input id="cl-subclient-input" type="text" placeholder="输入被代理客户名称后点「添加」"
+                     onkeydown="if(event.key==='Enter'){event.preventDefault();addSubClient();}">
+              <button type="button" class="icon-btn" onclick="addSubClient()">＋ 添加</button>
+            </div>
+            <div class="cx-tags" id="cl-subclient-tags"></div>
+            <div class="cx-hint">该委托方作为<b>国内总代</b>时，实际被代理的客户可以逐个添加；输入回车等同于点「添加」。</div>
+          </div>
+        </div>
+        <div class="field clpf" id="cl-fld-name"><div class="flbl">姓名<span class="fen">Contact Name</span></div><div class="fval"><input id="cl-name" type="text" placeholder="如：陈志远"></div></div>
+        <div class="field clpf" id="cl-fld-title"><div class="flbl">职位<span class="fen">Title</span></div><div class="fval"><input id="cl-title" type="text" placeholder="如：船务部经理"></div></div>
+        <div class="field clpf" id="cl-fld-phone"><div class="flbl">电话号码<span class="fen">Telephone</span></div><div class="fval"><input id="cl-phone" type="text" placeholder="如：021-6596-1001"></div></div>
+        <div class="field clpf" id="cl-fld-mobile"><div class="flbl">手机号码<span class="fen">Mobile</span></div><div class="fval"><input id="cl-mobile" type="text" placeholder="如：139-0180-1001"></div></div>
+        <div class="field clpf" id="cl-fld-email" style="grid-column:1/-1"><div class="flbl">邮箱<span class="fen">Email</span></div><div class="fval"><input id="cl-email" type="text" placeholder="如：ops@client.com"></div></div>
+        <div class="field clpf" id="cl-fld-remark" style="grid-column:1/-1"><div class="flbl">备注<span class="fen">Remarks</span></div><div class="fval"><input id="cl-remark" type="text" placeholder="如：优先联系人 / 结算账期 30 天"></div></div>
+        <div class="field clpf" id="cl-fld-vip" style="grid-column:1/-1"><div class="flbl">VIP<span class="fen">Key Account</span></div><div class="fval">
+          <label class="vip-check"><input id="cl-vip" type="checkbox"><span>⭐ 标记为 VIP 委托人（列表中星标高亮、优先显示）</span></label>
+        </div></div>
       </div>
     </div>
     <div class="mf">
@@ -1124,7 +1223,7 @@
 /* ---------------- 版本号 ----------------
    显示在左上角系统名称右侧。每次做了可见改动，往上加：
    小修：末位 +1；新增功能：中间位 +1。 */
-var APP_VERSION = "v1.12.0";
+var APP_VERSION = "v1.16.1";
 (function(){ var el=document.getElementById("appVer"); if(el) el.textContent=APP_VERSION; })();
 
 /* ---------------- i18n ---------------- */
@@ -1373,8 +1472,90 @@ function backfillClients(arr){
 }
 function saveClients(d){ persist("clients", d); }
 var localClients = [];
+
+/* ---- 委托方：公司 -> 多联系人 ----
+   存储仍是扁平的一条条联系人记录（兼容历史数据/旧导出）。
+   ★ 分组主键 = 归一化后的公司名称（trim + lowercase），**不是 gid**：
+     gid 只是给同组记录盖的印章，
+     万一某条载入路径漏掉 ensureClientGroups()、gid 缺失或脏了，
+     按公司名分组依然正确 —— 不会出现「所有公司并成一个」。
+   同一组的联系人共用 company / address，其余字段每人一份，vip 每人独立。 */
+function clientKey(c){
+  var k = String((c && c.company) || "").trim().toLowerCase();
+  /* 没有公司名称的记录各自独立成组，不能并到一起 */
+  return k || ("__nocid_" + (c && c.id));
+}
+/* 按公司聚合：{key, gid, company, address, contacts:[], vipCount} */
+function clientCompanies(){
+  var order = [], map = {};
+  for(var i=0;i<localClients.length;i++){
+    var c = localClients[i];
+    if(!c || typeof c !== "object") continue;
+    if(typeof c.vip !== "boolean") c.vip = !!c.vip;
+    var k = clientKey(c);
+    var g = map[k];
+    if(!g){
+      g = map[k] = {key:k, gid:c.gid, company:c.company||"", address:c.address||"", ptype:c.ptype||"", subClients:null, contacts:[]};
+      order.push(g);
+    }
+    g.contacts.push(c);
+    /* 公司级字段取组内第一个非空值：一家公司只维护一份 */
+    if(!g.company && c.company) g.company = c.company;
+    if(!g.address && c.address) g.address = c.address;
+    if(!g.ptype   && c.ptype)   g.ptype   = c.ptype;
+    if(!g.subClients && Array.isArray(c.subClients) && c.subClients.length) g.subClients = c.subClients.slice();
+  }
+  order.forEach(function(g){
+    g.vipCount = g.contacts.filter(function(c){ return c.vip; }).length;
+  });
+  return order;
+}
+/* 给同组记录统一盖上 gid 印章（幂等）；基于按名的分组结果，不依赖旧 gid */
+function ensureClientGroups(){
+  var next = 0;
+  localClients.forEach(function(c){ if(typeof c.gid === "number" && c.gid > next) next = c.gid; });
+  clientCompanies().forEach(function(g){
+    var gid = (typeof g.gid === "number" && g.gid) ? g.gid : ++next;
+    g.gid = gid;
+    g.contacts.forEach(function(c){ c.gid = gid; });
+  });
+}
+function clientGroupByKey(k){
+  if(k==null) return null;
+  var list = clientCompanies();
+  for(var i=0;i<list.length;i++) if(list[i].key === String(k)) return list[i];
+  return null;
+}
+/* 按公司名取「委托方类别」——新建代理船舶时选了委托方就自动带出 */
+function principalTypeOf(name){
+  var n = String(name||"").trim().toLowerCase(); if(!n) return "";
+  var list = clientCompanies();
+  for(var i=0;i<list.length;i++)
+    if(String(list[i].company).trim().toLowerCase() === n) return list[i].ptype || "";
+  return "";
+}
+/* 按公司名取联系人：VIP 优先（报价单/INVOICE 抬头用） */
+function findClientByCompany(name){
+  var n = String(name||"").trim().toLowerCase(); if(!n) return null;
+  var hit = localClients.filter(function(c){ return String(c.company||"").trim().toLowerCase()===n; });
+  if(!hit.length) return null;
+  for(var i=0;i<hit.length;i++) if(hit[i].vip) return hit[i];
+  return hit[0];
+}
+function clientNextId(){
+  return localClients.length ? Math.max.apply(null, localClients.map(function(x){ return x.id||0; }))+1 : 1;
+}
+function clientNextGid(){
+  return localClients.reduce(function(m,c){ return Math.max(m, c.gid||0); }, 0) + 1;
+}
 function clientOpts(){
-  var o = localClients.map(function(c){ return {v:c.company, t:c.company}; });
+  var seen = {}, o = [];
+  localClients.forEach(function(c){
+    var k = String(c.company||"").trim();
+    if(!k || seen[k]) return;
+    seen[k] = 1; o.push({v:k, t:k});
+  });
+  o.sort(function(a,b){ return a.t.localeCompare(b.t, "zh-Hans-CN"); });
   o.unshift({v:"", t:"— 请选择委托方 —"});
   return o;
 }
@@ -1571,19 +1752,22 @@ var SORT_CFG = {
   ship:   {cn:"cn", en:"en", port:"port", berth:"berth", eta:"eta", etd:"etd", status:"status"},
   vessel: {cn:"cn", en:"en", imo:"imo", mmsi:"mmsi", flag:"flag", type:"type", loa:"loa", beam:"beam", nt:"nt"},
   agent:  {company:"company", kind:"__kind", contact:"contact", phone:"phone", email:"email", address:"address", fees:"__fees", remark:"remark"},
-  client: {company:"company", name:"name", title:"title", phone:"phone", mobile:"mobile", email:"email", address:"address", remark:"remark"}
+  client: {company:"company", ptype:"ptype", address:"address", contacts:"__contacts", vip:"__vip"}
 };
 /* 表头列定义：非排序列 k 为 null */
 var COLS = {
   ship:   [{t:"#",w:"44px"},{k:"cn",t:"中文船名"},{k:"en",t:"英文船名"},{k:"port",t:"港口 PORT"},{k:"berth",t:"泊位"},{k:"eta",t:"靠泊时间 ETA"},{k:"etd",t:"离泊时间 ETD"},{k:"status",t:"状态"},{t:"船期",w:"96px"}],
   vessel: [{t:"#",w:"44px"},{k:"cn",t:"中文船名"},{k:"en",t:"英文船名"},{k:"imo",t:"IMO"},{k:"mmsi",t:"MMSI"},{k:"flag",t:"国籍"},{k:"type",t:"类型"},{k:"loa",t:"船长(m)"},{k:"beam",t:"船宽(m)"},{k:"nt",t:"净吨"},{t:"操作"}],
   agent:  [{t:"#",w:"44px"},{k:"company",t:"公司名"},{k:"kind",t:"类型"},{k:"contact",t:"联系人"},{k:"phone",t:"电话"},{k:"email",t:"邮箱"},{k:"address",t:"地址 / 邮编"},{k:"fees",t:"收费项目数"},{k:"remark",t:"备注"},{t:"操作"}],
-  client: [{t:"#",w:"44px"},{k:"company",t:"公司名称"},{k:"name",t:"姓名"},{k:"title",t:"职位"},{k:"phone",t:"电话"},{k:"mobile",t:"手机"},{k:"email",t:"邮箱"},{k:"address",t:"地址"},{k:"remark",t:"备注"},{t:"操作"}]
+  client: [{t:"#",w:"44px"},{k:"company",t:"公司名称 Company"},{k:"ptype",t:"委托方类别",w:"110px"},{k:"address",t:"地址 Address"},{k:"contacts",t:"联系人",w:"90px"},{k:"vip",t:"VIP",w:"70px"},{t:"操作",w:"212px"}]
 };
 function sortVal(key, colKey, item){
   var field = SORT_CFG[key][colKey];
   if(field==="__fees") return (item.fees||[]).length;
   if(field==="__kind") return kindLabel(item);
+  /* 委托方按公司聚合后的派生列 */
+  if(field==="__contacts") return (item.contacts||[]).length;
+  if(field==="__vip") return (item.vipCount||0);
   var v = item[field];
   return (v==null) ? "" : v;
 }
@@ -1737,13 +1921,21 @@ function localAgentOpts(){
   return o;
 }
 /* ---------------- 代理 / 服务商 ----------------
-   公司档案用 kind 区分：agent=本港代理 / provider=服务商 / both=两者皆是。
-   旧数据没有 kind，一律按 agent 处理。 */
-function agentKind(a){ var k=a&&a.kind; return (k==="provider"||k==="both") ? k : "agent"; }
-function isAgentKind(a){ var k=agentKind(a); return k==="agent"||k==="both"; }
-function isProviderKind(a){ var k=agentKind(a); return k==="provider"||k==="both"; }
+   公司档案用 kind 存「类型」的值：内置 agent=本港代理 / provider=服务商 / both=两者皆是，
+   用户自建类型存自定义值。旧数据没有 kind，一律按 agent 处理。
+   ★ 出现在航次表单哪个下拉由「值」本身决定（v1.16.1 起，类型上的 a/p 开关已废除）：
+     kind === "agent" → 只进「本港代理」单选；其它一切类型 → 只进「本港服务商」多选。
+   所以新增类型不用问出现在哪边 —— 新类型天然就是服务商类型。 */
+function agentKind(a){
+  var k=a&&a.kind;
+  if(!k) return "agent";
+  if(agentTypeByV(k)) return k;                       /* 已知类型（内置或用户自建）原样返回 */
+  return (k==="provider"||k==="both") ? k : "agent";  /* 类型被删掉的老数据：按内置语义兜底 */
+}
 function kindLabel(a){
-  var k=agentKind(a);
+  var t = agentTypeByV(agentKind(a));
+  if(t) return t.t;
+  var k = agentKind(a);
   return k==="provider" ? "服务商" : (k==="both" ? "代理+服务商" : "代理");
 }
 function providerOpts(){
@@ -1751,6 +1943,47 @@ function providerOpts(){
   o.unshift({v:"", t:"— 请选择服务商 —"});
   return o;
 }
+/* ---------------- 代理/服务商「类型」主数据 ----------------
+   内置三种：本港代理 / 服务商 / 代理 + 服务商（值沿用历史的 agent/provider/both，老数据零迁移）。
+   用户可自行增删（如 报关行、拖轮公司），维护方式参考「交通凭证 → 港口列表」：下拉 + 新增 + 删除。
+   ★ 出现在航次表单哪个下拉由「值」本身决定，类型上不再带开关（v1.16.1 废除 a/p）：
+     v === "agent"（本港代理）→ 只进「本港代理」单选；
+     其它任何类型（服务商 / 代理+服务商 / 用户自建）→ 只进「本港服务商」多选。
+   存放在 vset.agentTypes，走既有的 api_save_vsettings，无需新增数据库函数。 */
+var AGENT_TYPES_BUILTIN = [
+  {v:"agent",    t:"本港代理"},
+  {v:"provider", t:"服务商"},
+  {v:"both",     t:"代理 + 服务商"}
+];
+function normalizeAgentTypes(arr){
+  var out = [];
+  (Array.isArray(arr)?arr:[]).forEach(function(x){
+    if(!x || typeof x !== "object") return;
+    var v = (typeof x.v === "string") ? x.v.trim() : "";
+    var t = (typeof x.t === "string") ? x.t.trim() : "";
+    if(!v || !t) return;
+    if(out.some(function(y){ return y.v === v; })) return;
+    out.push({v:v, t:t});   /* 老数据里的 a/p 开关直接丢弃：规则改由值本身表达 */
+  });
+  return out;
+}
+/* 空列表（从未维护过 / 被清空）时回落到内置三种；用户删掉的内置类型不会复活 */
+function agentTypes(){
+  var arr = (vset && Array.isArray(vset.agentTypes)) ? vset.agentTypes : [];
+  return arr.length ? arr : AGENT_TYPES_BUILTIN.slice();
+}
+function agentTypeByV(v){
+  var l = agentTypes();
+  for(var i=0;i<l.length;i++) if(l[i].v === v) return l[i];
+  return null;
+}
+function agentTypeOpts(){ return agentTypes().map(function(x){ return {v:x.v, t:x.t}; }); }
+/* 公司档案用的筛选（航次表单两个下拉的数据源）：
+   只有类型值为 agent（本港代理）的进「本港代理」单选，其它一切类型只进「本港服务商」多选。 */
+function isAgentKind(a){ return agentKind(a) === "agent"; }
+function isProviderKind(a){ return agentKind(a) !== "agent"; }
+/* 徽标配色：自定义类型没有专属 CSS 类，按新规则映射到内置两色 */
+function agentTagCls(a){ return isAgentKind(a) ? "tag-agent" : "tag-provider"; }
 function blockHTML(fields, s, editable){
   var editMode = editing && (editable!==false);
   return fields.map(function(f){
@@ -1762,6 +1995,7 @@ function blockHTML(fields, s, editable){
       } else if(f.type==="select"){
         var sopts = (typeof f.opts==="function") ? f.opts() : (f.opts||[]);
         ctrl = buildSelect("d-"+f.key, sopts, v);
+        if(f.key==="principal") ctrl = ctrl.replace("<select ", "<select onchange=\"syncPrincipalType(this.value,'d')\" ");
       } else if(f.type==="multiselect"){
         ctrl = multiSelHTML("d-"+f.key, (typeof f.opts==="function")?f.opts():(f.opts||[]), v);
       } else {
@@ -1781,15 +2015,99 @@ function blockHTML(fields, s, editable){
   }).join("");
 }
 /* 多选控件：值存数组，逐项渲染复选框；opts 首项为空占位需跳过 */
-function multiSelHTML(id, opts, val){
-  var arr = Array.isArray(val)?val:(val?[val]:[]);
-  var items = opts.filter(function(o){ return o.v; });
-  if(!items.length) return '<span class="none">暂无服务商，请先到「本港代理/服务商维护」添加类型为服务商的公司</span>';
-  return '<div class="msel" id="'+id+'" data-value="'+esc(arr.join("|"))+'">'+
-    items.map(function(o){
-      return '<label><input type="checkbox" value="'+esc(o.v)+'"'+(arr.indexOf(o.v)>-1?" checked":"")+'>'+esc(o.t)+'</label>';
-    }).join("")+'</div>';
+/* 多选下拉（本港服务商）：形态与报价单「从价格表添加」一致 —— 一个下拉按钮 + 勾选框列表。
+   勾选即时生效（这是表单字段，不是"选完再追加"的列表），下方用小标签回显已选公司。
+   取值仍走 multiSelVal(id)，内部还是原生 checkbox，逻辑不动。 */
+function multiSelLabel(arr){
+  return arr.length ? ("已选 "+arr.length+" 项") : "请选择本港服务商（可多选）";
 }
+function multiSelHTML(id, opts, val){
+  var arr = Array.isArray(val) ? val.slice() : (val ? [val] : []);
+  var items = opts.filter(function(o){ return o.v; });
+  if(!items.length) return '<span class="msel-none">暂无服务商，请先到「本港代理/服务商维护」添加类型为服务商的公司</span>';
+  var chips = arr.map(function(v){
+    return '<span class="msel-chip">'+esc(v)+
+      '<button type="button" title="移除" onclick="multiSelRemove('+qid(id)+','+qid(v)+')">×</button></span>';
+  }).join("");
+  return '<div class="msel-dd" id="'+id+'">'+
+    '<button type="button" class="msel-dd-btn" id="'+id+'-btn" onclick="toggleMultiSel(event,'+qid(id)+')">'+multiSelLabel(arr)+'</button>'+
+    '<div class="msel-dd-box hidden" id="'+id+'-box">'+
+      items.map(function(o){
+        var on = arr.indexOf(o.v)>-1;
+        return '<label class="msel-dd-opt'+(on?' on':'')+'" data-v="'+esc(o.v)+'">'+
+          '<input type="checkbox" value="'+esc(o.v)+'"'+(on?' checked':'')+
+          ' onchange="onMultiSelToggle('+qid(id)+',this)">'+
+          '<span>'+esc(o.t)+'</span></label>';
+      }).join("")+
+    '</div>'+
+    '<div class="msel-chips" id="'+id+'-chips">'+chips+'</div>'+
+  '</div>';
+}
+function multiSelBoxes(){
+  if(!document.querySelectorAll) return [];
+  return Array.prototype.slice.call(document.querySelectorAll(".msel-dd-box"));
+}
+/* 浮层盒子的高度上限（与 .msel-dd-box 的 max-height 保持一致），用于判断是否够地方往下弹 */
+var MSEL_BOX_MAXH = 230;
+function toggleMultiSel(e, id){
+  if(e && e.stopPropagation) e.stopPropagation();
+  var box=document.getElementById(id+"-box"); if(!box) return;
+  var willOpen = box.classList.contains("hidden");
+  multiSelBoxes().forEach(function(b){ b.classList.add("hidden"); });
+  if(!willOpen) return;
+  /* 下方空间不够、且上方更宽敞时改为向上弹 */
+  box.classList.remove("up");
+  try{
+    var btn=document.getElementById(id+"-btn");
+    if(btn && btn.getBoundingClientRect && window && typeof window.innerHeight==="number"){
+      var r=btn.getBoundingClientRect();
+      if(window.innerHeight - r.bottom < MSEL_BOX_MAXH + 16 && r.top > MSEL_BOX_MAXH + 16) box.classList.add("up");
+    }
+  }catch(err){}
+  box.classList.remove("hidden");
+}
+function multiSelChecked(id){
+  var box=document.getElementById(id+"-box");
+  if(!box || !box.querySelectorAll) return [];
+  return Array.prototype.filter.call(box.querySelectorAll("input[type=checkbox]"), function(c){ return c.checked; })
+    .map(function(c){ return c.value; });
+}
+function multiSelRefresh(id){
+  var box=document.getElementById(id+"-box");
+  var btn=document.getElementById(id+"-btn");
+  var chips=document.getElementById(id+"-chips");
+  var arr=multiSelChecked(id);
+  if(btn) btn.textContent=multiSelLabel(arr);
+  if(chips) chips.innerHTML = arr.map(function(v){
+    return '<span class="msel-chip">'+esc(v)+
+      '<button type="button" title="移除" onclick="multiSelRemove('+qid(id)+','+qid(v)+')">×</button></span>';
+  }).join("");
+}
+function onMultiSelToggle(id, cb){
+  var box=document.getElementById(id+"-box");
+  if(box && box.querySelectorAll){
+    Array.prototype.forEach.call(box.querySelectorAll(".msel-dd-opt"), function(l){
+      if(l.getAttribute("data-v")===cb.value) l.classList.toggle("on", !!cb.checked);
+    });
+  }
+  multiSelRefresh(id);
+}
+function multiSelRemove(id, v){
+  var box=document.getElementById(id+"-box");
+  if(box && box.querySelectorAll){
+    Array.prototype.forEach.call(box.querySelectorAll("input[type=checkbox]"), function(c){ if(c.value===v) c.checked=false; });
+    Array.prototype.forEach.call(box.querySelectorAll(".msel-dd-opt"), function(l){
+      if(l.getAttribute("data-v")===v) l.classList.remove("on");
+    });
+  }
+  multiSelRefresh(id);
+}
+/* 点下拉外部收起（含点进另一个下拉时先收起全部） */
+document.addEventListener("click", function(e){
+  var t=e && e.target;
+  if(t && t.closest && t.closest(".msel-dd")) return;
+  multiSelBoxes().forEach(function(b){ b.classList.add("hidden"); });
+});
 /* 读取多选控件当前勾选值 */
 function multiSelVal(id){
   var box=document.getElementById(id); if(!box) return [];
@@ -2539,12 +2857,19 @@ function refresh(){ ["ship","vessel","agent","client"].forEach(renderPageSizeSel
 
 /* ---------------- modal (新增) ---------------- */
 var newTodos=[];
+/* 卡片里含下拉勾选浮层时自动解除裁剪，避免浮层被 overflow:hidden 卡住 */
 function blockShell(title, en, bodyHTML){
-  return '<div class="block"><div class="block-h">'+title+' <span class="en">'+en+'</span></div><div class="block-b"><div class="fields-grid">'+bodyHTML+'</div></div></div>';
+  return '<div class="block'+(bodyHTML.indexOf("msel-dd")>-1?" block-drop":"")+'"><div class="block-h">'+title+' <span class="en">'+en+'</span></div><div class="block-b"><div class="fields-grid">'+bodyHTML+'</div></div></div>';
 }
 function modalInput(f){
   if(f.type==="datetime") return dtHTML("f-"+f.key, "");
-  if(f.type==="select"){ var aopts=(typeof f.opts==="function")?f.opts():(f.opts||[]); return buildSelect("f-"+f.key, aopts, ""); }
+  if(f.type==="select"){
+    var aopts=(typeof f.opts==="function")?f.opts():(f.opts||[]);
+    var h = buildSelect("f-"+f.key, aopts, "");
+    /* 选了委托方 → 自动带出该公司在「委托方信息维护」里维护的委托方类别 */
+    if(f.key==="principal") h = h.replace("<select ", "<select onchange=\"syncPrincipalType(this.value,'f')\" ");
+    return h;
+  }
   if(f.type==="multiselect") return multiSelHTML("f-"+f.key, (typeof f.opts==="function")?f.opts():(f.opts||[]), []);
   return '<input id="f-'+f.key+'" type="text" placeholder="'+esc(f.ph||'')+'">';
 }
@@ -2570,6 +2895,15 @@ function openModal(){
   renderModalTodos();
   autoGrowAllTA(document.getElementById("modal-body"));
   document.getElementById("mask").classList.remove("hidden");
+}
+/* 选了「委托方」→ 把该公司维护的「委托方类别」自动带出来。
+   公司没维护类别时保持原样，不覆盖用户已手选的值。
+   pfx：'f' = 新增弹窗的控件前缀，'d' = 船舶详情编辑态 */
+function syncPrincipalType(name, pfx){
+  var el = document.getElementById((pfx||"f") + "-principalType");
+  if(!el) return;
+  var t = principalTypeOf(name);
+  if(t) el.value = t;
 }
 function prefillFromVessel(){
   basicFields.forEach(function(f){ var el=document.getElementById("f-"+f.key); if(el) el.textContent="—"; });
@@ -3343,32 +3677,65 @@ function deleteVessel(id){
 /* ---------------- local agent master (CRUD) ---------------- */
 var editingAgentId=null;
 var agentFees=[];
+/* 列表行展开状态：点任意单元格展开详情（收费价格表 / 备注全文 / 英文名址） */
+var agentExpanded={};
+function toggleAgentRow(id){
+  agentExpanded[id]=!agentExpanded[id];
+  renderAgents();
+}
 function renderAgents(){
   var q=(document.getElementById("search-a").value||"").toLowerCase();
   var tb=document.getElementById("agent-tbody");
   setHead("agent"); renderPageSizeSel("agent");
-  var list=localAgents.filter(function(a){ return !q || (a.company+(a.companyEn||"")+a.contact+(a.phone||"")+(a.email||"")+(a.address||"")+(a.addressEn||"")+(a.postcode||"")).toLowerCase().includes(q); });
+  /* 搜索范围覆盖这一页能看到的所有信息，备注（多行）也算 */
+  var list=localAgents.filter(function(a){ return !q || (a.company+(a.companyEn||"")+a.contact+(a.phone||"")+(a.email||"")+(a.address||"")+(a.addressEn||"")+(a.postcode||"")+(a.remark||"")).toLowerCase().includes(q); });
   list = applySort("agent", list);
   if(!list.length){ tb.innerHTML='<tr><td colspan="10" class="empty">暂无本港代理/服务商，点击右上角「＋ 新增代理/服务商」添加</td></tr>'; setPagerHTML("agent",0); return; }
   var sub='font-size:12px;color:var(--muted);margin-top:2px';
   var pg=pageSlice("agent", list);
   tb.innerHTML=pg.view.map(function(a,i){
+    var open=!!agentExpanded[a.id];
     var comp=esc(a.company)+(a.companyEn?'<div style="'+sub+'">'+esc(a.companyEn)+'</div>':'');
     var addr=esc(a.address||"—")+(a.addressEn?'<div style="'+sub+'">'+esc(a.addressEn)+'</div>':'')+
       (a.postcode?'<div style="'+sub+'">邮编 '+esc(a.postcode)+'</div>':'');
-    return '<tr>'+
+    var head='<tr class="cx-company'+(open?' cx-open':'')+'" onclick="toggleAgentRow('+a.id+')">'+
       '<td class="mono">'+(pg.start+i+1)+'</td>'+
-      '<td>'+comp+'</td>'+
-      '<td><span class="tag tag-'+agentKind(a)+'">'+kindLabel(a)+'</span></td>'+
+      '<td><span class="cx-caret">▶</span> <span class="cx-name">'+comp+'</span></td>'+
+      '<td><span class="tag '+agentTagCls(a)+'">'+kindLabel(a)+'</span></td>'+
       '<td>'+esc(a.contact||"—")+'</td><td class="mono">'+(a.phone||"—")+'</td>'+
       '<td>'+esc(a.email||"—")+'</td><td>'+addr+'</td>'+
       '<td class="mono">'+((a.fees||[]).length)+'</td>'+
       '<td>'+esc(a.remark||"—")+'</td>'+
-      '<td><button class="icon-btn" onclick="editAgent('+a.id+')">编辑</button> '+
+      '<td onclick="event.stopPropagation()"><button class="icon-btn" onclick="editAgent('+a.id+')">编辑</button> '+
       '<button class="icon-btn danger" onclick="deleteAgent('+a.id+')">删除</button></td>'+
     '</tr>';
+    return open ? head + agentDetailRow(a) : head;
   }).join("");
   setPagerHTML("agent", pg.total);
+}
+/* 展开行：公司档案里表格放不下的东西 —— 英文名址、备注全文、收费价格表 */
+function agentDetailRow(a){
+  var meta='<div class="cx-meta">'+
+    '<span class="cx-meta-i"><b>类型</b><span class="tag '+agentTagCls(a)+'">'+kindLabel(a)+'</span></span>'+
+    (a.companyEn ? '<span class="cx-meta-i"><b>英文公司名</b>'+esc(a.companyEn)+'</span>' : '')+
+    (a.addressEn ? '<span class="cx-meta-i"><b>英文地址</b>'+esc(a.addressEn)+'</span>' : '')+
+  '</div>';
+  var remark='<div style="margin-bottom:10px"><div style="font-size:12px;color:var(--muted);margin-bottom:4px">备注</div>'+
+    '<div style="white-space:pre-line;font-size:13px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:9px 12px">'+
+    (a.remark ? esc(a.remark) : '<span style="color:var(--muted)">—</span>')+'</div></div>';
+  var fees;
+  if((a.fees||[]).length){
+    fees='<div><div style="font-size:12px;color:var(--muted);margin-bottom:4px">收费价格表（共 '+(a.fees||[]).length+' 项）</div>'+
+      '<table><thead><tr><th>收费项目</th><th>计费单位</th><th>成本价</th><th>对外报价</th><th>币种</th><th>备注</th></tr></thead><tbody>'+
+      a.fees.map(function(t){
+        return '<tr><td>'+esc(t.item||"—")+'</td><td>'+esc(t.unit||"—")+'</td>'+
+          '<td class="mono">'+esc(t.cost||"—")+'</td><td class="mono">'+esc(t.price||"—")+'</td>'+
+          '<td class="mono">'+esc(t.currency||"CNY")+'</td><td>'+esc(t.note||"—")+'</td></tr>';
+      }).join("")+'</tbody></table></div>';
+  } else {
+    fees='<div style="font-size:12.5px;color:var(--muted)">尚未维护收费价格表 —— 点「编辑」打开后可添加收费项。</div>';
+  }
+  return '<tr class="cx-sub"><td colspan="10"><div class="cx-wrap">'+meta+remark+fees+'</div></td></tr>';
 }
 function renderAgentFees(){
   var box=document.getElementById("agent-fees"); if(!box) return;
@@ -3401,10 +3768,11 @@ function openAgentModal(){
   document.getElementById("ag-address").value="";
   document.getElementById("ag-address-en").value="";
   document.getElementById("ag-postcode").value="";
-  document.getElementById("ag-kind").value="agent";
+  fillAgentKindOpts("agent");   /* 先填选项再设值，否则 select 里没有这项会被丢成空 */
   document.getElementById("ag-remark").value="";
   agentFees=[]; renderAgentFees();
   document.getElementById("agent-mask").classList.remove("hidden");
+  autoGrowAllTA(document.getElementById("agent-mask"));   /* 备注是多行文本框，高度跟随内容 */
 }
 function editAgent(id){
   var a=localAgents.find(function(x){return x.id===id;}); if(!a) return;
@@ -3418,18 +3786,64 @@ function editAgent(id){
   document.getElementById("ag-address").value=a.address||"";
   document.getElementById("ag-address-en").value=a.addressEn||"";
   document.getElementById("ag-postcode").value=a.postcode||"";
-  document.getElementById("ag-kind").value=agentKind(a);
+  fillAgentKindOpts(agentKind(a));
   document.getElementById("ag-remark").value=a.remark||"";
   agentFees=(a.fees||[]).map(function(t){return {item:t.item||"",unit:t.unit||"",cost:t.cost||"",price:t.price||"",currency:(t.currency==="USD"?"USD":"CNY"),note:t.note||""};});
   renderAgentFees();
   document.getElementById("agent-mask").classList.remove("hidden");
+  autoGrowAllTA(document.getElementById("agent-mask"));   /* 回填的多行备注要立刻撑开 */
 }
 function closeAgentModal(){ document.getElementById("agent-mask").classList.add("hidden"); }
-/* 从表单读取类型，缺省/非法值一律按 agent */
+/* 从表单读取类型，缺省/非法值一律按 agent；已知类型（含用户自建）原样返回 */
 function agentKindFromForm(){
   var el=document.getElementById("ag-kind");
   var v=el?el.value:"";
+  if(!v) return "agent";
+  if(agentTypeByV(v)) return v;
   return (v==="provider"||v==="both") ? v : "agent";
+}
+/* 类型下拉：选项必须在设值之前填好（v1.14.2 在委托方类别上踩过同一个坑） */
+function fillAgentKindOpts(cur){
+  var sel=document.getElementById("ag-kind"); if(!sel) return;
+  sel.innerHTML = agentTypeOpts().map(function(o){
+    return '<option value="'+esc(o.v)+'">'+esc(o.t)+'</option>';
+  }).join("");
+  if(cur!=null && cur!=="") sel.value = cur;
+}
+/* 新增类型：与「交通凭证 → 港口列表 → ＋ 新增港口」同一套交互。
+   不再问「出现在哪个下拉」—— 规则是固定的：只有「本港代理」进代理单选，其余全进服务商多选。 */
+function promptAddAgentType(){
+  var n = prompt("新增类型名称（例如：报关行 / 拖轮公司 / 理货）：");
+  if(n==null) return;
+  n = n.trim();
+  if(!n){ toast("类型名称不能为空"); return; }
+  if(agentTypes().some(function(x){ return x.t===n || x.v===n; })){ toast("该类型已存在"); return; }
+  var list = agentTypes().slice();
+  var v = "t" + Date.now();          /* 自定义类型的值：加前缀 + 时间戳，绝不与内置三种撞 */
+  list.push({v:v, t:n});
+  vset.agentTypes = list;
+  persistVSet();
+  fillAgentKindOpts(v);
+  toast("已新增类型：" + n + "（只出现在「本港服务商」多选）");
+}
+/* 删除类型：正在被公司使用的不给删（否则那些公司的类型会掉成默认值） */
+function promptDeleteAgentType(){
+  var sel=document.getElementById("ag-kind"); if(!sel) return;
+  var v=sel.value;
+  if(!v){ toast("请先在下拉里选中要删除的类型"); return; }
+  /* 「本港代理」是整套筛选规则的地基（isAgentKind 就认这一个值），不给删 */
+  if(v==="agent"){ toast("「本港代理」是内置类型，不能删除"); return; }
+  if(agentTypes().length<=1){ toast("至少保留一个类型"); return; }
+  var t=agentTypeByV(v);
+  var label=t?t.t:v;
+  var used=localAgents.filter(function(x){ return agentKind(x)===v; }).length;
+  if(used){ toast("无法删除：「"+label+"」正被 "+used+" 家公司档案使用，请先把它们的类型改掉"); return; }
+  if(!confirm("确认删除类型「"+label+"」？")) return;
+  vset.agentTypes = agentTypes().filter(function(x){ return x.v!==v; });
+  persistVSet();
+  fillAgentKindOpts(vset.agentTypes.length ? vset.agentTypes[0].v : "");
+  renderAgents();
+  toast("已删除类型：" + label);
 }
 function saveAgent(){
   var company=(document.getElementById("ag-company").value||"").trim();
@@ -3476,70 +3890,367 @@ function deleteAgent(id){
 }
 
 /* ---------------- client (委托方) master (CRUD) ---------------- */
-var editingClientId=null;
-var clientFieldIds=["company","name","title","phone","mobile","address","email","remark"];
+/* 引用公司的代理船舶记录（按公司名精确匹配） */
+function clientRefs(company){
+  var n = String(company||"").trim();
+  if(!n) return [];
+  return data.filter(function(s){ return String(s.principal||"").trim() === n; });
+}
+function clientRefToast(company){
+  var refs = clientRefs(company);
+  if(!refs.length) return false;
+  var names = refs.slice(0,5).map(function(s){ return s.cn; }).join("、");
+  if(refs.length>5) names += " 等";
+  toast("无法删除：该委托方已被 "+refs.length+" 条代理记录引用（"+names+"）");
+  return true;
+}
+/* 把值内联进 onclick 的 HTML 属性里：
+   数字原样输出；字符串用单引号包起来，并同时做 HTML 实体转义 + JS 转义。
+   ⚠️ 不能用 JSON.stringify —— 双引号会提前闭合 HTML 属性（SyntaxError）。 */
+function qid(v){
+  if(typeof v === "number" || /^\d+$/.test(String(v))) return String(v);
+  var s = String(v==null ? "" : v);
+  s = s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  return "'" + s.replace(/\\/g,"\\\\").replace(/'/g,"\\'") + "'";
+}
+/* 展开状态：按公司分组 key（公司名归一化）记 */
+var clientExpanded = {};
+function toggleClientGroup(k){
+  if(k==null) return;
+  k = String(k);
+  clientExpanded[k] = !clientExpanded[k];
+  renderClients();
+}
+function clientContactHay(c){
+  return ((c.name||"")+(c.title||"")+(c.phone||"")+(c.mobile||"")+(c.email||"")+(c.remark||"")).toLowerCase();
+}
 function renderClients(){
-  var q=(document.getElementById("search-c").value||"").toLowerCase();
+  ensureClientGroups();   /* 兜底自愈：不管数据从哪条路径进来，渲染前分组一定是对的 */
+  var q=(document.getElementById("search-c").value||"").trim().toLowerCase();
   var tb=document.getElementById("client-tbody");
   setHead("client"); renderPageSizeSel("client");
-  var list=localClients.filter(function(c){
-    var hay=((c.company||"")+(c.name||"")+(c.title||"")+(c.phone||"")+(c.mobile||"")+(c.email||"")+(c.address||"")+(c.remark||"")).toLowerCase();
-    return !q || hay.includes(q);
+  var rows = [];
+  clientCompanies().forEach(function(g){
+    /* 搜索范围 = 这一页能看到的所有公司级信息：公司名 / 类别 / 地址 / 被代理客户。
+       被代理客户单独算：命中它时展开（否则用户看不出这行为什么被匹配到），
+       命中公司名 / 类别 / 地址时保持折叠。 */
+    var selfHay = ((g.company||"")+(g.address||"")+(g.ptype||"")).toLowerCase();
+    var subHay  = ((g.subClients||[]).join(" ")).toLowerCase();
+    var selfMatch = q ? selfHay.includes(q) : false;
+    var subMatch  = q ? subHay.includes(q) : false;
+    var cs = g.contacts.filter(function(c){
+      return !q || selfMatch || subMatch || clientContactHay(c).includes(q);
+    });
+    if(q && !cs.length && !selfMatch && !subMatch) return;
+    /* VIP 优先排在联系人列表最前 */
+    cs = cs.slice().sort(function(a,b){
+      if(!!b.vip !== !!a.vip) return b.vip ? 1 : -1;
+      return String(a.name||"").localeCompare(String(b.name||""), "zh-Hans-CN");
+    });
+    /* 只有「命中联系人本身 / 命中被代理客户」才自动展开；命中公司名/类别/地址时保持折叠 */
+    rows.push({g:g, contacts:cs, contactMatch: !!(q && !selfMatch)});
   });
-  list = applySort("client", list);
-  if(!list.length){ tb.innerHTML='<tr><td colspan="10" class="empty">暂无委托方，点击右上角「＋ 新增委托方」添加</td></tr>'; setPagerHTML("client",0); return; }
-  var pg=pageSlice("client", list);
-  tb.innerHTML=pg.view.map(function(c,i){
-    return '<tr>'+
+  rows = applySort("client", rows);
+  if(!rows.length){
+    tb.innerHTML = '<tr><td colspan="7" class="empty">'+(q ? "没有匹配的委托方" : "暂无委托方，点击右上角「＋ 新增委托方」添加")+'</td></tr>';
+    setPagerHTML("client",0); return;
+  }
+  var pg = pageSlice("client", rows);
+  tb.innerHTML = pg.view.map(function(item,i){
+    var g = item.g;
+    var open = !!(clientExpanded[String(g.key)] || item.contactMatch);
+    var head = '<tr class="cx-company'+(open?' cx-open':'')+'" onclick="toggleClientGroup('+qid(g.key)+')">'+
       '<td class="mono">'+(pg.start+i+1)+'</td>'+
-      '<td>'+esc(c.company)+'</td><td>'+esc(c.name||"—")+'</td><td>'+esc(c.title||"—")+'</td>'+
-      '<td class="mono">'+esc(c.phone||"—")+'</td><td class="mono">'+esc(c.mobile||"—")+'</td>'+
-      '<td>'+esc(c.email||"—")+'</td><td>'+esc(c.address||"—")+'</td>'+
-      '<td>'+esc(c.remark||"—")+'</td>'+
-      '<td><button class="icon-btn" onclick="editClient('+c.id+')">编辑</button> '+
-      '<button class="icon-btn danger" onclick="deleteClient('+c.id+')">删除</button></td>'+
+      '<td><span class="cx-caret">▶</span> <span class="cx-name">'+esc(g.company||"（未命名公司）")+'</span>'+
+        (g.vipCount ? '<span class="vip-badge">★ VIP ×'+g.vipCount+'</span>' : '')+'</td>'+
+      '<td>'+(g.ptype ? '<span class="cx-ptype">'+esc(g.ptype)+'</span>' : '—')+'</td>'+
+      '<td>'+esc(g.address||"—")+'</td>'+
+      '<td class="cx-count">'+g.contacts.length+' 人</td>'+
+      '<td class="cx-count">'+(g.vipCount ? '<span class="cx-star">★ '+g.vipCount+'</span>' : '—')+'</td>'+
+      '<td onclick="event.stopPropagation()"><div class="cx-acts">'+
+        '<button class="icon-btn" onclick="event.stopPropagation();openClientContact('+qid(g.key)+')">＋ 联系人</button> '+
+        '<button class="icon-btn" onclick="event.stopPropagation();openClientCompany('+qid(g.key)+')">编辑公司</button> '+
+        '<button class="icon-btn danger" onclick="event.stopPropagation();deleteClientCompany('+qid(g.key)+')">删除</button>'+
+      '</div></td>'+
     '</tr>';
+    if(!open) return head;
+    var subs = item.contacts.map(function(c){
+      return '<tr'+(c.vip?' class="cx-vip"':'')+'>'+
+        '<td style="width:26px;text-align:center">'+(c.vip?'<span class="cx-star" title="VIP">★</span>':'')+'</td>'+
+        '<td>'+esc(c.name||"—")+(c.vip?' <span class="vip-badge">VIP</span>':'')+'</td>'+
+        '<td>'+esc(c.title||"—")+'</td>'+
+        '<td class="mono">'+esc(c.phone||"—")+'</td>'+
+        '<td class="mono">'+esc(c.mobile||"—")+'</td>'+
+        '<td>'+esc(c.email||"—")+'</td>'+
+        '<td>'+esc(c.remark||"—")+'</td>'+
+        '<td><div class="cx-acts">'+
+          '<button class="icon-btn" onclick="openClientContact('+qid(g.key)+','+qid(c.id)+')">编辑</button> '+
+          '<button class="icon-btn danger" onclick="deleteClient('+qid(c.id)+')">删除</button>'+
+        '</div></td>'+
+      '</tr>';
+    }).join("");
+    /* 展开区的公司档案摘要：地址已在公司行单独占一列，这里只补「类别 + 被代理客户」 */
+    var meta = '<div class="cx-meta">'+
+      '<span class="cx-meta-i"><b>类别</b>'+(g.ptype ? esc(g.ptype) : "—")+'</span>'+
+      (g.subClients && g.subClients.length
+        ? '<span class="cx-meta-i"><b>被代理客户</b>'+
+          g.subClients.map(function(n){ return '<span class="cx-subcli">'+esc(n)+'</span>'; }).join("")+'</span>'
+        : '')+
+    '</div>';
+    return head +
+      '<tr class="cx-sub"><td colspan="7"><div class="cx-wrap">'+ meta +
+        '<table><thead><tr>'+
+          '<th style="width:26px"></th><th>姓名</th><th>职位</th><th>电话</th><th>手机</th><th>邮箱</th><th>备注</th><th style="width:132px">操作</th>'+
+        '</tr></thead><tbody>'+subs+'</tbody></table>'+
+        '<div style="margin-top:9px"><button class="cx-add" onclick="openClientContact('+qid(g.key)+')">＋ 为「'+esc(g.company||"该公司")+'」添加联系人</button></div>'+
+      '</div></td></tr>';
   }).join("");
   setPagerHTML("client", pg.total);
 }
-function openClientModal(){
-  editingClientId=null;
-  document.getElementById("client-mh").textContent="新增委托方";
-  clientFieldIds.forEach(function(k){ document.getElementById("cl-"+k).value=""; });
+
+/* ---------------- client modal：三种模式 ----------------
+   "new"     新增委托方（新公司 + 第一位联系人）
+   "contact" 新增 / 编辑某个公司的联系人（公司名、地址锁定为公司档案的值）
+   "company" 编辑公司档案（名称与地址应用到该公司全部联系人）          */
+var clMode="new", clEditId=null, clKey=null;
+var clTextIds=["company","address","name","title","phone","mobile","email","remark"];
+var clPersonFlds=["name","title","phone","mobile","email","remark","vip"];
+var clCompanyFlds=["ptype","subclients"];   /* 公司级字段：新增公司 / 编辑公司时可见，编辑联系人时隐藏 */
+/* 「被代理客户」只在委托方类别 = 国内总代 时才出现；数组属于公司档案，编辑期先放在这里 */
+var clSubClients = [];
+var SUBCLIENT_TYPE = "国内总代";
+function renderSubClientTags(){
+  var box=document.getElementById("cl-subclient-tags"); if(!box) return;
+  if(!clSubClients.length){ box.innerHTML='<span class="cx-none">暂未添加被代理客户</span>'; return; }
+  box.innerHTML = clSubClients.map(function(n,i){
+    return '<span class="cx-subcli">'+esc(n)+
+      '<button type="button" class="cx-tagx" title="移除" onclick="removeSubClient('+i+')">×</button></span>';
+  }).join("");
+}
+function addSubClient(){
+  var el=document.getElementById("cl-subclient-input"); if(!el) return;
+  var v=(el.value||"").trim();
+  if(!v){ toast("请先输入被代理客户名称"); return; }
+  if(clSubClients.indexOf(v)>-1){ toast("「"+v+"」已经在列表里了"); return; }
+  clSubClients.push(v); el.value=""; renderSubClientTags();
+}
+function removeSubClient(i){ clSubClients.splice(i,1); renderSubClientTags(); }
+/* 类别变化时联动：只有「国内总代」才显示被代理客户区 */
+function clPtypeChanged(){ clSyncSubClientField(); }
+function clSyncSubClientField(){
+  var isGA = (clVal("ptype") === SUBCLIENT_TYPE);
+  var box=document.getElementById("cl-fld-subclients");
+  if(box) box.classList.toggle("hidden", !isGA);
+  return isGA;
+}
+function clLoadSubClients(g){
+  clSubClients = (g && Array.isArray(g.subClients)) ? g.subClients.slice() : [];
+  renderSubClientTags();
+}
+function clVal(k){ var el=document.getElementById("cl-"+k); return (el && el.value || "").trim(); }
+function clSet(k, v){
+  var el=document.getElementById("cl-"+k); if(!el) return;
+  var s = (v==null ? "" : String(v));
+  /* 给 <select> 赋值前必须保证该 option 已存在，否则赋值会被浏览器丢弃（退回第一项）。
+     历史数据里的类别若不在预设列表里，这里临时补一个 option，保证能原样显示。 */
+  if(el.tagName === "SELECT" && s){
+    var hit=false, opts=el.options||[];
+    for(var i=0;i<opts.length;i++){ if(opts[i].value===s){ hit=true; break; } }
+    if(!hit && typeof document.createElement==="function" && el.appendChild){
+      var op=document.createElement("option");
+      op.value=s; op.textContent=s;
+      el.appendChild(op);
+    }
+  }
+  el.value = s;
+}
+function clLockCompany(){
+  var ce=document.getElementById("cl-company"), ae=document.getElementById("cl-address");
+  ce.readOnly = true; ae.readOnly = true;
+  ce.classList.add("cx-lock"); ae.classList.add("cx-lock");
+}
+function clResetForm(){
+  /* ★ 先把委托方类别的选项填好，再往回写值 —— 顺序反了的话
+     <select> 里还没有对应 option，clSet("ptype", 已有值) 会被丢弃，界面上永远显示「未指定」 */
+  clFillPtypeOpts();
+  clTextIds.forEach(function(k){
+    var el=document.getElementById("cl-"+k); if(!el) return;
+    el.value=""; el.readOnly=false; el.classList.remove("cx-lock");
+  });
+  document.getElementById("cl-vip").checked=false;
+  clSet("ptype","");
+  clSubClients = [];
+  clSet("subclient-input","");
+  clSyncSubClientField();      /* 类别为空 → 被代理客户区隐藏 */
+  document.getElementById("cl-company-hint").textContent="";
+  document.getElementById("cl-address-hint").textContent="";
+}
+function clShowPerson(v){
+  clPersonFlds.forEach(function(k){
+    var el=document.getElementById("cl-fld-"+k);
+    if(el) el.classList.toggle("hidden", !v);
+  });
+}
+/* 公司级字段（委托方类别）单独控制显隐 */
+function clShowCompanyExtra(v){
+  clCompanyFlds.forEach(function(k){
+    var el=document.getElementById("cl-fld-"+k);
+    if(el) el.classList.toggle("hidden", !v);
+  });
+}
+function clFillPtypeOpts(){
+  var el=document.getElementById("cl-ptype"); if(!el) return;
+  var cur = el.value || "";
+  el.innerHTML = '<option value="">— 未指定 —</option>'+
+    principalTypeOpts.map(function(o){ return '<option value="'+esc(o.v)+'">'+esc(o.t)+'</option>'; }).join("");
+  if(cur) el.value = cur;   /* 重建选项后把当前值放回去，避免冲掉用户选择 */
+}
+function clFillCompanyList(){
+  var dl=document.getElementById("cl-company-list"); if(!dl) return;
+  var names=clientCompanies().map(function(g){ return g.company; }).filter(Boolean);
+  names.sort(function(a,b){ return a.localeCompare(b,"zh-Hans-CN"); });
+  dl.innerHTML = names.map(function(n){ return '<option value="'+esc(n)+'"></option>'; }).join("");
+}
+/* 选择已有公司 → 自动带出共用地址并锁定 */
+function clCompanyChanged(){
+  if(clMode!=="new") return;
+  var v=clVal("company").toLowerCase();
+  var hit=v ? clientCompanies().filter(function(g){ return String(g.company).trim().toLowerCase()===v; })[0] : null;
+  var ae=document.getElementById("cl-address"), hint=document.getElementById("cl-company-hint");
+  if(hit){
+    clSet("address", hit.address);
+    clSet("ptype", hit.ptype);
+    clLoadSubClients(hit); clSyncSubClientField();
+    ae.readOnly=true; ae.classList.add("cx-lock");
+    hint.textContent="已匹配到已有公司，将共享其公司名称、地址与委托方类别；如需修改请点公司行的「编辑公司」。";
+    document.getElementById("cl-address-hint").textContent="地址由公司档案共用，已自动带出。";
+  } else {
+    ae.readOnly=false; ae.classList.remove("cx-lock");
+    clSet("ptype","");
+    clLoadSubClients(null); clSyncSubClientField();
+    hint.textContent="";
+    document.getElementById("cl-address-hint").textContent="新公司：请填写共用地址，后续该公司联系人自动继承。";
+  }
+}
+function clOpen(){
+  clFillCompanyList();
+  /* 注意：这里不要再调 clFillPtypeOpts() —— 它靠 clResetForm() 在写值之前填充，
+     放在这里会重建 <select> 选项，把刚设好的类别冲回「未指定」 */
+  document.getElementById("cl-company-hint").textContent="";
   document.getElementById("client-mask").classList.remove("hidden");
 }
-function editClient(id){
-  var c=localClients.find(function(x){return x.id===id;}); if(!c) return;
-  editingClientId=id;
-  document.getElementById("client-mh").textContent="编辑委托方";
-  clientFieldIds.forEach(function(k){ document.getElementById("cl-"+k).value=c[k]||""; });
-  document.getElementById("client-mask").classList.remove("hidden");
+function openClientModal(){            /* 新增委托方：新公司 + 首位联系人 */
+  clMode="new"; clEditId=null; clKey=null;
+  clResetForm(); clShowPerson(true); clShowCompanyExtra(true);
+  clLoadSubClients(null);
+  document.getElementById("client-mh").textContent="新增委托方";
+  document.getElementById("cl-tip").innerHTML="填写公司名称、共用地址<b>与委托方类别</b>，再录入第一位联系人。<b>同一公司可以继续添加多个联系人</b>，他们会共用这里的公司名称、地址与类别。";
+  document.getElementById("cl-address-hint").textContent="新公司：请填写共用地址，后续该公司联系人自动继承。";
+  clOpen();
+}
+function openClientContact(k, id){
+  var g=clientGroupByKey(k); if(!g){ renderClients(); return; }
+  clMode="contact"; clKey=String(k); clEditId=(id==null?null:id);
+  clResetForm(); clShowPerson(true); clShowCompanyExtra(false);
+  clSet("company", g.company); clSet("address", g.address);
+  clLockCompany();
+  document.getElementById("cl-company-hint").textContent="公司名称由公司档案共用（如需修改请关闭本窗后点公司行的「编辑公司」）。";
+  document.getElementById("cl-address-hint").textContent="地址由公司档案共用，该公司全部联系人一致。";
+  if(clEditId!=null){
+    var c=localClients.filter(function(x){ return x.id===clEditId; })[0];
+    if(!c) return;
+    clSet("name", c.name); clSet("title", c.title); clSet("phone", c.phone);
+    clSet("mobile", c.mobile); clSet("email", c.email); clSet("remark", c.remark);
+    document.getElementById("cl-vip").checked = !!c.vip;
+    document.getElementById("client-mh").textContent="编辑联系人 · "+g.company;
+    document.getElementById("cl-tip").innerHTML="只修改这位联系人的个人信息；公司名称与地址属于公司档案，改它会影响同公司所有人。";
+  } else {
+    document.getElementById("client-mh").textContent="添加联系人 · "+g.company;
+    document.getElementById("cl-tip").innerHTML="为「<b>"+esc(g.company)+"</b>」新增一位联系人，共用公司名称与地址，其余信息单独填写。";
+  }
+  clOpen();
+}
+function openClientCompany(k){
+  var g=clientGroupByKey(k); if(!g){ renderClients(); return; }
+  clMode="company"; clKey=String(k); clEditId=null;
+  clResetForm(); clShowPerson(false); clShowCompanyExtra(true);
+  clSet("company", g.company); clSet("address", g.address); clSet("ptype", g.ptype);
+  clLoadSubClients(g); clSyncSubClientField();
+  document.getElementById("client-mh").textContent="编辑公司 · "+g.company;
+  document.getElementById("cl-tip").innerHTML="公司名称与地址由该公司下 <b>全部 "+g.contacts.length+" 位联系人共用</b>，保存后一次性同步。"+
+    (g.company ? "若改名，引用了这家公司的代理船舶记录也会一并更新。" : "");
+  document.getElementById("cl-address-hint").textContent="该公司全部联系人共用此地址。";
+  clOpen();
 }
 function closeClientModal(){ document.getElementById("client-mask").classList.add("hidden"); }
 function saveClient(){
-  var obj={};
-  clientFieldIds.forEach(function(k){ obj[k]=(document.getElementById("cl-"+k).value||"").trim(); });
-  if(!obj.company){ toast("请填写公司名称"); return; }
-  if(editingClientId){
-    var c=localClients.find(function(x){return x.id===editingClientId;}); if(c) Object.assign(c,obj);
-  } else {
-    obj.id = localClients.length? Math.max.apply(null,localClients.map(function(x){return x.id;}))+1 : 1;
-    localClients.push(obj);
-  }
-  saveClients(localClients); closeClientModal(); renderClients(); toast("已保存");
-}
-function deleteClient(id){
-  var c=localClients.find(function(x){return x.id===id;}); if(!c) return;
-  var refs=data.filter(function(s){ return s.principal===c.company; });
-  if(refs.length){
-    var names=refs.slice(0,5).map(function(s){return s.cn;}).join("、");
-    if(refs.length>5) names+=" 等";
-    toast("无法删除：该委托方已被 "+refs.length+" 条代理记录引用（"+names+"）");
+  var company = clVal("company"), address = clVal("address");
+  if(!company){ toast("请填写公司名称"); return; }
+  if(clMode==="company"){
+    var g=clientGroupByKey(clKey); if(!g){ renderClients(); return; }
+    var old=g.company, oldKey=g.key, n=0;
+    var subs = clVal("ptype")===SUBCLIENT_TYPE ? clSubClients.slice() : [];
+    g.contacts.forEach(function(c){ c.company=company; c.address=address; c.ptype=clVal("ptype"); c.subClients=subs.slice(); });
+    if(old!==company){
+      data.forEach(function(s){ if(String(s.principal||"").trim()===old){ s.principal=company; n++; } });
+      if(n) save(data);
+    }
+    ensureClientGroups();
+    /* 展开状态跟着公司新名字迁移 */
+    if(clientExpanded[oldKey]){ delete clientExpanded[oldKey]; clientExpanded[clientKey({company:company})]=true; }
+    saveClients(localClients); closeClientModal(); renderClients();
+    toast(n ? ("公司信息已更新，并同步 "+n+" 条代理船舶的委托方") : "公司信息已更新（全部 "+g.contacts.length+" 位联系人同步）");
+    if(n) renderDashboard();
     return;
   }
-  if(!confirm("确认删除该委托方？此操作不可撤销。")) return;
-  localClients=localClients.filter(function(x){return x.id!==id;});
-  saveClients(localClients); renderClients(); toast("已删除");
+  /* 联系人：先看输入的公司名是否已存在（新增委托方时可能直接选了老公司） */
+  var clude = clientCompanies().filter(function(x){ return String(x.company).trim().toLowerCase()===company.toLowerCase(); })[0];
+  var gid = (clMode==="new" && clude) ? clude.gid : (clKey ? (clientGroupByKey(clKey)||{gid:0}).gid : 0);
+  if(!gid) gid = clientNextGid();
+  if(clude) address = clVal("address") || clude.address;
+  /* 委托方类别属于公司：new 模式用表单值（或直接选了老公司时用老公司的），
+     contact 模式继承所属公司的类别 */
+  var ptype = (clMode==="new") ? (clVal("ptype") || (clude ? clude.ptype : "")) : (clientGroupByKey(clKey)||{ptype:""}).ptype;
+  /* 被代理客户同属公司：只有「国内总代」才留，其余一律清空，避免类别改了还留着脏数据 */
+  var subs = (ptype===SUBCLIENT_TYPE)
+    ? ((clMode==="new") ? (clSubClients.length ? clSubClients.slice() : ((clude&&clude.subClients)||[]).slice())
+                        : ((clientGroupByKey(clKey)||{subClients:null}).subClients||[]).slice())
+    : [];
+  var obj = {
+    company:company, address:address, gid:gid, ptype:ptype, subClients:subs,
+    name:clVal("name"), title:clVal("title"), phone:clVal("phone"),
+    mobile:clVal("mobile"), email:clVal("email"), remark:clVal("remark"),
+    vip:document.getElementById("cl-vip").checked
+  };
+  if(!obj.name && !obj.email && !obj.phone && !obj.mobile){
+    if(!confirm("未填写姓名 / 电话 / 手机 / 邮箱中的任何一项，仍要保存这条联系人吗？")) return;
+  }
+  if(clEditId!=null){
+    var c=localClients.filter(function(x){ return x.id===clEditId; })[0];
+    if(c) Object.assign(c, obj);
+  } else {
+    obj.id = clientNextId();
+    localClients.push(obj);
+    clientExpanded[clientKey(obj)] = true;   /* 新加的人立刻能看到 */
+  }
+  saveClients(localClients); closeClientModal(); renderClients();
+  toast(clEditId!=null ? "联系人已保存" : "已添加联系人");
+}
+function deleteClient(id){
+  var c=localClients.filter(function(x){ return x.id===id; })[0]; if(!c) return;
+  var g=clientCompanies().filter(function(x){ return x.contacts.indexOf(c)>-1; })[0];
+  if(g && g.contacts.length<=1){ deleteClientCompany(g.key); return; }   /* 最后一个人 → 等同删公司 */
+  if(!confirm("确认删除联系人「"+(c.name||"（未填姓名）")+"」？此操作不可撤销。")) return;
+  localClients=localClients.filter(function(x){ return x.id!==id; });
+  ensureClientGroups(); saveClients(localClients); renderClients(); toast("已删除联系人");
+}
+function deleteClientCompany(k){
+  var g=clientGroupByKey(k); if(!g){ renderClients(); return; }
+  if(clientRefToast(g.company)) return;
+  if(!confirm("确认删除「"+g.company+"」及其 "+g.contacts.length+" 位联系人？此操作不可撤销。")) return;
+  localClients=localClients.filter(function(x){ return g.contacts.indexOf(x)===-1; });
+  delete clientExpanded[String(k)];
+  ensureClientGroups(); saveClients(localClients); renderClients(); toast("已删除");
 }
 
 /* ---------------- auth ---------------- */
@@ -3711,6 +4422,7 @@ function pullDataApply(b){
   vessels      = Array.isArray(b.vessels) ? b.vessels : vessels;
   localAgents  = Array.isArray(b.agents)  ? b.agents  : localAgents;
   localClients = Array.isArray(b.clients) ? b.clients : localClients;
+  ensureClientGroups();
   ports        = Array.isArray(b.ports)   ? b.ports   : ports;
   lastDataSig  = JSON.stringify([data, vessels, localAgents, localClients]);
 }
@@ -3877,7 +4589,7 @@ function renderImportSummary(){
   if(mode === "replace")
     warn += '⚠ 整表替换会清除该集合中原有的全部记录，且不可撤销。';
   if(importData.vsettings && importData.vsettings.length)
-    warn += (warn ? '<br>' : '') + '凭证设置（船名 / 港口 / 乘客 / 接驳地点）是单条记录，两种模式下都以文件内容覆盖。';
+    warn += (warn ? '<br>' : '') + '凭证设置（船名 / 港口 / 乘客 / 接驳地点）以及「代理/服务商类型」列表是同一条记录，两种模式下都以文件内容覆盖。';
   if(warn) html += '<div class="import-warn">'+warn+'</div>';
   document.getElementById("import-summary").innerHTML = html;
   document.getElementById("import-summary").classList.remove("hidden");
@@ -3910,6 +4622,7 @@ function doImport(){
     else if(p.kind === "vtrips")  trips = p.arr;
     else if(p.kind === "vsettings") vset = p.arr[0] || normalizeVSettings(null);
   });
+  ensureClientGroups();
   var jobs = plan.map(function(p){ return persist(p.kind, p.arr); });
   closeImport();
   refresh(); renderVessels(); renderAgents(); renderClients(); renderVoucher();
@@ -3969,6 +4682,9 @@ var VSET_DEFAULT = {vessel:"", port:"", passengers:[],   /* 单据抬头与收�
     tel:"+86 13378410401",
     web:"www.ansud.cn"
   },
+  /* 代理/服务商的「类型」列表（内置三种 + 用户自建，维护方式同港口列表）。
+     放在 vset 里走既有的 api_save_vsettings，不需要新增数据库函数。 */
+  agentTypes:[],
   locations:{}};
 var vset = JSON.parse(JSON.stringify(VSET_DEFAULT));
 var trips = [];
@@ -3998,6 +4714,7 @@ function normalizeVSettings(o){
       if(typeof o.contact[k] === "string") d.contact[k] = o.contact[k];
     });
   }
+  d.agentTypes = normalizeAgentTypes(o.agentTypes);
   return d;
 }
 function persistVSet(){ persist("vsettings", vset); }
@@ -4471,6 +5188,7 @@ function boot(){
     vessels   = Array.isArray(b.vessels) ? b.vessels : [];
     localAgents = Array.isArray(b.agents) ? b.agents : [];
     localClients = Array.isArray(b.clients) ? b.clients : [];
+    ensureClientGroups();
     applyCustomFlags(Array.isArray(b.flags) ? b.flags : []);
     ports      = Array.isArray(b.ports) ? b.ports : [];
     vset       = normalizeVSettings(b.vsettings);
@@ -4501,7 +5219,7 @@ function boot(){
       legacy = lsGet(STORE);        if(!data.length      && legacy && legacy.length){ data = legacy;                   jobs.push(persist("ships", data)); }
       legacy = lsGet(VSTORE);       if(!vessels.length   && legacy && legacy.length){ vessels = legacy;                jobs.push(persist("vessels", vessels)); }
       legacy = lsGet(ASTORE);       if(!localAgents.length && legacy && legacy.length){ localAgents = backfillAgents(legacy); jobs.push(persist("agents", localAgents)); }
-      legacy = lsGet(CSTORE);       if(!localClients.length && legacy && legacy.length){ localClients = backfillClients(legacy); jobs.push(persist("clients", localClients)); }
+      legacy = lsGet(CSTORE);       if(!localClients.length && legacy && legacy.length){ localClients = backfillClients(legacy); jobs.push(persist("clients", localClients)); ensureClientGroups(); }
       legacy = lsGet("customFlags_v1");
       if(!customFlagsList().length && legacy && legacy.length){ applyCustomFlags(legacy); jobs.push(persist("flags", legacy)); }
 
