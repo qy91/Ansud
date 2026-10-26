@@ -514,7 +514,11 @@
   .crew-section{margin-top:8px;overflow-x:auto}
   .crew-h{font-weight:600;font-size:13px;color:#333;margin-bottom:6px;border-left:3px solid var(--brand);padding-left:7px}
   .crew-empty{color:#999;font-size:12px;padding:4px 0}
-  .crew-row{display:grid;grid-template-columns:22px repeat(9,minmax(80px,1fr));gap:6px;align-items:end;margin-bottom:6px}
+  .crew-row{display:grid;grid-template-columns:22px repeat(9,minmax(80px,1fr)) 30px;gap:6px;align-items:end;margin-bottom:6px}
+  .crew-del{display:flex;align-items:flex-end;justify-content:center;padding-bottom:1px}
+  .crew-del button{width:26px;height:30px;border:1px solid #fecaca;background:#fff;color:#dc2626;border-radius:6px;
+    cursor:pointer;font-size:13px;line-height:1;padding:0;font-family:inherit}
+  .crew-del button:hover{background:#fee2e2}
   .crew-idx{font-size:12px;color:#888;text-align:center;padding-bottom:7px}
   .crew-row .cr-cell{display:flex;flex-direction:column;gap:2px;min-width:0}
   .crew-row .cr-lab{font-size:11px;color:#777}
@@ -561,8 +565,6 @@
   .cx-sub tr.cx-vip td{background:#fffbeb}
   .cx-sub tr.cx-vip:hover td{background:#fdf3d4}
   .cx-star{color:#d97706;font-size:13px}
-  .cx-add{border:1px dashed var(--brand);color:var(--brand);background:#fff;border-radius:7px;padding:5px 10px;font-size:12.5px;cursor:pointer;font-family:inherit}
-  .cx-add:hover{background:#eef6fc}
   .cx-lock{background:#f4f6f9!important;color:var(--muted)}
   .cx-hint{font-size:12px;color:var(--muted);margin-top:5px}
   .cx-acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
@@ -1223,7 +1225,7 @@
 /* ---------------- 版本号 ----------------
    显示在左上角系统名称右侧。每次做了可见改动，往上加：
    小修：末位 +1；新增功能：中间位 +1。 */
-var APP_VERSION = "v1.16.1";
+var APP_VERSION = "v1.17.1";
 (function(){ var el=document.getElementById("appVer"); if(el) el.textContent=APP_VERSION; })();
 
 /* ---------------- i18n ---------------- */
@@ -2437,7 +2439,7 @@ function generateQuote(){
       '</div>'+
       '<div class="q-rule"></div>'+
       '<div class="q-meta">'+
-        '<div class="q-billto"><div class="q-bt">BILL TO</div>'+
+        '<div class="q-billto"><div class="q-bt">CLIENT</div>'+
         '<div class="q-bt-name">'+esc(s.principal||"—")+'</div>'+
         (client&&client.address?'<div class="q-bt-addr"><b>Company address:</b> '+invAddr(client.address)+'</div>':'')+
       '</div>'+
@@ -2673,8 +2675,8 @@ function syncDocPrintStyle(){
     "}\n";
 }
 /* ---------------- INVOICE 打印（内容取自报价单） ----------------
-   版式完全复用报价单的 .quote 样式（同一套信头 / 金色分隔线 / BILL TO /
-   章节标题 / 费用表格），只把大标题换成 INVOICE、表格多一列 Amount。
+   版式完全复用报价单的 .quote 样式（同一套信头 / 金色分隔线 / CLIENT（报价单处，
+   INVOICE 自身仍为 BILL TO）/ 章节标题 / 费用表格），只把大标题换成 INVOICE、表格多一列 Amount。
    编号与日期沿用报价单（s.quote.no / s.quote.date），保证报价单与发票一一对应。
    底部按 crew invoice.pdf 的体例补上：汇率换算汇总表、以及收款账户信息
    —— 账户信息属收款信息，只在 INVOICE 打印稿显示。 */
@@ -2978,6 +2980,18 @@ function updCrew(ctx,i,which,j,k,v){
   if(!arr || !arr[j]) return;
   arr[j][k]=v;
 }
+/* 删除某一行船员：名单少一行，人数（onCount/offCount）同步改成删完后的实际行数 */
+function delCrewRow(ctx,i,which,j){
+  var a=todoListBy(ctx), t=a && a[i]; if(!t) return;
+  var key = (which==="on") ? "crewOn" : "crewOff";
+  var cnt = (which==="on") ? "onCount" : "offCount";
+  var arr = Array.isArray(t[key]) ? t[key] : [];
+  if(j<0 || j>=arr.length) return;
+  arr.splice(j,1);
+  t[key]=arr;
+  t[cnt]=arr.length;
+  rerenderTodos(ctx);
+}
 function crewRowsHTML(ctx,i,which,list){
   if(!list || !list.length) return '<div class="crew-empty">暂无船员，先在上方设置人数</div>';
   return list.map(function(c,j){
@@ -2996,7 +3010,8 @@ function crewRowsHTML(ctx,i,which,list){
       }
       return '<div class="cr-cell"><span class="cr-lab">'+f.l+'</span>'+ctrl+'</div>';
     }).join('');
-    return '<div class="crew-row"><div class="crew-idx">'+(j+1)+'</div>'+cells+'</div>';
+    return '<div class="crew-row"><div class="crew-idx">'+(j+1)+'</div>'+cells+
+      '<div class="crew-del"><button type="button" title="删除本行" onclick="delCrewRow(\''+ctx+'\','+i+',\''+which+'\','+j+')">✕</button></div></div>';
   }).join('');
 }
 function crewManifestHTML(ctx,i,t){
@@ -4002,7 +4017,6 @@ function renderClients(){
         '<table><thead><tr>'+
           '<th style="width:26px"></th><th>姓名</th><th>职位</th><th>电话</th><th>手机</th><th>邮箱</th><th>备注</th><th style="width:132px">操作</th>'+
         '</tr></thead><tbody>'+subs+'</tbody></table>'+
-        '<div style="margin-top:9px"><button class="cx-add" onclick="openClientContact('+qid(g.key)+')">＋ 为「'+esc(g.company||"该公司")+'」添加联系人</button></div>'+
       '</div></td></tr>';
   }).join("");
   setPagerHTML("client", pg.total);
@@ -4254,13 +4268,91 @@ function deleteClientCompany(k){
 }
 
 /* ---------------- auth ---------------- */
+/* ---------------- 登录防爆破：连续 8 次密码错误 → 锁定 30 分钟 ----------------
+   账号体系在 Neon Auth（托管服务，没有挂自定义服务端逻辑的地方），锁定只能做在前端：
+   按邮箱记录「连续」失败次数，满 8 次锁 30 分钟，锁定期内根本不发登录请求。
+   - 只统计凭据类失败（HTTP 4xx）；网络抖动 / Origin 配置错 / 邮箱未验证都不计入，避免误伤。
+   - 两次失败间隔超过 30 分钟视为不连续，计数重新起算。
+   - 登录成功立即清零；不同邮箱各自独立计数（同一浏览器多人用时互不影响）。 */
+var LOGIN_LOCK_KEY = "loginLock_v1";
+var LOCK_MAX_FAILS = 8, LOCK_MINUTES = 30;
+function lockReadAll(){
+  try{
+    var raw = localStorage.getItem(LOGIN_LOCK_KEY);
+    var o = raw ? JSON.parse(raw) : null;
+    return (o && typeof o === "object") ? o : {};
+  }catch(e){ return {}; }
+}
+function lockKey(email){ return String(email||"").trim().toLowerCase(); }
+function lockRec(email){
+  var r = lockReadAll()[lockKey(email)];
+  if(!r || typeof r !== "object") r = {};
+  r.fails = Number(r.fails)||0;
+  r.lockedUntil = Number(r.lockedUntil)||0;
+  r.lastFail = Number(r.lastFail)||0;
+  return r;
+}
+function lockWrite(email, r){
+  var k = lockKey(email); if(!k) return;
+  var all = lockReadAll(); all[k] = r;
+  try{ localStorage.setItem(LOGIN_LOCK_KEY, JSON.stringify(all)); }catch(e){}
+}
+function lockClear(email){
+  var k = lockKey(email); if(!k) return;
+  var all = lockReadAll(); delete all[k];
+  try{ localStorage.setItem(LOGIN_LOCK_KEY, JSON.stringify(all)); }catch(e){}
+}
+/* 锁定剩余毫秒（0 = 未锁定 / 已到期） */
+function lockRemain(email){
+  var left = lockRec(email).lockedUntil - Date.now();
+  return left > 0 ? left : 0;
+}
+function lockMsg(email){
+  var left = lockRemain(email); if(!left) return "";
+  var m = Math.floor(left/60000), s = Math.floor(left%60000/1000);
+  return "密码连续输错 " + LOCK_MAX_FAILS + " 次，已锁定 " + LOCK_MINUTES + " 分钟，请在 " +
+    m + " 分 " + (s<10?"0":"") + s + " 秒后重试。";
+}
+/* 记一次失败；返回要补充展示给用户的提示（非凭据类错误返回 ""，不计入） */
+function lockNoteFail(email, err){
+  var m = (err && err.message) || String(err||"");
+  if(!/HTTP 4\d\d/.test(m)) return "";                                    /* 网络/超时类不算 */
+  if(/EMAIL_NOT_VERIFIED|MISSING_OR_NULL_ORIGIN|INVALID_ORIGIN/i.test(m)) return "";
+  var r = lockRec(email);
+  if(Date.now() - r.lastFail > LOCK_MINUTES*60000) r.fails = 0;           /* 隔太久不算连续 */
+  r.fails++; r.lastFail = Date.now();
+  if(r.fails >= LOCK_MAX_FAILS){
+    r.fails = LOCK_MAX_FAILS;
+    r.lockedUntil = Date.now() + LOCK_MINUTES*60000;
+    lockWrite(email, r);
+    return lockMsg(email);
+  }
+  lockWrite(email, r);
+  return "（已连续输错 " + r.fails + " 次，再输错 " + (LOCK_MAX_FAILS - r.fails) +
+    " 次将锁定 " + LOCK_MINUTES + " 分钟）";
+}
+/* 锁定期间每秒刷新倒计时；解除后提示一次 */
+var LOCK_TICK = null;
+function stopLockTick(){ if(LOCK_TICK){ clearInterval(LOCK_TICK); LOCK_TICK = null; } }
+function startLockTick(email, errEl){
+  stopLockTick();
+  var upd = function(){
+    if(!lockRemain(email)){ stopLockTick(); errEl.textContent = "锁定已解除，请重新登录。"; return; }
+    errEl.textContent = lockMsg(email);
+  };
+  upd();
+  LOCK_TICK = setInterval(upd, 1000);
+}
 function doLogin(){
   var u=document.getElementById("lg-user").value.trim();
   var p=document.getElementById("lg-pass").value;
   var err=document.getElementById("lg-err");
   if(!u||!p){ err.textContent="请输入邮箱和密码"; return; }
+  if(lockRemain(u)){ err.textContent = lockMsg(u); startLockTick(u, err); return; }
+  stopLockTick();
   err.textContent = "正在登录…";
   signIn(u, p, true).then(function(){
+    lockClear(u);          /* 登录成功即清零失败计数 */
     err.textContent="";
     document.getElementById("login").classList.add("hidden");
     document.getElementById("app").classList.remove("hidden");
@@ -4280,7 +4372,9 @@ function doLogin(){
       hint = "当前访问地址 " + location.origin + " 不在 Neon Auth 的可信来源里。请到 Neon 控制台 Better Auth → Trusted Origins → Add Origin，添加：" + location.origin;
     else if(/HTTP 4\d\d/.test(m))
       hint = "邮箱或密码不正确";
-    err.textContent = hint;
+    var extra = lockNoteFail(u, e);
+    err.textContent = extra ? (hint + " " + extra) : hint;
+    if(lockRemain(u)) startLockTick(u, err);
   });
 }
 /* 退出前确认：防止误点直接登出。留一个 flag 让 beforeunload 跳过本次提示。 */
