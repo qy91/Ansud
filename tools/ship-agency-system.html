@@ -1245,7 +1245,7 @@
 /* ---------------- 版本号 ----------------
    显示在左上角系统名称右侧。每次做了可见改动，往上加：
    小修：末位 +1；新增功能：中间位 +1。 */
-var APP_VERSION = "v1.20.4";
+var APP_VERSION = "v1.20.6";
 (function(){ var el=document.getElementById("appVer"); if(el) el.textContent=APP_VERSION; })();
 
 /* ---------------- i18n ---------------- */
@@ -1782,7 +1782,7 @@ var SORT_CFG = {
 var COLS = {
   ship:   [{t:"#",w:"44px"},{k:"cn",t:"中文船名"},{k:"en",t:"英文船名"},{k:"port",t:"港口 PORT"},{k:"berth",t:"泊位"},{k:"eta",t:"靠泊时间 ETA"},{k:"etd",t:"离泊时间 ETD"},{k:"status",t:"状态"},{t:"船期",w:"96px"}],
   vessel: [{t:"#",w:"44px"},{k:"cn",t:"中文船名"},{k:"en",t:"英文船名"},{k:"imo",t:"IMO"},{k:"mmsi",t:"MMSI"},{k:"flag",t:"国籍"},{k:"type",t:"类型"},{k:"loa",t:"船长(m)"},{k:"beam",t:"船宽(m)"},{k:"nt",t:"净吨"},{t:"操作"}],
-  agent:  [{t:"#",w:"44px"},{k:"company",t:"公司名"},{k:"kind",t:"类型"},{k:"contact",t:"联系人"},{k:"phone",t:"电话"},{k:"email",t:"邮箱"},{k:"address",t:"地址 / 邮编"},{k:"fees",t:"收费项目数"},{k:"remark",t:"备注"},{t:"操作"}],
+  agent:  [{t:"#",w:"44px"},{k:"company",t:"公司名"},{k:"kind",t:"类型"},{k:"contact",t:"联系人"},{k:"phone",t:"电话"},{k:"email",t:"邮箱"},{k:"address",t:"地址 / 邮编"},{k:"fees",t:"收费项目数"},{t:"操作"}],
   client: [{t:"#",w:"44px"},{k:"company",t:"公司名称 Company"},{k:"ptype",t:"委托方类别",w:"110px"},{k:"address",t:"地址 Address"},{k:"contacts",t:"联系人",w:"90px"},{k:"vip",t:"VIP",w:"70px"},{t:"操作",w:"212px"}]
 };
 function sortVal(key, colKey, item){
@@ -2897,6 +2897,8 @@ function buildInvoiceHtml(s, items, currency, qno, qdate){
       qline("Vessel Name", s.en)+
       qline("IMO", s.imo)+
       qline("Port of Call", [s.port,s.berth].filter(Boolean).join(" / "))+
+      qline("ATA", fmt(s.eta))+
+      qline("ATD", fmt(s.etd))+
     '</div></div>'+
     '<div class="q-sec"><div class="q-sec-t">FEE SCHEDULE</div>'+
       '<table class="q-fee"><thead><tr>'+
@@ -3975,7 +3977,7 @@ function renderAgents(){
   /* 搜索范围覆盖这一页能看到的所有信息，备注（多行）也算 */
   var list=localAgents.filter(function(a){ return !q || (a.company+(a.companyEn||"")+a.contact+(a.phone||"")+(a.email||"")+(a.address||"")+(a.addressEn||"")+(a.postcode||"")+(a.remark||"")).toLowerCase().includes(q); });
   list = applySort("agent", list);
-  if(!list.length){ tb.innerHTML='<tr><td colspan="10" class="empty">暂无本港代理/服务商，点击右上角「＋ 新增代理/服务商」添加</td></tr>'; setPagerHTML("agent",0); return; }
+  if(!list.length){ tb.innerHTML='<tr><td colspan="9" class="empty">暂无本港代理/服务商，点击右上角「＋ 新增代理/服务商」添加</td></tr>'; setPagerHTML("agent",0); return; }
   var sub='font-size:12px;color:var(--muted);margin-top:2px';
   var pg=pageSlice("agent", list);
   tb.innerHTML=pg.view.map(function(a,i){
@@ -3990,7 +3992,6 @@ function renderAgents(){
       '<td>'+esc(a.contact||"—")+'</td><td class="mono">'+(a.phone||"—")+'</td>'+
       '<td>'+esc(a.email||"—")+'</td><td>'+addr+'</td>'+
       '<td class="mono">'+((a.fees||[]).length)+'</td>'+
-      '<td>'+esc(a.remark||"—")+'</td>'+
       '<td onclick="event.stopPropagation()"><button class="icon-btn" onclick="editAgent('+a.id+')">编辑</button> '+
       '<button class="icon-btn danger" onclick="deleteAgent('+a.id+')">删除</button></td>'+
     '</tr>';
@@ -4020,7 +4021,7 @@ function agentDetailRow(a){
   } else {
     fees='<div style="font-size:12.5px;color:var(--muted)">尚未维护收费价格表 —— 点「编辑」打开后可添加收费项。</div>';
   }
-  return '<tr class="cx-sub"><td colspan="10"><div class="cx-wrap">'+meta+remark+fees+'</div></td></tr>';
+  return '<tr class="cx-sub"><td colspan="9"><div class="cx-wrap">'+meta+remark+fees+'</div></td></tr>';
 }
 function renderAgentFees(){
   var box=document.getElementById("agent-fees"); if(!box) return;
