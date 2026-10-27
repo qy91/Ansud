@@ -253,6 +253,13 @@
     display:flex;align-items:center;gap:8px;border-radius:var(--radius) var(--radius) 0 0}
   .block-h .en{font-weight:400;font-size:12px;color:var(--muted)}
   .block-h .count{margin-left:auto;font-size:12px;font-weight:600;color:var(--brand)}
+  /* 单据抬头/银行信息维护：每块收款信息头部的「打印显示」开关 */
+  .block-h .print-switch{margin-left:auto;display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap;user-select:none}
+  .print-switch input{position:absolute;opacity:0;width:0;height:0}
+  .print-switch .ps-track{position:relative;width:34px;height:18px;border-radius:9px;background:#cbd5e1;transition:background .15s;flex:0 0 auto}
+  .print-switch .ps-knob{position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .15s}
+  .print-switch input:checked + .ps-track{background:var(--brand)}
+  .print-switch input:checked + .ps-track .ps-knob{transform:translateX(16px)}
   .voy-cell{text-align:right;white-space:nowrap}
   .voy-cell .voy-ref{padding:5px 11px;font-size:12.5px;font-weight:600;color:var(--brand);border:1px solid #c8d8f0;background:#f4f8ff;border-radius:6px;cursor:pointer;white-space:nowrap;line-height:1.2}
   .voy-cell .voy-ref:hover:not(:disabled){background:#e6f0ff;border-color:var(--brand)}
@@ -390,6 +397,13 @@
   .quote .q-fee-copy{border:none;background:transparent;color:var(--brand);cursor:pointer;font-size:14px;line-height:1;padding:3px}
   .quote .q-fee-copy:hover{color:var(--brand-d);text-decoration:underline}
   .quote .q-fee .col-del{width:64px;text-align:center;white-space:nowrap}
+  /* 拖动排序：第一列是抓取手柄，仅在编辑态可见（打印时隐藏） */
+  .quote .q-fee .col-drag{width:22px;text-align:center;vertical-align:middle;color:#9aa5b1}
+  .quote .q-fee .q-drag{cursor:grab;user-select:none;font-size:15px;line-height:1;display:inline-block;padding:4px 2px;touch-action:none}
+  .quote .q-fee .q-drag:active{cursor:grabbing}
+  .quote .q-fee tr.q-dragging{opacity:.4;background:#eef4fb}
+  .quote .q-fee tr.drop-above td{border-top:2px solid var(--brand)}
+  .quote .q-fee tr.drop-below td{border-bottom:2px solid var(--brand)}
   /* 自定义下拉（从价格表添加） */
   .quote .q-dd{position:relative;flex:1 1 320px;min-width:260px}
   .quote .q-dd-btn{width:100%;text-align:left;padding:7px 28px 7px 10px;border:1px solid var(--line);
@@ -443,7 +457,8 @@
     .quote input::-webkit-input-placeholder{color:transparent !important}
     .quote select{border:none !important;background:transparent !important;padding:0 !important;height:auto !important;color:#1d2939 !important;font-size:13px !important;-webkit-appearance:none;appearance:none}
     .quote .q-fee th.col-chk,.quote .q-fee td.col-chk,
-    .quote .q-fee th.col-del,.quote .q-fee td.col-del{display:none !important}
+    .quote .q-fee th.col-del,.quote .q-fee td.col-del,
+    .quote .q-fee th.col-drag,.quote .q-fee td.col-drag{display:none !important}
     /* 成本价是内部信息，报价单打印稿一律不出现 */
     .quote .q-fee th.col-cost,.quote .q-fee td.col-cost{display:none !important}
     /* TOTAL 行里的「成本 / 毛利」同样只在屏幕可见 */
@@ -514,7 +529,7 @@
   .crew-section{margin-top:8px;overflow-x:auto}
   .crew-h{font-weight:600;font-size:13px;color:#333;margin-bottom:6px;border-left:3px solid var(--brand);padding-left:7px}
   .crew-empty{color:#999;font-size:12px;padding:4px 0}
-  .crew-row{display:grid;grid-template-columns:22px repeat(9,minmax(80px,1fr)) 30px;gap:6px;align-items:end;margin-bottom:6px}
+  .crew-row{display:grid;grid-template-columns:22px repeat(10,minmax(80px,1fr)) 30px;gap:6px;align-items:end;margin-bottom:6px}
   .crew-del{display:flex;align-items:flex-end;justify-content:center;padding-bottom:1px}
   .crew-del button{width:26px;height:30px;border:1px solid #fecaca;background:#fff;color:#dc2626;border-radius:6px;
     cursor:pointer;font-size:13px;line-height:1;padding:0;font-family:inherit}
@@ -1070,6 +1085,9 @@
           <select id="cl-ptype" onchange="clPtypeChanged()"></select>
           <div class="cx-hint" id="cl-ptype-hint">公司层级字段：新建代理船舶选了这家公司时会自动带出。</div>
         </div></div>
+        <div class="field clcf" id="cl-fld-cremark" style="grid-column:1/-1"><div class="flbl">公司备注<span class="fen">Company Remarks（同一公司共用）</span></div><div class="fval">
+          <textarea id="cl-cremark" rows="3" placeholder="如：结算账期 30 天 / 优先安排靠泊 / 发票抬头与委托方不一致"></textarea>
+        </div></div>
         <div class="field clcf hidden" id="cl-fld-subclients" style="grid-column:1/-1">
           <div class="flbl">被代理客户<span class="fen">Sub-clients（同一公司共用，可添加多个）</span></div>
           <div class="fval">
@@ -1122,7 +1140,8 @@
       </div>
 
       <div class="block">
-        <div class="block-h">🏦 收款账户（英文） <span class="en">Banking Details (EN)</span></div>
+        <div class="block-h">🏦 收款账户（英文） <span class="en">Banking Details (EN)</span>
+          <label class="print-switch" title="关闭后该段英文收款信息在打印稿中不显示"><input type="checkbox" id="bk-showEn" checked><span class="ps-track"><span class="ps-knob"></span></span>打印显示</label></div>
         <div class="block-b">
           <div class="fields-grid">
             <div class="field" style="grid-column:1/-1"><div class="flbl">收款人名称 / Beneficiary Name</div>
@@ -1140,7 +1159,8 @@
       </div>
 
       <div class="block">
-        <div class="block-h">🏦 收款账户（中文） <span class="en">Banking Details (CN)</span></div>
+        <div class="block-h">🏦 收款账户（中文） <span class="en">Banking Details (CN)</span>
+          <label class="print-switch" title="关闭后该段中文收款信息在打印稿中不显示"><input type="checkbox" id="bk-showCn" checked><span class="ps-track"><span class="ps-knob"></span></span>打印显示</label></div>
         <div class="block-b">
           <div class="fields-grid">
             <div class="field" style="grid-column:1/-1"><div class="flbl">账户名称</div>
@@ -1225,7 +1245,7 @@
 /* ---------------- 版本号 ----------------
    显示在左上角系统名称右侧。每次做了可见改动，往上加：
    小修：末位 +1；新增功能：中间位 +1。 */
-var APP_VERSION = "v1.17.1";
+var APP_VERSION = "v1.20.4";
 (function(){ var el=document.getElementById("appVer"); if(el) el.textContent=APP_VERSION; })();
 
 /* ---------------- i18n ---------------- */
@@ -1497,7 +1517,7 @@ function clientCompanies(){
     var k = clientKey(c);
     var g = map[k];
     if(!g){
-      g = map[k] = {key:k, gid:c.gid, company:c.company||"", address:c.address||"", ptype:c.ptype||"", subClients:null, contacts:[]};
+      g = map[k] = {key:k, gid:c.gid, company:c.company||"", address:c.address||"", ptype:c.ptype||"", cremark:c.cremark||"", subClients:null, contacts:[]};
       order.push(g);
     }
     g.contacts.push(c);
@@ -1505,6 +1525,7 @@ function clientCompanies(){
     if(!g.company && c.company) g.company = c.company;
     if(!g.address && c.address) g.address = c.address;
     if(!g.ptype   && c.ptype)   g.ptype   = c.ptype;
+    if(!g.cremark && c.cremark) g.cremark = c.cremark;
     if(!g.subClients && Array.isArray(c.subClients) && c.subClients.length) g.subClients = c.subClients.slice();
   }
   order.forEach(function(g){
@@ -1607,7 +1628,8 @@ var basicFields = [
   {key:"en",   label:"船名（英）", en:"Name (EN)", type:"text", req:true, ph:"e.g. COSCO Star"},
   {key:"imo",  label:"IMO 编号", en:"IMO Number", type:"text", ph:"如：9789089"},
   {key:"mmsi", label:"MMSI", en:"MMSI", type:"text", ph:"如：413123456"},
-  {key:"flag", label:"国籍", en:"Flag State", type:"select", opts:flagOpts},
+  /* 国籍：新增船舶时默认新加坡（值必须和 flagOpts 里的完全一致，见 vesselDefault()） */
+  {key:"flag", label:"国籍", en:"Flag State", type:"select", opts:flagOpts, def:"新加坡 SINGAPORE"},
   {key:"type", label:"船舶类型", en:"Vessel Type", type:"select", opts:[
     {v:"散货", t:"散货"}, {v:"油轮", t:"油轮"}, {v:"集装箱", t:"集装箱"},
     {v:"滚装船", t:"滚装船"}, {v:"化学品", t:"化学品"}, {v:"其它", t:"其它"}
@@ -2269,17 +2291,19 @@ function qEN(v){
 function closeQuote(){ document.getElementById("quote-mask").classList.add("hidden"); }
 var quoteItems = [];
 var quoteCurrency = "CNY";
+var quoteItemSeq = 0;   /* 给每条收费项分配稳定 _id，用于拖动排序时定位（不被行号 i 干扰） */
 /* 当前报价单的编号/日期（generateQuote 时确定；保存后随航次存库，重开不再变） */
 var quoteNo = "", quoteDate = "";
 function buildQuoteFeeRows(){
   var tb=document.getElementById("quote-fee-body"); if(!tb) return;
   if(!quoteItems.length){
-    tb.innerHTML='<tr><td colspan="10" class="empty">暂无收费项，点击下方「＋ 添加收费项」手动添加。</td></tr>';
+    tb.innerHTML='<tr><td colspan="11" class="empty">暂无收费项，点击下方「＋ 添加收费项」手动添加。</td></tr>';
     return;
   }
   /* 每格 = 屏幕用 input（可编辑）+ 打印用 .ptxt 纯文本（可换行）。
      input 是单行控件，长描述在窄列里会被截断，打印稿必须换成会折行的文本。 */
   tb.innerHTML = quoteItems.map(function(it,i){
+    if(it._id==null) it._id = "q"+(++quoteItemSeq);   /* 稳定唯一 id，拖动排序据此定位 */
     var off = it.inc ? "" : " off";
     function cell(cls, val, key, ph, readonly){
       var inp = readonly
@@ -2288,7 +2312,8 @@ function buildQuoteFeeRows(){
           '<span class="ptxt">'+esc(val)+'</span>';
       return '<td'+(cls?' class="'+cls+'"':'')+'>'+inp+'</td>';
     }
-    return '<tr class="'+off+'">'+
+    return '<tr class="'+off+'" data-id="'+it._id+'">'+
+      '<td class="col-drag"><span class="q-drag" title="按住拖动调整顺序">⠿</span></td>'+
       '<td class="col-chk"><input type="checkbox" class="q-fee-chk" '+(it.inc?"checked":"")+' onchange="toggleQuoteItem('+i+',this)"></td>'+
       '<td class="num col-no">'+esc(String(i+1))+'</td>'+
       cell("col-item", it.item, "item", "收费项目")+
@@ -2302,6 +2327,72 @@ function buildQuoteFeeRows(){
         '<button type="button" class="q-fee-del" onclick="delQuoteItem('+i+')">✕</button></td>'+
     '</tr>';
   }).join("");
+  qBindFeeDrag(tb);
+}
+/* 拖动排序：把各事件用事件委托绑在 tbody 上（tbody 每次重渲染会重建，旧监听随之回收）。
+   为避免与行内 input 文本选择冲突，只有按住最左的 ⠿ 手柄才允许拖整行：
+   mousedown 手柄时临时把该 <tr> 设为 draggable，dragend/mouseup 再复原。 */
+var qDragSrcId = null;
+function qBindFeeDrag(tb){
+  if(!tb) return;
+  tb.addEventListener("mousedown", function(e){
+    var h = e.target.closest ? e.target.closest(".q-drag") : null;
+    var tr = h && h.closest ? h.closest("tr") : null;
+    if(tr) tr.setAttribute("draggable","true");
+  });
+  tb.addEventListener("mouseup", qResetFeeDrag);
+  tb.addEventListener("dragstart", function(e){
+    var tr = e.target.closest ? e.target.closest("tr") : null;
+    if(!tr) return;
+    qDragSrcId = tr.getAttribute("data-id");
+    e.dataTransfer.effectAllowed = "move";
+    try{ e.dataTransfer.setData("text/plain", qDragSrcId||""); }catch(_){}
+    tr.classList.add("q-dragging");
+  });
+  tb.addEventListener("dragover", function(e){
+    if(qDragSrcId==null) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    var tb2=document.getElementById("quote-fee-body");
+    if(tb2) tb2.querySelectorAll("tr.drop-above,tr.drop-below").forEach(function(x){ x.classList.remove("drop-above","drop-below"); });
+    var tr = e.target.closest ? e.target.closest("tr") : null;
+    if(!tr || tr.getAttribute("data-id")===qDragSrcId) return;
+    var r = tr.getBoundingClientRect();
+    tr.classList.add((e.clientY - r.top) < r.height/2 ? "drop-above" : "drop-below");
+  });
+  tb.addEventListener("drop", function(e){
+    if(qDragSrcId==null) return;
+    e.preventDefault();
+    var tr = e.target.closest ? e.target.closest("tr") : null;
+    var src = qDragSrcId;
+    qResetFeeDrag();
+    if(!tr) return;
+    var tgt = tr.getAttribute("data-id");
+    if(!tgt || tgt===src) return;
+    var r = tr.getBoundingClientRect();
+    qReorderQuoteItems(src, tgt, (e.clientY - r.top) < r.height/2);
+  });
+  tb.addEventListener("dragend", qResetFeeDrag);
+}
+function qResetFeeDrag(){
+  var tb=document.getElementById("quote-fee-body");
+  if(tb) tb.querySelectorAll("tr").forEach(function(tr){
+    tr.classList.remove("q-dragging","drop-above","drop-below");
+    tr.removeAttribute("draggable");
+  });
+  qDragSrcId = null;
+}
+function qReorderQuoteItems(srcId, tgtId, above){
+  var from=-1, to=-1, k;
+  for(k=0;k<quoteItems.length;k++){ if(quoteItems[k]._id===srcId){ from=k; break; } }
+  if(from<0) return;
+  var item = quoteItems.splice(from,1)[0];
+  for(k=0;k<quoteItems.length;k++){ if(quoteItems[k]._id===tgtId){ to=k; break; } }
+  if(to<0) quoteItems.push(item);
+  else quoteItems.splice(above?to:to+1, 0, item);
+  buildQuoteFeeRows();
+  renderQuoteTotal();
+  toast("已调整收费项顺序");
 }
 function setQuoteCurrency(v){ quoteCurrency = (v==="USD")?"USD":"CNY"; buildQuoteFeeRows(); renderQuoteTotal(); }
 function updQuoteItem(i,key,el){ if(!quoteItems[i]) return; quoteItems[i][key]=el.value;
@@ -2455,7 +2546,7 @@ function generateQuote(){
         '<div class="q-feebar"><span class="q-hint">'+hint+'</span>'+curSel+'</div>'+
         qPickBarHTML(s)+
         '<table class="q-fee"><thead><tr>'+
-          '<th class="col-chk"></th><th class="num col-no">No.</th><th class="col-item">Item</th><th class="col-unit">Unit</th><th class="col-qty" style="text-align:right">Qty</th><th class="col-up" style="text-align:right">Unit Price ('+esc(quoteCurrency)+')</th><th class="col-cost" style="text-align:right">Cost</th><th class="col-amt" style="text-align:right">Amount</th><th class="col-rem">Remarks</th><th class="col-del"></th>'+
+          '<th class="col-drag"></th><th class="col-chk"></th><th class="num col-no">No.</th><th class="col-item">Item</th><th class="col-unit">Unit</th><th class="col-qty" style="text-align:right">Qty</th><th class="col-up" style="text-align:right">Unit Price ('+esc(quoteCurrency)+')</th><th class="col-cost" style="text-align:right">Cost</th><th class="col-amt" style="text-align:right">Amount</th><th class="col-rem">Remarks</th><th class="col-del"></th>'+
         '</tr></thead><tbody id="quote-fee-body"></tbody></table>'+
         '<button type="button" class="btn sm ghost q-fee-add" onclick="addQuoteItem()">＋ 添加收费项</button>'+
         '<div class="q-total" id="quote-total">TOTAL: —</div>'+
@@ -2739,6 +2830,9 @@ function invAmountBlock(m, currency){
    用户把维护项清空后，对应行不再输出；中英文都整段为空时返回空串，
    避免打印出一个只有标题的空块。 */
 function invBankBlock(){
+  var b = (vset && vset.bank) || {};
+  var showEn = (b.showEn !== false);   /* 默认显示，仅当显式设为 false 才隐藏 */
+  var showCn = (b.showCn !== false);
   var U = bankInfo(), C = bankInfoCn();
   function nz(v){ return (v==null) ? "" : String(v).trim(); }
   var en = [
@@ -2754,10 +2848,10 @@ function invBankBlock(){
     ["\u5f00\u6237\u94f6\u884c\uff1a", nz(C.bank)],
     ["\u516c\u53f8\u5730\u5740\uff1a", nz(C.address)]
   ];
-  var enHtml = en.filter(function(r){ return r[1]; })
-                .map(function(r){ return '<div>'+r[0]+esc(r[1])+'</div>'; }).join("");
-  var cnHtml = cn.filter(function(r){ return r[1]; })
-                .map(function(r){ return '<div>'+r[0]+esc(r[1])+'</div>'; }).join("");
+  var enHtml = showEn ? en.filter(function(r){ return r[1]; })
+                .map(function(r){ return '<div>'+r[0]+esc(r[1])+'</div>'; }).join("") : "";
+  var cnHtml = showCn ? cn.filter(function(r){ return r[1]; })
+                .map(function(r){ return '<div>'+r[0]+esc(r[1])+'</div>'; }).join("") : "";
   if(!enHtml && !cnHtml) return "";
   return '<div class="q-bank">'+
     (enHtml ? '<div class="q-bank-t">Our banking details as following:</div><div class="q-bank-en">'+enHtml+'</div>' : '')+
@@ -2817,6 +2911,12 @@ function buildInvoiceHtml(s, items, currency, qno, qdate){
   '</div>';
 }
 
+/* INVOICE 的 Date 使用「打印时刻」的真实日期，而非报价单保存时的日期。
+   格式与报价单一致的 [DD / MM / YYYY]，保证打印稿视觉统一。 */
+function invoicePrintDate(){
+  var d = new Date();
+  return "["+pad2(d.getDate())+" / "+pad2(d.getMonth()+1)+" / "+d.getFullYear()+"]";
+}
 /* 生成并预览 INVOICE（打印前调用） */
 function buildInvoice(){
   var s = data.find(function(x){return x.id===currentId;}); if(!s) return false;
@@ -2824,9 +2924,9 @@ function buildInvoice(){
   var items = (q && q.items && q.items.length) ? q.items : quoteItems;
   if(!items || !items.length){ toast("报价单还没有收费项，请先添加并保存报价单"); return false; }
   var currency = (q && q.currency) || quoteCurrency || "CNY";
-  /* 编号与日期与报价单保持一致：优先用已保存的报价单，否则用当前弹窗上的 */
+  /* 编号沿用报价单（保证报价单与发票一一对应）；DATE 用打印当下真实日期 */
   var qno   = (q && q.no)   || quoteNo   || "";
-  var qdate = (q && q.date) || quoteDate || "";
+  var qdate = invoicePrintDate();
   document.getElementById("invoice-print").innerHTML = buildInvoiceHtml(s, items, currency, qno, qdate);
   return true;
   return true;
@@ -2922,22 +3022,162 @@ function closeModal(){ document.getElementById("mask").classList.add("hidden"); 
        crewOn:[{...}], crewOff:[{...}] }         // 每行一个船员，字段见 CREW_FIELDS
    编辑态用 todoCard(t,i,ctx) 渲染；只读态用 crewManifestView(t,i) 渲染船员清单 + 生成 OKTB。
    ctx: "edit" = 详情页编辑；"modal" = 新增弹窗（两个列表分开存）。 */
+/* 船员职位（Rank）：值存国际通用缩写，直接就是打印在船员名单上的写法；
+   列表照船员名单体例按甲板部 / 轮机部 / 服务部 / 其他排列（共 26 项，经用户确认）。
+   ⚠️ OKTB 登轮担保函按用户要求保持原有 5 列（NO./Name/Nationality/DOB/Passport），不带 Rank。 */
+var CREW_RANKS = [
+  {v:"MASTER", t:"MASTER 船长",    en:"Master"},
+  {v:"C/O",    t:"C/O 大副",       en:"Chief Officer"},
+  {v:"2/O",    t:"2/O 二副",       en:"Second Officer"},
+  {v:"3/O",    t:"3/O 三副",       en:"Third Officer"},
+  {v:"D/C",    t:"D/C 甲板实习生", en:"Deck Cadet"},
+  {v:"BSN",    t:"BSN 水手长",     en:"Bosun"},
+  {v:"CARP",   t:"CARP 木匠",      en:"Carpenter"},
+  {v:"AB",     t:"AB 一水",        en:"Able Seaman"},
+  {v:"OS",     t:"OS 二水",        en:"Ordinary Seaman"},
+  {v:"C/E",    t:"C/E 轮机长",     en:"Chief Engineer"},
+  {v:"2/E",    t:"2/E 大管轮",     en:"Second Engineer"},
+  {v:"3/E",    t:"3/E 二管轮",     en:"Third Engineer"},
+  {v:"4/E",    t:"4/E 三管轮",     en:"Fourth Engineer"},
+  {v:"ETO",    t:"ETO 电子电气员", en:"Electro-Technical Officer"},
+  {v:"E/C",    t:"E/C 轮机实习生", en:"Engine Cadet"},
+  {v:"OLR",    t:"OLR 机工/加油",  en:"Oiler"},
+  {v:"FIT",    t:"FIT 铜匠",       en:"Fitter"},
+  {v:"ETR",    t:"ETR 电工",       en:"Electrician"},
+  {v:"PM",     t:"PM 泵匠",        en:"Pumpman"},
+  {v:"C/C",    t:"C/C 大厨",       en:"Chief Cook"},
+  {v:"2/C",    t:"2/C 二厨",       en:"Second Cook"},
+  {v:"MESS",   t:"MESS 服务员",    en:"Messman"},
+  {v:"PILOT",  t:"PILOT 引航员",   en:"Pilot"},
+  {v:"SUPT",   t:"SUPT 船东代表",  en:"Superintendent"},
+  {v:"SURV",   t:"SURV 验船师",    en:"Surveyor"},
+  {v:"SUPY",   t:"SUPY 随船人员",  en:"Supernumerary"}
+];
+/* 船员国籍（Nationality）：**值存英文**（所以 OKTB 里打出来就是英文），下拉显示「中文 ENGLISH」。
+   排列按中国港口换班的常见度：中国 → 南亚/东南亚 → 其他亚洲 → 欧洲 → 美洲/非洲/大洋洲。
+   要加国家直接在数组里补一行即可（值用大写英文，显示文本「中文 英文」）。 */
+var CREW_NATIONALITIES = [
+  {v:"CHINESE",       t:"中国 CHINESE"},
+  {v:"INDIAN",        t:"印度 INDIAN"},
+  {v:"FILIPINO",      t:"菲律宾 FILIPINO"},
+  {v:"INDONESIAN",    t:"印度尼西亚 INDONESIAN"},
+  {v:"BANGLADESHI",   t:"孟加拉国 BANGLADESHI"},
+  {v:"PAKISTANI",     t:"巴基斯坦 PAKISTANI"},
+  {v:"SRI LANKAN",    t:"斯里兰卡 SRI LANKAN"},
+  {v:"VIETNAMESE",    t:"越南 VIETNAMESE"},
+  {v:"MYANMAR",       t:"缅甸 MYANMAR"},
+  {v:"THAI",          t:"泰国 THAI"},
+  {v:"CAMBODIAN",     t:"柬埔寨 CAMBODIAN"},
+  {v:"NEPALI",        t:"尼泊尔 NEPALI"},
+  {v:"MALAYSIAN",     t:"马来西亚 MALAYSIAN"},
+  {v:"SINGAPOREAN",   t:"新加坡 SINGAPOREAN"},
+  {v:"KOREAN",        t:"韩国 KOREAN"},
+  {v:"JAPANESE",      t:"日本 JAPANESE"},
+  {v:"IRANIAN",       t:"伊朗 IRANIAN"},
+  {v:"TURKISH",       t:"土耳其 TURKISH"},
+  {v:"EGYPTIAN",      t:"埃及 EGYPTIAN"},
+  {v:"UKRAINIAN",     t:"乌克兰 UKRAINIAN"},
+  {v:"RUSSIAN",       t:"俄罗斯 RUSSIAN"},
+  {v:"POLISH",        t:"波兰 POLISH"},
+  {v:"ROMANIAN",      t:"罗马尼亚 ROMANIAN"},
+  {v:"BULGARIAN",     t:"保加利亚 BULGARIAN"},
+  {v:"GEORGIAN",      t:"格鲁吉亚 GEORGIAN"},
+  {v:"LATVIAN",       t:"拉脱维亚 LATVIAN"},
+  {v:"LITHUANIAN",    t:"立陶宛 LITHUANIAN"},
+  {v:"CROATIAN",      t:"克罗地亚 CROATIAN"},
+  {v:"SERBIAN",       t:"塞尔维亚 SERBIAN"},
+  {v:"GREEK",         t:"希腊 GREEK"},
+  {v:"ITALIAN",       t:"意大利 ITALIAN"},
+  {v:"SPANISH",       t:"西班牙 SPANISH"},
+  {v:"PORTUGUESE",    t:"葡萄牙 PORTUGUESE"},
+  {v:"BRITISH",       t:"英国 BRITISH"},
+  {v:"GERMAN",        t:"德国 GERMAN"},
+  {v:"DUTCH",         t:"荷兰 DUTCH"},
+  {v:"FRENCH",        t:"法国 FRENCH"},
+  {v:"NORWEGIAN",     t:"挪威 NORWEGIAN"},
+  {v:"SWEDISH",       t:"瑞典 SWEDISH"},
+  {v:"DANISH",        t:"丹麦 DANISH"},
+  {v:"FINNISH",       t:"芬兰 FINNISH"},
+  {v:"AMERICAN",      t:"美国 AMERICAN"},
+  {v:"CANADIAN",      t:"加拿大 CANADIAN"},
+  {v:"MEXICAN",       t:"墨西哥 MEXICAN"},
+  {v:"BRAZILIAN",     t:"巴西 BRAZILIAN"},
+  {v:"ARGENTINIAN",   t:"阿根廷 ARGENTINIAN"},
+  {v:"SOUTH AFRICAN", t:"南非 SOUTH AFRICAN"},
+  {v:"NIGERIAN",      t:"尼日利亚 NIGERIAN"},
+  {v:"GHANIAN",       t:"加纳 GHANIAN"},
+  {v:"KENYAN",        t:"肯尼亚 KENYAN"},
+  {v:"AUSTRALIAN",    t:"澳大利亚 AUSTRALIAN"},
+  {v:"NEW ZEALANDER", t:"新西兰 NEW ZEALANDER"}
+];
 var CREW_FIELDS = [
   {k:"name",        l:"姓名",       en:"Name",         ph:"如：SONI VIPIN KUMAR"},
-  {k:"nationality", l:"国籍",       en:"Nationality",  ph:"如：INDIAN"},
-  {k:"gender",      l:"性别",       en:"Gender",       type:"select", opts:["MALE","FEMALE"]},
-  {k:"birthday",    l:"生日",       en:"DOB",          type:"date"},
+  {k:"rank",        l:"职位",       en:"Rank",         type:"select", opts:CREW_RANKS},
+  {k:"nationality", l:"国籍",       en:"Nationality",  type:"select", opts:CREW_NATIONALITIES},
+  {k:"gender",      l:"性别",       en:"Gender",       type:"select", opts:["男","女"], def:"男"},
+  /* 生日纯手输 YYYYMMDD；存的是 YYYYMMDD，显示时转成「1985年05月12日」（OKTB 里转成 1985-05-12） */
+  {k:"birthday",    l:"生日",       en:"DOB",          ph:"如：19850512"},
   {k:"passport",    l:"护照号码",   en:"Passport",     ph:"如：T1322833"},
   {k:"phone",       l:"联系电话",   en:"Phone",        ph:"如：+91 98xxxx"},
   {k:"email",       l:"船员邮箱",   en:"Email",        ph:"如：crew@example.com"},
   {k:"flight",      l:"航班信息",   en:"Flight",       ph:"航班号/航班详情"},
   {k:"airline",     l:"航空公司名", en:"Airline",      ph:"如：Air India"}
 ];
+/* ---------------- 船员字段的取值规整 ----------------
+   生日：统一成 YYYYMMDD 存（认 19850512 / 1985-05-12 / 1985/5/12 / 1985年5月12日）；
+         显示时中文界面用「1985年05月12日」，OKTB 用 1985-05-12（全英文、无中文字符）。
+   性别：选项 男 / 女，老数据里的 MALE / FEMALE 一并认。
+   国籍：存英文（OKTB 直接就是英文），老数据里手写的中文或小写英文反查成标准英文值。 */
+function normBirthday(v){
+  var s = String(v==null?"":v).trim();
+  if(!s) return "";
+  var m = s.match(/^(\d{4})\D?(\d{1,2})\D?(\d{1,2})\D?$/);
+  if(!m) return "";
+  var y=+m[1], mo=+m[2], d=+m[3];
+  if(y<1900 || y>2100 || mo<1 || mo>12 || d<1 || d>31) return "";
+  return y + (mo<10?"0":"") + mo + (d<10?"0":"") + d;
+}
+function fmtBirthdayCN(v){ var s=normBirthday(v); return s ? (s.slice(0,4)+"年"+s.slice(4,6)+"月"+s.slice(6,8)+"日") : String(v==null?"":v).trim(); }
+function fmtBirthdayEN(v){ var s=normBirthday(v); return s ? (s.slice(0,4)+"-"+s.slice(4,6)+"-"+s.slice(6,8)) : String(v==null?"":v).trim(); }
+function normGender(v){
+  var s = String(v==null?"":v).trim();
+  if(/^(male|m|男)$/i.test(s)) return "男";
+  if(/^(female|f|女)$/i.test(s)) return "女";
+  return s;
+}
+function normNationality(v){
+  var s = String(v==null?"":v).trim(); if(!s) return "";
+  var up = s.toUpperCase();
+  for(var i=0;i<CREW_NATIONALITIES.length;i++){
+    var n = CREW_NATIONALITIES[i];
+    if(n.v===up || n.t===s) return n.v;
+    if(n.t.indexOf(s)>-1) return n.v;      /* 老数据写「印度」→ INDIAN */
+  }
+  return s;                                 /* 表外国籍原样保留（OKTB 会照打） */
+}
+/* 下拉字段在只读表里显示「中文 English」这类标签，而不是存的英文值 */
+function crewOptLabel(f, v){
+  if(!v) return "";
+  var l = f.opts||[];
+  for(var i=0;i<l.length;i++){
+    var o = l[i], ov = (typeof o === "string") ? o : String(o.v);
+    if(ov === v) return (typeof o === "string") ? o : String(o.t||o.v);
+  }
+  return v;
+}
 function blankCrew(){
-  var o={}; CREW_FIELDS.forEach(function(f){ o[f.k]=""; }); return o;
+  var o={}; CREW_FIELDS.forEach(function(f){ o[f.k]=(f.def!=null?f.def:""); }); return o;
 }
 function crewClean(c){
-  var o={}; CREW_FIELDS.forEach(function(f){ o[f.k]=(c && c[f.k]!=null) ? String(c[f.k]) : ""; }); return o;
+  var o={};
+  CREW_FIELDS.forEach(function(f){
+    var v = (c && c[f.k]!=null) ? String(c[f.k]) : "";
+    if(f.k==="gender")        v = normGender(v);
+    else if(f.k==="nationality") v = normNationality(v);
+    else if(f.k==="birthday")    v = normBirthday(v) || v.trim();
+    o[f.k]=v;
+  });
+  return o;
 }
 function crewFilled(c){
   if(!c) return false;
@@ -2980,6 +3220,16 @@ function updCrew(ctx,i,which,j,k,v){
   if(!arr || !arr[j]) return;
   arr[j][k]=v;
 }
+/* 生日专用：存规整后的 YYYYMMDD，并把输入框回显成「YYYY年MM月DD日」。
+   认不出来（非空又不是合法日期）就提示一句，框里留原样让用户改。 */
+function updBirth(ctx,i,which,j,el){
+  var s = normBirthday(el.value);
+  var a=todoListBy(ctx), t=a && a[i];
+  var arr = t ? ((which==="on") ? t.crewOn : t.crewOff) : null;
+  if(arr && arr[j]) arr[j].birthday = s;
+  if(s) el.value = fmtBirthdayCN(s);
+  else if(String(el.value||"").trim()) toast("生日请按 YYYYMMDD 输入，例如 19850512");
+}
 /* 删除某一行船员：名单少一行，人数（onCount/offCount）同步改成删完后的实际行数 */
 function delCrewRow(ctx,i,which,j){
   var a=todoListBy(ctx), t=a && a[i]; if(!t) return;
@@ -3000,11 +3250,19 @@ function crewRowsHTML(ctx,i,which,list){
       var handler = "updCrew('"+ctx+"',"+i+",'"+which+"',"+j+",'"+f.k+"',this.value)";
       var ctrl;
       if(f.type==="select"){
+        /* 选项两种形态：字符串数组（如性别），或 {v:存的值, t:显示文本}（如职位——值是缩写、显示带中文） */
+        var oopts = (f.opts||[]).map(function(o){
+          return (typeof o === "string") ? {v:o, t:o} : {v:String(o.v), t:String(o.t||o.v)};
+        });
         ctrl = '<select onchange="'+handler+'"><option value="">请选择</option>'+
-          f.opts.map(function(o){ return '<option value="'+o+'"'+(v===o?' selected':'')+'>'+o+'</option>'; }).join('')+
+          oopts.map(function(o){
+            return '<option value="'+esc(o.v)+'"'+(v===o.v?' selected':'')+'>'+esc(o.t)+'</option>';
+          }).join('')+
           '</select>';
-      } else if(f.type==="date"){
-        ctrl = '<input type="date" value="'+esc(v.slice(0,10))+'" onchange="'+handler+'">';
+      } else if(f.k==="birthday"){
+        /* 纯手输 YYYYMMDD；失焦立刻把框里回显成「1985年05月12日」（只改这一个框，不整行重渲染） */
+        ctrl = '<input type="text" value="'+esc(fmtBirthdayCN(v))+'" placeholder="'+esc(f.ph||"如：19850512")+
+          '" onchange="updBirth(\''+ctx+'\','+i+',\''+which+'\','+j+',this)">';
       } else {
         ctrl = '<input type="text" value="'+esc(v)+'" placeholder="'+esc(f.ph||"")+'" onchange="'+handler+'">';
       }
@@ -3076,7 +3334,13 @@ function crewTableView(title, list){
     '</tr></thead><tbody>';
   list.forEach(function(c,j){
     h += '<tr><td>'+(j+1)+'</td>'+
-      CREW_FIELDS.map(function(f){ return '<td>'+esc(c[f.k]||"—")+'</td>'; }).join('')+
+      CREW_FIELDS.map(function(f){
+        var raw = c[f.k]==null ? "" : String(c[f.k]);
+        var disp = raw;
+        if(f.k==="birthday")            disp = fmtBirthdayCN(raw);        /* 1985年05月12日 */
+        else if(f.type==="select")      disp = crewOptLabel(f, raw);      /* 中国 CHINESE / 男 */
+        return '<td>'+esc(disp||"—")+'</td>';
+      }).join('')+
       '</tr>';
   });
   return h+'</tbody></table></div>';
@@ -3099,11 +3363,8 @@ function crewManifestView(t,i){
 /* ---------- OKTB（登轮担保函）----------
    版式按 OKTB.pdf 模板复刻：信纸抬头 + To/Fm/Date/Re + 标题 + 人员表 + 航班 + 担保句 + 落款盖章。
    按「航空公司 + 航班」分组，同组一封；不同组各自独立成封（打印时自动分页）。 */
-function dobTxt(v){
-  v = String(v||"").trim(); if(!v) return "";
-  var m = v.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
-  return m ? (m[1]+"-"+Number(m[2])+"-"+Number(m[3])) : v;
-}
+/* OKTB 是英文函件：日期一律出 1985-05-12（不带「年月日」），新旧两种存值都认 */
+function dobTxt(v){ return fmtBirthdayEN(v); }
 function oktbLetter(info, grp){
   var d = new Date();
   var mon = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getMonth()];
@@ -3650,10 +3911,19 @@ function vesselField(f, cur){
   }
   return '<div class="field"><div class="flbl">'+f.label+'<span class="fen">'+f.en+'</span></div><div class="fval"><input id="vf-'+f.key+'" type="text" value="'+esc(cur||"")+'" placeholder="'+esc(f.ph||'')+'"></div></div>';
 }
+/* 新增船舶时的字段默认值（目前只有国籍）。★ 必须校验该选项还在下拉里：
+   若「新加坡 SINGAPORE」被用户在国籍管理里删掉，直接赋这个值会让 <select> 静默退回第一项，
+   保存时就把国籍存成「中国 CHINA」了 —— 所以查不到就留空。 */
+function vesselDefault(f){
+  if(!f || !f.def) return "";
+  var list = (f.key==="flag") ? flagOpts : (f.opts||[]);   /* flag 要用实时的 flagOpts（applyCustomFlags 会换新数组） */
+  var hit = list.some(function(o){ return String(o.v) === String(f.def); });
+  return hit ? f.def : "";
+}
 function openVesselModal(){
   editingVesselId=null;
   document.getElementById("vessel-mh").textContent="新增船舶";
-  document.getElementById("vessel-body").innerHTML='<div class="fields-grid">'+basicFields.map(function(f){return vesselField(f,"");}).join('')+'</div>';
+  document.getElementById("vessel-body").innerHTML='<div class="fields-grid">'+basicFields.map(function(f){return vesselField(f, vesselDefault(f));}).join('')+'</div>';
   document.getElementById("vessel-mask").classList.remove("hidden");
 }
 function editVessel(id){
@@ -3949,7 +4219,7 @@ function renderClients(){
     /* 搜索范围 = 这一页能看到的所有公司级信息：公司名 / 类别 / 地址 / 被代理客户。
        被代理客户单独算：命中它时展开（否则用户看不出这行为什么被匹配到），
        命中公司名 / 类别 / 地址时保持折叠。 */
-    var selfHay = ((g.company||"")+(g.address||"")+(g.ptype||"")).toLowerCase();
+    var selfHay = ((g.company||"")+(g.address||"")+(g.ptype||"")+(g.cremark||"")).toLowerCase();
     var subHay  = ((g.subClients||[]).join(" ")).toLowerCase();
     var selfMatch = q ? selfHay.includes(q) : false;
     var subMatch  = q ? subHay.includes(q) : false;
@@ -4004,13 +4274,14 @@ function renderClients(){
         '</div></td>'+
       '</tr>';
     }).join("");
-    /* 展开区的公司档案摘要：地址已在公司行单独占一列，这里只补「类别 + 被代理客户」 */
+    /* 展开区的公司档案摘要：地址已在公司行单独占一列，这里只补「类别 + 被代理客户 + 公司备注」 */
     var meta = '<div class="cx-meta">'+
       '<span class="cx-meta-i"><b>类别</b>'+(g.ptype ? esc(g.ptype) : "—")+'</span>'+
       (g.subClients && g.subClients.length
         ? '<span class="cx-meta-i"><b>被代理客户</b>'+
           g.subClients.map(function(n){ return '<span class="cx-subcli">'+esc(n)+'</span>'; }).join("")+'</span>'
         : '')+
+      (g.cremark ? '<span class="cx-meta-i cx-meta-remark"><b>公司备注</b>'+esc(g.cremark).replace(/\n/g,"<br>")+'</span>' : '')+
     '</div>';
     return head +
       '<tr class="cx-sub"><td colspan="7"><div class="cx-wrap">'+ meta +
@@ -4027,9 +4298,9 @@ function renderClients(){
    "contact" 新增 / 编辑某个公司的联系人（公司名、地址锁定为公司档案的值）
    "company" 编辑公司档案（名称与地址应用到该公司全部联系人）          */
 var clMode="new", clEditId=null, clKey=null;
-var clTextIds=["company","address","name","title","phone","mobile","email","remark"];
+var clTextIds=["company","address","name","title","phone","mobile","email","remark","cremark"];
 var clPersonFlds=["name","title","phone","mobile","email","remark","vip"];
-var clCompanyFlds=["ptype","subclients"];   /* 公司级字段：新增公司 / 编辑公司时可见，编辑联系人时隐藏 */
+var clCompanyFlds=["ptype","subclients","cremark"];   /* 公司级字段：新增公司 / 编辑公司时可见，编辑联系人时隐藏 */
 /* 「被代理客户」只在委托方类别 = 国内总代 时才出现；数组属于公司档案，编辑期先放在这里 */
 var clSubClients = [];
 var SUBCLIENT_TYPE = "国内总代";
@@ -4134,6 +4405,7 @@ function clCompanyChanged(){
   if(hit){
     clSet("address", hit.address);
     clSet("ptype", hit.ptype);
+    clSet("cremark", hit.cremark);
     clLoadSubClients(hit); clSyncSubClientField();
     ae.readOnly=true; ae.classList.add("cx-lock");
     hint.textContent="已匹配到已有公司，将共享其公司名称、地址与委托方类别；如需修改请点公司行的「编辑公司」。";
@@ -4188,7 +4460,7 @@ function openClientCompany(k){
   var g=clientGroupByKey(k); if(!g){ renderClients(); return; }
   clMode="company"; clKey=String(k); clEditId=null;
   clResetForm(); clShowPerson(false); clShowCompanyExtra(true);
-  clSet("company", g.company); clSet("address", g.address); clSet("ptype", g.ptype);
+  clSet("company", g.company); clSet("address", g.address); clSet("ptype", g.ptype); clSet("cremark", g.cremark);
   clLoadSubClients(g); clSyncSubClientField();
   document.getElementById("client-mh").textContent="编辑公司 · "+g.company;
   document.getElementById("cl-tip").innerHTML="公司名称与地址由该公司下 <b>全部 "+g.contacts.length+" 位联系人共用</b>，保存后一次性同步。"+
@@ -4204,7 +4476,7 @@ function saveClient(){
     var g=clientGroupByKey(clKey); if(!g){ renderClients(); return; }
     var old=g.company, oldKey=g.key, n=0;
     var subs = clVal("ptype")===SUBCLIENT_TYPE ? clSubClients.slice() : [];
-    g.contacts.forEach(function(c){ c.company=company; c.address=address; c.ptype=clVal("ptype"); c.subClients=subs.slice(); });
+    g.contacts.forEach(function(c){ c.company=company; c.address=address; c.ptype=clVal("ptype"); c.cremark=clVal("cremark"); c.subClients=subs.slice(); });
     if(old!==company){
       data.forEach(function(s){ if(String(s.principal||"").trim()===old){ s.principal=company; n++; } });
       if(n) save(data);
@@ -4225,13 +4497,15 @@ function saveClient(){
   /* 委托方类别属于公司：new 模式用表单值（或直接选了老公司时用老公司的），
      contact 模式继承所属公司的类别 */
   var ptype = (clMode==="new") ? (clVal("ptype") || (clude ? clude.ptype : "")) : (clientGroupByKey(clKey)||{ptype:""}).ptype;
+  /* 公司备注同属公司：new 模式用表单值（或老公司的），contact 模式继承所属公司的备注 */
+  var cremark = (clMode==="new") ? (clVal("cremark") || (clude ? clude.cremark : "")) : (clientGroupByKey(clKey)||{cremark:""}).cremark;
   /* 被代理客户同属公司：只有「国内总代」才留，其余一律清空，避免类别改了还留着脏数据 */
   var subs = (ptype===SUBCLIENT_TYPE)
     ? ((clMode==="new") ? (clSubClients.length ? clSubClients.slice() : ((clude&&clude.subClients)||[]).slice())
                         : ((clientGroupByKey(clKey)||{subClients:null}).subClients||[]).slice())
     : [];
   var obj = {
-    company:company, address:address, gid:gid, ptype:ptype, subClients:subs,
+    company:company, address:address, gid:gid, ptype:ptype, cremark:cremark, subClients:subs,
     name:clVal("name"), title:clVal("title"), phone:clVal("phone"),
     mobile:clVal("mobile"), email:clVal("email"), remark:clVal("remark"),
     vip:document.getElementById("cl-vip").checked
@@ -4343,6 +4617,67 @@ function startLockTick(email, errEl){
   upd();
   LOCK_TICK = setInterval(upd, 1000);
 }
+/* ---------------- 登录日志：只写 Neon，界面不展示 ----------------
+   记录「谁、什么时候、用什么设备、哪个版本」登录进来，写进 login_logs 表
+   （走 SECURITY DEFINER 函数 api_log_login，SQL 见 schema-loginlog.sql，需先在 Neon 执行一次）。
+   系统里没有任何入口显示它 —— 要看到 Neon 控制台的 SQL 编辑器里查：
+     SELECT logged_at, email, evt, app, ua FROM login_logs ORDER BY logged_at DESC LIMIT 100;
+   ⚠️ 密码输错的失败登录记不进去：那一刻还没有 JWT，Data API 无凭据可写。
+      （失败次数由前端锁定机制 loginLock_v1 记在本地，见上面防爆破一节。） */
+/* ---------------- 公网 IP：前端自己不知道，只能问第三方回显服务 ----------------
+   依次试三个源（国内网络对某些域名不通，所以要多备几个），每个 2.5 秒超时就换下一个；
+   全失败就返回 ""——IP 只是附加信息，拿不到也必须照常写登录日志。 */
+function fetchPublicIP(){
+  var srcs = [
+    {u:"https://api.ipify.org?format=json",       p:function(t){ try{ return JSON.parse(t).ip || ""; }catch(e){ return ""; } }},
+    {u:"https://cloudflare.com/cdn-cgi/trace",    p:function(t){ var m=String(t).match(/ip=([^\s]+)/); return m?m[1]:""; }},
+    {u:"https://api.ip.sb/ip",                    p:function(t){ return String(t||"").trim(); }}
+  ];
+  var i = 0;
+  /* 只接受 IPv4 / IPv6 形态：否则被墙或代理拦截时，回显服务返回的是
+     一段 HTML 报错页，会被当成 IP 存进去（v1.19.2 实测踩到） */
+  function ok(ip){
+    ip = String(ip==null?"":ip).trim();
+    if(!ip || ip.length > 45) return "";
+    if(/^\d{1,3}(\.\d{1,3}){3}$/.test(ip)) return ip;
+    if(/^[0-9a-fA-F:]{2,45}$/.test(ip) && ip.indexOf(":") > -1) return ip;   /* IPv6 */
+    return "";
+  }
+  function next(){
+    if(i >= srcs.length) return Promise.resolve("");
+    var s = srcs[i++];
+    var done = fetch(s.u, {cache:"no-store"}).then(function(r){ return r.ok ? r.text() : ""; })
+      .then(s.p).then(ok).catch(function(){ return ""; });
+    var timer = new Promise(function(res){ setTimeout(function(){ res(""); }, 2500); });
+    return Promise.race([done, timer]).then(function(ip){ return ip ? ip : next(); });
+  }
+  return next();
+}
+var logWarned = false;   /* 同一次页面会话只提示一次，免得控制台刷屏 */
+function logWarnOnce(e){
+  if(logWarned) return;
+  logWarned = true;
+  try{
+    console.warn("登录日志未写入。" + ((e && e.message) || e) +
+      "　→ 在 Neon SQL 编辑器整段执行 schema-loginlog.sql（末尾含 NOTIFY pgrst, 'reload schema';），然后刷新页面。");
+  }catch(e2){}
+}
+function logLogin(email, evt){
+  try{
+    var ua = "";
+    try{ ua = String((typeof navigator !== "undefined" && navigator.userAgent) ? navigator.userAgent : "").slice(0,300); }catch(e){}
+    var payload = function(ip){
+      return { p_email:String(email||""), p_evt:String(evt||"login"), p_ua:ua, p_app:APP_VERSION, p_ip:ip||"" };
+    };
+    fetchPublicIP().then(function(ip){
+      return apiRpc("api_log_login", payload(ip)).catch(function(){
+        /* 退到早期不带 ip 的四参数版本（老库），保证至少记到人 */
+        var p4 = payload(""); delete p4.p_ip;
+        return apiRpc("api_log_login", p4);
+      });
+    }).catch(logWarnOnce);
+  }catch(e){}
+}
 function doLogin(){
   var u=document.getElementById("lg-user").value.trim();
   var p=document.getElementById("lg-pass").value;
@@ -4353,6 +4688,7 @@ function doLogin(){
   err.textContent = "正在登录…";
   signIn(u, p, true).then(function(){
     lockClear(u);          /* 登录成功即清零失败计数 */
+    logLogin(u, "login");  /* 只写远端日志，界面无感 */
     err.textContent="";
     document.getElementById("login").classList.add("hidden");
     document.getElementById("app").classList.remove("hidden");
@@ -4768,7 +5104,9 @@ var VSET_DEFAULT = {vessel:"", port:"", passengers:[],   /* 单据抬头与收�
     beneficiaryCn:"\u6df1\u5733\u5b89\u901f\u8fbe\u8239\u8236\u4ee3\u7406\u6709\u9650\u516c\u53f8",
     accountCn:"755983936710000",
     bankCn:"\u62db\u5546\u94f6\u884c\u80a1\u4efd\u6709\u9650\u516c\u53f8\u6df1\u5733\u65b0\u65f6\u4ee3\u652f\u884c",
-    addressCn:"\u6df1\u5733\u5e02\u5357\u5c71\u533a\u540e\u6d77\u6ee8\u8def\u9e4f\u6da6\u5e7f\u573a3219"
+    addressCn:"\u6df1\u5733\u5e02\u5357\u5c71\u533a\u540e\u6d77\u6ee8\u8def\u9e4f\u6da6\u5e7f\u573a3219",
+    showEn:true,   /* 打印稿是否显示英文收款信息 */
+    showCn:true    /* 打印稿是否显示中文收款信息 */
   },
   /* 信纸抬头右上角联系方式 */
   contact: {
@@ -4797,10 +5135,11 @@ function normalizeVSettings(o){
       if(Array.isArray(o.locations[k])) d.locations[k] = o.locations[k].slice();
     });
   }
-  /* 单据抬头与银行信息：逐字段取，缺省回落到默认值 */
+  /* 单据抬头与银行信息：逐字段取，缺省回落到默认值。
+     showEn/showCn 是布尔（打印显示开关），需连布尔一起认，否则加载后开关丢失。 */
   if(o.bank && typeof o.bank === "object"){
     Object.keys(d.bank).forEach(function(k){
-      if(typeof o.bank[k] === "string") d.bank[k] = o.bank[k];
+      if(typeof o.bank[k] === "string" || typeof o.bank[k] === "boolean") d.bank[k] = o.bank[k];
     });
   }
   if(o.contact && typeof o.contact === "object"){
@@ -5052,17 +5391,21 @@ function openLetterhead(){
   set("bk-accEn", b.accountEn); set("bk-swift", b.swift); set("bk-addrEn", b.addressEn);
   set("bk-benCn", b.beneficiaryCn); set("bk-bankCn", b.bankCn);
   set("bk-accCn", b.accountCn); set("bk-addrCn", b.addressCn);
+  var setChk = function(id, v){ var el=document.getElementById(id); if(el) el.checked = (v!==false); };
+  setChk("bk-showEn", b.showEn); setChk("bk-showCn", b.showCn);
   document.getElementById("letterhead-mask").classList.remove("hidden");
 }
 function closeLetterhead(){ document.getElementById("letterhead-mask").classList.add("hidden"); }
 function saveLetterhead(){
   var get = function(id){ var el=document.getElementById(id); return el ? el.value.trim() : ""; };
+  var getChk = function(id){ var el=document.getElementById(id); return el ? !!el.checked : true; };
   vset.contact = { email:get("lh-email"), tel:get("lh-tel"), web:get("lh-web") };
   vset.bank = {
     beneficiaryEn:get("bk-benEn"), bankEn:get("bk-bankEn"),
     accountEn:get("bk-accEn"),     swift:get("bk-swift"), addressEn:get("bk-addrEn"),
     beneficiaryCn:get("bk-benCn"), bankCn:get("bk-bankCn"),
-    accountCn:get("bk-accCn"),     addressCn:get("bk-addrCn")
+    accountCn:get("bk-accCn"),     addressCn:get("bk-addrCn"),
+    showEn:getChk("bk-showEn"), showCn:getChk("bk-showCn")
   };
   persistVSet();
   syncDocPrintStyle();   /* 抬头改了，@page doc 里的联系方式也要跟着改 */
