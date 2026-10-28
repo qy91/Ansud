@@ -132,19 +132,19 @@
   /* 与 @media print 里 .quote .q-fee 的一套规则完全相同。
      全局 th,td{padding:11px 14px;font-size:13px} 的特异性只有 0,0,2，
      会被这里的类选择器压住，故加 !important 确认真实生效。 */
-  .invoice .q-fee{table-layout:fixed !important;width:100% !important}
+  .invoice .q-fee{table-layout:auto !important;width:100% !important}
   .invoice .q-fee th,.invoice .q-fee td{padding:1.1mm 2mm !important;font-size:10pt !important;
     line-height:1.25 !important;vertical-align:middle}
   .invoice .q-fee th{font-size:9.5pt !important}
-  /* 与打印块完全同一套百分比列宽（总和 100%，正好铺满 182mm 内容区），
-     屏幕预览与打印稿逐列对齐，不会出现「预览好看、打印走样」。 */
+  /* Item 列填满剩余宽度，其余列按内容自适应：窄列 nowrap 贴紧内容，
+     Remarks 允许换行（多行输入）。屏幕预览与打印稿逐列对齐。 */
   .invoice .q-fee th.col-no,.invoice .q-fee td.col-no{width:7mm !important}
-  .invoice .q-fee th.col-item,.invoice .q-fee td.col-item{width:45% !important}
-  .invoice .q-fee th.col-unit,.invoice .q-fee td.col-unit{width:8% !important}
-  .invoice .q-fee th.col-qty,.invoice .q-fee td.col-qty{width:6% !important}
-  .invoice .q-fee th.col-up,.invoice .q-fee td.col-up{width:17% !important}
-  .invoice .q-fee th.col-amt,.invoice .q-fee td.col-amt{display:table-cell !important;width:12% !important}
-  .invoice .q-fee th.col-rem,.invoice .q-fee td.col-rem{width:12% !important}
+  .invoice .q-fee th.col-item,.invoice .q-fee td.col-item{width:auto !important}
+  .invoice .q-fee th.col-unit,.invoice .q-fee td.col-unit,
+  .invoice .q-fee th.col-qty,.invoice .q-fee td.col-qty,
+  .invoice .q-fee th.col-up,.invoice .q-fee td.col-up,
+  .invoice .q-fee th.col-amt,.invoice .q-fee td.col-amt{white-space:nowrap !important;width:1% !important}
+  .invoice .q-fee th.col-rem,.invoice .q-fee td.col-rem{width:auto !important;white-space:nowrap !important}
 
   /* ---------- OKTB 打印（套 OKTB.pdf 模板信纸抬头，流程同 INVOICE） ---------- */
   #oktb-print{display:none}
@@ -363,6 +363,10 @@
   .quote .q-fee .col-chk{width:30px;text-align:center}
   .quote .q-fee .col-del{width:34px;text-align:center}
   .quote .q-fee input[type=text]{width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:6px;font-size:13px;font-family:inherit;background:#fff;color:#1d2939}
+  /* ITEM 列允许换行：编辑态用 textarea，打印态用 .ptxt（nl2br 已转 <br>） */
+  .quote .q-fee textarea.q-fee-ta{width:100%;min-height:40px;resize:vertical;padding:6px 8px;border:1px solid var(--line);border-radius:6px;font-size:13px;font-family:inherit;background:#fff;color:#1d2939;line-height:1.35}
+  .quote .q-fee textarea.q-fee-ta:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(11,94,156,.12)}
+  .quote .q-fee td.col-item{white-space:pre-wrap;word-break:break-word;vertical-align:top}
   .quote .q-fee input[type=text]:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(11,94,156,.12)}
   .quote .q-fee select{width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:6px;font-size:13px;font-family:inherit;background:#fff;color:#1d2939}
   .quote .q-fee select:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(11,94,156,.12)}
@@ -370,18 +374,31 @@
   /* 列宽用百分比：Item 占大头，其余列按内容需要分配。
      屏幕编辑态的表格里还有 col-chk(30px) 与 col-del(64px) 两个固定列，
      合计约占 12%，所以这里的百分比总和取 88%，正好把容器铺满、不留空隙。 */
-  .quote .q-fee{table-layout:fixed}
-  .quote .q-fee th.col-item,.quote .q-fee td.col-item{width:34%}
-  .quote .q-fee th.col-unit,.quote .q-fee td.col-unit{width:8%}
-  .quote .q-fee th.col-qty,.quote .q-fee td.col-qty{width:7%}
-  .quote .q-fee th.col-up,.quote .q-fee td.col-up{width:15%}
-  .quote .q-fee th.col-cost,.quote .q-fee td.col-cost{width:11%}
-  .quote .q-fee th.col-rem,.quote .q-fee td.col-rem{width:13%}
-  .quote .q-fee th.col-up{white-space:nowrap}
+  .quote .q-fee{table-layout:auto;width:100%}
+  /* Item 列填满剩余宽度；其余列按内容自适应——列宽取「表头文字 / 单元格内容」中较宽者（nowrap 不换行），
+     输入控件 width:100% 随列收缩，不再写死固定像素，实现真正的“内容自适应”。 */
+  .quote .q-fee th.col-item,.quote .q-fee td.col-item{width:auto}
+  .quote .q-fee th.col-unit,.quote .q-fee td.col-unit,
+  .quote .q-fee th.col-qty,.quote .q-fee td.col-qty,
+  .quote .q-fee th.col-up,.quote .q-fee td.col-up,
+  .quote .q-fee th.col-cost,.quote .q-fee td.col-cost,
+  .quote .q-fee th.col-amt,.quote .q-fee td.col-amt,
+  .quote .q-fee th.col-rem,.quote .q-fee td.col-rem{white-space:nowrap;width:1%}
+  .quote .q-fee td.col-unit input,.quote .q-fee td.col-qty input,
+  .quote .q-fee td.col-up input,.quote .q-fee td.col-cost input{
+    width:auto;min-width:0;field-sizing:content}
+  /* Remarks 多行输入按内容自适应宽度（不被 100% 拉满），与数字列口径一致；Item 列仍填满剩余 */
+  .quote .q-fee td.col-rem textarea.q-fee-ta{width:auto;max-width:100%;field-sizing:content}
   .quote .q-fee .col-cost{background:#fdf6f8}
   .quote .q-fee th.col-cost{background:#fbeef1}
-  /* Amount / No. / 打印用纯文本只在打印稿出现 */
-  .quote .q-fee .col-amt,.quote .q-fee .col-no,.quote .q-fee .ptxt{display:none}
+  /* 通行行（Unit / Qty / Unit Price 全空 → 合并成一格只显示 ITEM）：视觉上作小节标题，
+     左对齐、加粗、**无背景色**（v1.20.23 去掉底色，保持单据干净）；
+     里面仍是 textarea，但填满整格（不做按内容收缩）。 */
+  .quote .q-fee td.col-through{font-weight:700;text-align:left;background:none}
+  .quote .q-fee td.col-through textarea.q-fee-ta{width:100%;field-sizing:auto}
+  /* v1.20.21 起 Amount 列在屏幕列表也显示（跟在 Unit Price 之后）；
+     No. 与打印用纯文本（.ptxt）仍只在打印稿出现 */
+  .quote .q-fee .col-no,.quote .q-fee .ptxt{display:none}
   /* Qty 是数字列，收窄后要给足输入空间：只在屏幕态收紧内边距，
      打印态仍用 @media print 里的 1.1mm 2mm 统一内边距。
      Unit 列同理，横向内边距收一点，"GMGT" 这类缩写才不会被裁掉。 */
@@ -466,24 +483,24 @@
     /* FEE SCHEDULE 打印样式：报价单与 INVOICE 共用同一套 —— 紧凑行距 + 窄 Qty 列。
        报价单的输入框在打印时已去边框变纯文本，这里再统一行高/内边距/字号，
        两份单据的表格观感就完全一致。 */
-    .quote .q-fee{table-layout:fixed;width:100%}
+    .quote .q-fee{table-layout:auto;width:100%}
     .quote .q-fee th,.quote .q-fee td{padding:1.1mm 2mm;font-size:10pt;line-height:1.25;
       vertical-align:middle}
     .quote .q-fee th{font-size:9.5pt}
-    /* 打印列宽与 .invoice 预览块完全同一套（总和 100%，铺满 182mm 内容区）：
-       Item 占最大份额，Unit / Qty / Unit Price 收窄，Amount / Remarks 适度留白。 */
+    /* 打印列宽：Item 填满剩余，其余列按内容自适应（窄列 nowrap 贴紧内容，Remarks 适度留白可换行） */
     .quote .q-fee th.col-no,.quote .q-fee td.col-no{width:7mm}
-    .quote .q-fee th.col-item,.quote .q-fee td.col-item{width:45%}
-    .quote .q-fee th.col-unit,.quote .q-fee td.col-unit{width:8%}
-    .quote .q-fee th.col-qty,.quote .q-fee td.col-qty{width:6%}
-    .quote .q-fee th.col-up,.quote .q-fee td.col-up{width:17%}
-    .quote .q-fee th.col-amt,.quote .q-fee td.col-amt{display:table-cell !important;width:12%}
+    .quote .q-fee th.col-item,.quote .q-fee td.col-item{width:auto}
+    .quote .q-fee th.col-unit,.quote .q-fee td.col-unit,
+    .quote .q-fee th.col-qty,.quote .q-fee td.col-qty,
+    .quote .q-fee th.col-up,.quote .q-fee td.col-up,
+    .quote .q-fee th.col-amt,.quote .q-fee td.col-amt{white-space:nowrap;width:1%}
     /* No. 列同样只在打印稿出现（基础样式里 .col-no 是 display:none，这里捞回来） */
     .quote .q-fee th.col-no,.quote .q-fee td.col-no{display:table-cell !important}
-    .quote .q-fee th.col-rem,.quote .q-fee td.col-rem{width:12%}
+    .quote .q-fee th.col-rem,.quote .q-fee td.col-rem{width:auto;white-space:nowrap}
     /* 打印时用可换行的纯文本替代单行 input，与 INVOICE 的表格观感一致 */
     .quote .q-fee td input[type=text]{display:none !important}
-    .quote .q-fee td .ptxt{display:inline !important;white-space:normal}
+    .quote .q-fee td textarea{display:none !important}
+    .quote .q-fee td .ptxt{display:inline !important;white-space:pre-wrap}
     .quote .q-fee td.num .ptxt{display:block !important;text-align:right}
     .quote .q-fee .col-qty input,.quote .q-fee td.col-qty{text-align:right}
     .quote .q-fee input[type=text]{font-size:10pt !important;line-height:1.25}
@@ -1245,7 +1262,7 @@
 /* ---------------- 版本号 ----------------
    显示在左上角系统名称右侧。每次做了可见改动，往上加：
    小修：末位 +1；新增功能：中间位 +1。 */
-var APP_VERSION = "v1.20.6";
+var APP_VERSION = "v1.20.23";
 (function(){ var el=document.getElementById("appVer"); if(el) el.textContent=APP_VERSION; })();
 
 /* ---------------- i18n ---------------- */
@@ -1699,6 +1716,12 @@ window.addEventListener("resize", function(){ autoGrowAllTA(); });
 function fmt(s){ if(!s) return "—"; return s.replace("T"," ").slice(0,16); }
 function toast(m){ var t=document.getElementById("toast"); t.textContent=m; t.classList.add("show"); setTimeout(function(){t.classList.remove("show");},1800); }
 function esc(s){ return (s||"").replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c];}); }
+/* 换行符转 <br>：必须在 esc() 之后调用（否则 <br> 会被转义成 &lt;br&gt;）。
+   用于 ITEM 这类允许换行的单元格，让用户在编辑框按回车输入的换行在打印稿里真正折行。 */
+function nl2br(s){ return (s==null?"":String(s)).replace(/\r\n|\r|\n/g,"<br>"); }
+/* 打印稿防连字符断行：把「-」换成不换行连字符 U+2011（外观相同，但浏览器不会在此处折行）。
+   必须在 esc() 之后调用（esc 不产生「-」，nl2br 的 <br> 也不含「-」，先后均安全）。 */
+function nbHyphen(s){ return (s==null?"":String(s)).replace(/-/g,"\u2011"); }
 function statusBadge(st){ var cls={in:"b-in",arr:"b-arr",out:"b-out",proc:"b-proc"}[st]; return '<span class="badge '+cls+'">'+(L[lang][st]||st)+'</span>'; }
 
 /* ---------------- stats ---------------- */
@@ -2294,40 +2317,91 @@ var quoteCurrency = "CNY";
 var quoteItemSeq = 0;   /* 给每条收费项分配稳定 _id，用于拖动排序时定位（不被行号 i 干扰） */
 /* 当前报价单的编号/日期（generateQuote 时确定；保存后随航次存库，重开不再变） */
 var quoteNo = "", quoteDate = "";
+/* 通行行判定：Unit / Qty / Unit Price 三项都为空 → 该行合并成一格通栏，只显示 ITEM 内容
+   （典型用法：在费用明细里插「PORT CHARGES」这类小节标题）。三列只要填了任意一项就是普通行。 */
+function feeRowIsThrough(f){
+  return !String(f.unit==null?"":f.unit).trim() &&
+         !String(f.qty==null?"":f.qty).trim() &&
+         !String(f.price==null?"":f.price).trim();
+}
 function buildQuoteFeeRows(){
   var tb=document.getElementById("quote-fee-body"); if(!tb) return;
   if(!quoteItems.length){
     tb.innerHTML='<tr><td colspan="11" class="empty">暂无收费项，点击下方「＋ 添加收费项」手动添加。</td></tr>';
     return;
   }
+  /* 行序号：通行行不占号，只对普通行连续编号（1,2,3…），故先算好再渲染 */
+  var seq = 0;
+  var feeNos = quoteItems.map(function(it){
+    return feeRowIsThrough(it) ? "" : String(++seq);
+  });
   /* 每格 = 屏幕用 input（可编辑）+ 打印用 .ptxt 纯文本（可换行）。
-     input 是单行控件，长描述在窄列里会被截断，打印稿必须换成会折行的文本。 */
+     input 是单行控件，长描述在窄列里会被截断，打印稿必须换成会折行的文本。
+     ITEM 列（key==="item"）用多行 textarea，允许按回车输入换行，打印稿用 nl2br 真实折行。 */
   tb.innerHTML = quoteItems.map(function(it,i){
     if(it._id==null) it._id = "q"+(++quoteItemSeq);   /* 稳定唯一 id，拖动排序据此定位 */
     var off = it.inc ? "" : " off";
-    function cell(cls, val, key, ph, readonly){
+    function cell(cls, val, key, ph, readonly, ml){
+      var edit = ml
+        ? '<textarea rows="2" class="q-fee-ta" placeholder="'+ph+'" oninput="updQuoteItem('+i+',\''+key+'\',this)">'+esc(val)+'</textarea>'
+        : '<input type="text" value="'+esc(val)+'" placeholder="'+ph+'" oninput="updQuoteItem('+i+',\''+key+'\',this)">';
       var inp = readonly
-        ? '<span class="ptxt">'+esc(val)+'</span>'
-        : '<input type="text" value="'+esc(val)+'" placeholder="'+ph+'" oninput="updQuoteItem('+i+',\''+key+'\',this)">'+
-          '<span class="ptxt">'+esc(val)+'</span>';
+        ? '<span class="ptxt">'+nl2br(esc(val))+'</span>'
+        : edit+'<span class="ptxt">'+nl2br(esc(val))+'</span>';
       return '<td'+(cls?' class="'+cls+'"':'')+'>'+inp+'</td>';
+    }
+    /* 通行行：Unit / Qty / Unit Price 全空 → 整行合并成一格，只显示 ITEM 内容。
+       仍保留拖拽手柄与删除/复制按钮，否则该行就没法编辑和排序了。 */
+    if(feeRowIsThrough(it)){
+      return '<tr class="q-fee-through'+off+'" data-id="'+it._id+'">'+
+        '<td class="col-drag"><span class="q-drag" title="按住拖动调整顺序">⠿</span></td>'+
+        '<td class="col-chk"><input type="checkbox" class="q-fee-chk" '+(it.inc?"checked":"")+' onchange="toggleQuoteItem('+i+',this)"></td>'+
+        '<td class="col-through" colspan="8">'+
+          '<textarea rows="1" class="q-fee-ta" placeholder="收费项目" oninput="updQuoteItem('+i+',\'item\',this)">'+esc(it.item==null?"":it.item)+'</textarea>'+
+          '<span class="ptxt">'+nl2br(esc(it.item==null?"":it.item))+'</span>'+
+        '</td>'+
+        '<td class="col-del"><button type="button" class="q-fee-copy" onclick="copyQuoteItem('+i+')" title="在本行下方插入一条相同的收费项">⧉</button>'+
+          '<button type="button" class="q-fee-del" onclick="delQuoteItem('+i+')">✕</button></td>'+
+      '</tr>';
     }
     return '<tr class="'+off+'" data-id="'+it._id+'">'+
       '<td class="col-drag"><span class="q-drag" title="按住拖动调整顺序">⠿</span></td>'+
       '<td class="col-chk"><input type="checkbox" class="q-fee-chk" '+(it.inc?"checked":"")+' onchange="toggleQuoteItem('+i+',this)"></td>'+
-      '<td class="num col-no">'+esc(String(i+1))+'</td>'+
-      cell("col-item", it.item, "item", "收费项目")+
+      '<td class="num col-no">'+esc(feeNos[i])+'</td>'+
+      cell("col-item", it.item, "item", "收费项目", false, true)+
       cell("col-unit", it.unit, "unit", "计费单位")+
       cell("num col-qty", it.qty, "qty", "数量")+
       cell("num col-up", it.price, "price", "单价")+
+      '<td class="num col-amt" data-amt="'+i+'"></td>'+
       '<td class="num col-cost"><input type="text" value="'+esc(it.cost)+'" placeholder="成本" oninput="updQuoteItem('+i+',\'cost\',this)"><span class="ptxt">'+esc(it.cost)+'</span></td>'+
-            '<td class="num col-amt" data-amt="'+i+'"></td>'+
-      cell("col-rem", it.note, "note", "备注")+
+      cell("col-rem", it.note, "note", "备注", false, true)+
       '<td class="col-del"><button type="button" class="q-fee-copy" onclick="copyQuoteItem('+i+')" title="在本行下方插入一条相同的收费项">⧉</button>'+
         '<button type="button" class="q-fee-del" onclick="delQuoteItem('+i+')">✕</button></td>'+
     '</tr>';
   }).join("");
+  qFeeAutoSize();
   qBindFeeDrag(tb);
+}
+/* 收费项输入控件按内容自适应宽度：数字/单位 input 用 size 贴合已输入字符数，
+   Remarks 多行 textarea 用 cols 贴合最长一行；列本身 table-layout:auto + width:1%，
+   于是最终列宽 = max(表头文字宽度, 输入内容宽度)——输入变长列自动变宽、变短自动收窄。 */
+function qFeeAutoSize(){
+  var tb=document.getElementById("quote-fee-body"); if(!tb) return;
+  var ins=tb.querySelectorAll("td.col-unit input,td.col-qty input,td.col-up input,td.col-cost input,td.col-rem textarea");
+  for(var i=0;i<ins.length;i++) qFeeAutoSizeEl(ins[i]);
+}
+function qFeeAutoSizeEl(el){
+  if(!el) return;
+  var v=el.value||"";
+  if(el.tagName==="TEXTAREA"){
+    var p=el.parentNode;
+    if(!(p && /(^| )col-rem( |$)/.test(p.className||""))) return; /* 仅 Remarks 列自适应；Item 列保持填满 */
+    var lines=v.split("\n"),max=0,i;
+    for(i=0;i<lines.length;i++){ if(lines[i].length>max) max=lines[i].length; }
+    el.cols=Math.max(12,max+1);
+  }else{
+    el.size=Math.max(4,v.length+1);
+  }
 }
 /* 拖动排序：把各事件用事件委托绑在 tbody 上（tbody 每次重渲染会重建，旧监听随之回收）。
    为避免与行内 input 文本选择冲突，只有按住最左的 ⠿ 手柄才允许拖整行：
@@ -2402,6 +2476,7 @@ function updQuoteItem(i,key,el){ if(!quoteItems[i]) return; quoteItems[i][key]=e
     var pt=cell.querySelector(".ptxt");
     if(pt) pt.textContent=el.value;
   }
+  qFeeAutoSizeEl(el);
   if(key==="price"||key==="qty"||key==="cost") renderQuoteTotal();
 }
 function toggleQuoteItem(i,el){ if(!quoteItems[i]) return; quoteItems[i].inc=el.checked; var tr=el.closest("tr"); if(tr) tr.classList.toggle("off",!el.checked); renderQuoteTotal(); }
@@ -2546,7 +2621,7 @@ function generateQuote(){
         '<div class="q-feebar"><span class="q-hint">'+hint+'</span>'+curSel+'</div>'+
         qPickBarHTML(s)+
         '<table class="q-fee"><thead><tr>'+
-          '<th class="col-drag"></th><th class="col-chk"></th><th class="num col-no">No.</th><th class="col-item">Item</th><th class="col-unit">Unit</th><th class="col-qty" style="text-align:right">Qty</th><th class="col-up" style="text-align:right">Unit Price ('+esc(quoteCurrency)+')</th><th class="col-cost" style="text-align:right">Cost</th><th class="col-amt" style="text-align:right">Amount</th><th class="col-rem">Remarks</th><th class="col-del"></th>'+
+          '<th class="col-drag"></th><th class="col-chk"></th><th class="num col-no">No.</th><th class="col-item">Item</th><th class="col-unit">Unit</th><th class="col-qty" style="text-align:right">Qty</th><th class="col-up" style="text-align:right">Unit Price</th><th class="col-amt" style="text-align:right">Amount</th><th class="col-cost" style="text-align:right">Cost</th><th class="col-rem">Remarks</th><th class="col-del"></th>'+
         '</tr></thead><tbody id="quote-fee-body"></tbody></table>'+
         '<button type="button" class="btn sm ghost q-fee-add" onclick="addQuoteItem()">＋ 添加收费项</button>'+
         '<div class="q-total" id="quote-total">TOTAL: —</div>'+
@@ -2861,18 +2936,29 @@ function invBankBlock(){
 function buildInvoiceHtml(s, items, currency, qno, qdate){
   var client = localClients.find(function(c){return c.company===s.principal;});
   var m = quoteMath(items, currency);
+  /* 行序号：通行行不占号，只对普通行连续编号（1,2,3…），故先算好再渲染 */
+  var seq = 0;
+  var feeNos = (items||[]).filter(function(f){ return f.inc!==false; }).map(function(f){
+    return feeRowIsThrough(f) ? "" : String(++seq);
+  });
   var rows = (items||[]).filter(function(f){ return f.inc!==false; }).map(function(f,i){
     var q = quoteQty(f.qty);
     var p = parseFloat(String(f.price==null?"":f.price).replace(/[^0-9.]/g,""));
     var amt = (isNaN(p) || String(f.price).trim()==="") ? "" : fmtMoney(round2(p*q));
+    /* 通行行：Unit / Qty / Unit Price 全空 → 整行合并成一格，只显示 ITEM 内容，且不占行序号 */
+    if(feeRowIsThrough(f)){
+      return '<tr class="q-fee-through">'+
+        '<td class="col-through" colspan="7">'+nl2br(esc(f.item||"\u2014"))+'</td>'+
+      '</tr>';
+    }
     return '<tr>'+
-      '<td class="col-no" style="text-align:center">'+(i+1)+'</td>'+
-      '<td class="col-item">'+esc(f.item||"\u2014")+'</td>'+
+      '<td class="col-no" style="text-align:center">'+esc(feeNos[i])+'</td>'+
+      '<td class="col-item">'+nl2br(esc(f.item||"\u2014"))+'</td>'+
       '<td class="col-unit" style="text-align:center">'+esc(f.unit||"\u2014")+'</td>'+
       '<td class="num col-qty">'+esc(f.qty==null||f.qty===""?"1":f.qty)+'</td>'+
       '<td class="num col-up">'+(isNaN(p)||String(f.price).trim()===""?"\u2014":fmtMoney(p))+'</td>'+
             '<td class="num col-amt">'+(amt===""?"\u2014":amt)+'</td>'+
-      '<td class="col-rem">'+esc(f.note||"")+'</td>'+
+      '<td class="col-rem">'+nbHyphen(nl2br(esc(f.note||"")))+'</td>'+
     '</tr>';
   }).join("");
   if(!rows) rows = '<tr><td colspan="7" class="empty">\u2014</td></tr>';
@@ -2904,7 +2990,7 @@ function buildInvoiceHtml(s, items, currency, qno, qdate){
       '<table class="q-fee"><thead><tr>'+
         '<th class="col-no">No.</th><th class="col-item">Item</th><th class="col-unit">Unit</th>'+
         '<th class="col-qty" style="text-align:right">Qty</th>'+
-        '<th class="col-up" style="text-align:right">Unit Price ('+esc(currency)+')</th>'+
+        '<th class="col-up" style="text-align:right">Unit Price</th>'+
         '<th class="col-amt" style="text-align:right">Amount</th><th class="col-rem">Remarks</th>'+
       '</tr></thead><tbody>'+rows+'</tbody></table>'+
       invAmountBlock(m, currency)+
