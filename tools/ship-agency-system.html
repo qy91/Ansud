@@ -93,6 +93,14 @@
   .toolbar input,.toolbar select{padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px;background:#fff}
   .toolbar input{min-width:220px}
   .toolbar .right{margin-left:auto;display:flex;gap:10px}
+  .toolbar label{display:inline-flex;align-items:center;gap:4px;font-size:13px;color:#475467}
+  .toolbar .settle-or{color:#98a2b3;font-size:13px}
+  .settle-sum{display:flex;flex-wrap:wrap;gap:8px 28px;padding:12px 16px;border-top:2px solid var(--brand);background:#f5f9fc;font-size:13px;color:#344054}
+  .settle-sum .ss-title{width:100%;font-weight:600;color:#1d2939}
+  .settle-sum .ss-row{display:flex;flex-wrap:wrap;gap:18px;align-items:center}
+  .settle-sum .ss-cur{font-weight:700;color:var(--brand-d)}
+  .settle-sum b{font-variant-numeric:tabular-nums}
+  .settle-sum .ss-note{color:#98a2b3}
   /* 每页数量设置 */
   .psp{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);white-space:nowrap}
   .psp select{padding:7px 9px;border:1px solid var(--line);border-radius:8px;font-size:13px;background:#fff;font-family:inherit}
@@ -128,6 +136,8 @@
   body.inv-preview .topbar,body.inv-preview .layout,body.inv-preview .toast,body.inv-preview .side,
   body.inv-preview #quote-mask{display:none}
   body.inv-preview #inv-back{display:block}
+  body.inv-preview #inv-print-btn{display:block}
+  #inv-print-btn{left:auto;right:16px}
   .invoice{width:210mm;margin:0 auto;background:#fff;padding:14mm;box-sizing:border-box}
   /* 与 @media print 里 .quote .q-fee 的一套规则完全相同。
      全局 th,td{padding:11px 14px;font-size:13px} 的特异性只有 0,0,2，
@@ -574,6 +584,11 @@
   .b-arr{background:#fef3c7;color:#b45309}
   .b-out{background:#e5e7eb;color:#4b5563}
   .b-proc{background:#dbeafe;color:#1d4ed8}
+  .b-settled{background:#fee2e2;color:#b91c1c}
+  /* 离港结算锁定提示 */
+  .lock-note{margin:2px 0 14px;padding:10px 14px;border:1px solid #f3c0c0;background:#fff5f5;color:#b91c1c;border-radius:8px;font-size:13px;font-weight:600}
+  .lock-note .ln-sub{display:block;font-weight:400;color:#9b4a4a;font-size:12px;margin-top:3px}
+  .btn.sv:disabled,.btn.sm:disabled{opacity:.5;cursor:not-allowed}
   .icon-btn{border:1px solid var(--line);background:#fff;border-radius:7px;padding:6px 10px;font-size:13px;cursor:pointer;color:var(--ink)}
   .icon-btn:hover{background:#f1f5f9}
   .icon-btn.danger:hover{background:#fee2e2;color:var(--danger);border-color:#fecaca}
@@ -796,6 +811,7 @@
     <div class="side">
       <div class="sec">导航菜单</div>
       <a class="nav active" data-page="dashboard" onclick="showPage('dashboard');renderDashboard()">📋 当前代理船舶</a>
+      <a class="nav" data-page="settle" onclick="showPage('settle');renderSettle()">💰 航次结算</a>
       <a class="nav" data-page="voyage" onclick="showPage('voyage');initVoyagePage()">🚢 船期查询</a>
       <a class="nav" data-page="vessels" onclick="showPage('vessels');renderVessels()">🛠 船舶基本信息维护</a>
       <a class="nav" data-page="agents" onclick="showPage('agents');renderAgents()">🤝 本港代理/服务商维护</a>
@@ -1007,12 +1023,34 @@
           <div class="block-b" id="blk-profit"></div>
         </div>
 
+        <div id="detail-lock" class="lock-note hidden"></div>
         <div class="detail-actions">
           <button class="btn sm sv" id="detail-edit-btn" onclick="startEdit()">编辑</button>
           <button class="btn sm ghost hidden" id="detail-cancel-btn" onclick="cancelEdit()">取消</button>
           <button class="btn sm danger hidden" id="detail-delete-btn" onclick="detailDelete()">删除</button>
           <button class="btn sm" id="detail-quote-btn" onclick="generateQuote()">📄 报价单/账单</button>
-          <button class="btn sm ghost" onclick="gotoVoucher(currentId)">🎫 生成交通凭证</button>
+          <button class="btn sm ghost" id="detail-voucher-btn" onclick="gotoVoucher(currentId)">🎫 生成交通凭证</button>
+        </div>
+      </div>
+
+      <!-- SETTLE (航次结算) -->
+      <div id="page-settle" class="page hidden">
+        <div class="page-title">航次结算 <span class="en">Voyage Settlement</span></div>
+        <div class="page-desc">状态为「离港结算」的代理船舶自动归集于此。这些航次的代理信息已锁定（仅可查看，无法修改）。</div>
+        <div class="block">
+          <div class="block-h">📑 结算清单 <span class="en">Settled Voyages</span> <span id="settle-count" class="count"></span></div>
+          <div class="block-b">
+            <div class="toolbar" id="settle-filter">
+              <label>月份
+                <select id="settle-month" onchange="renderSettle()"><option value="">全部</option></select>
+              </label>
+              <span class="settle-or">或自定义区间：</span>
+              <label>起始<input type="date" id="settle-from" onchange="renderSettle()"></label>
+              <label>结束<input type="date" id="settle-to" onchange="renderSettle()"></label>
+              <button type="button" class="btn sm ghost" onclick="settleResetFilter()">重置</button>
+            </div>
+            <div id="blk-settle"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -1262,13 +1300,13 @@
 /* ---------------- 版本号 ----------------
    显示在左上角系统名称右侧。每次做了可见改动，往上加：
    小修：末位 +1；新增功能：中间位 +1。 */
-var APP_VERSION = "v1.20.23";
+var APP_VERSION = "v1.20.31";
 (function(){ var el=document.getElementById("appVer"); if(el) el.textContent=APP_VERSION; })();
 
 /* ---------------- i18n ---------------- */
 var L = {
-  zh:{in:"在港",arr:"即将到港",out:"已离港",proc:"办理中"},
-  en:{in:"In Port",arr:"Arriving",out:"Departed",proc:"Processing"}
+  zh:{in:"在港",arr:"即将到港",out:"已离港",proc:"办理中",settled:"离港结算"},
+  en:{in:"In Port",arr:"Arriving",out:"Departed",proc:"Processing",settled:"Settled"}
 };
 var lang = "zh";
 
@@ -1604,7 +1642,8 @@ function clientOpts(){
 var statusOpts = [
   {v:"in",   t:"在港"},
   {v:"arr",  t:"即将到港"},
-  {v:"out",  t:"已离港"}
+  {v:"out",  t:"已离港"},
+  {v:"settled", t:"离港结算"}
 ];
 var flagOptsDefault = [
   {v:"中国 CHINA", t:"中国 CHINA"},
@@ -1722,7 +1761,7 @@ function nl2br(s){ return (s==null?"":String(s)).replace(/\r\n|\r|\n/g,"<br>"); 
 /* 打印稿防连字符断行：把「-」换成不换行连字符 U+2011（外观相同，但浏览器不会在此处折行）。
    必须在 esc() 之后调用（esc 不产生「-」，nl2br 的 <br> 也不含「-」，先后均安全）。 */
 function nbHyphen(s){ return (s==null?"":String(s)).replace(/-/g,"\u2011"); }
-function statusBadge(st){ var cls={in:"b-in",arr:"b-arr",out:"b-out",proc:"b-proc"}[st]; return '<span class="badge '+cls+'">'+(L[lang][st]||st)+'</span>'; }
+function statusBadge(st){ var cls={in:"b-in",arr:"b-arr",out:"b-out",proc:"b-proc",settled:"b-settled"}[st]; return '<span class="badge '+cls+'">'+(L[lang][st]||st)+'</span>'; }
 
 /* ---------------- stats ---------------- */
 function updateStats(){
@@ -2210,6 +2249,9 @@ function delTodo(i){ editTodos.splice(i,1); renderTodoBlock(); }
 function renderDetail(){
   var s = data.find(function(x){return x.id===currentId;});
   if(!s){ showPage("dashboard"); renderDashboard(); return; }
+  /* 离港结算的航次：强制只读，禁止进入编辑模式 */
+  var locked = (s.status==="settled");
+  if(locked) editing=false;
   autoGrowAllTA();
   document.getElementById("detail-title").innerHTML = esc(s.cn)+'<span class="en">'+esc(s.en)+'</span>';
   document.getElementById("detail-status").innerHTML = editing ? "" : statusBadge(s.status);
@@ -2226,14 +2268,28 @@ function renderDetail(){
   var eb=document.getElementById("detail-edit-btn");
   var cb=document.getElementById("detail-cancel-btn");
   var db=document.getElementById("detail-delete-btn");
-  if(editing){
-    eb.textContent = lang==="zh"?"保存":"Save";
-    eb.className="btn sm sv"; eb.onclick=saveDetail;
-    cb.classList.remove("hidden"); db.classList.add("hidden");
+  var qb=document.getElementById("detail-quote-btn");
+  var vb=document.getElementById("detail-voucher-btn");
+  var lk=document.getElementById("detail-lock");
+  if(locked){
+    /* 已结算：隐藏编辑/取消/删除，禁用报价单与凭证（均会改动记录），并显示锁定提示 */
+    eb.classList.add("hidden"); cb.classList.add("hidden"); db.classList.add("hidden");
+    if(qb) qb.disabled=true;
+    if(vb) vb.disabled=true;
+    if(lk){ lk.classList.remove("hidden"); lk.innerHTML='🔒 该航次已「离港结算」，所有代理信息已锁定，仅可查看，无法修改。'+(s.settledAt?('<span class="ln-sub">结算时间：'+esc(fmt(s.settledAt))+'</span>'):''); }
   } else {
-    eb.textContent = lang==="zh"?"编辑":"Edit";
-    eb.className="btn sm sv"; eb.onclick=startEdit;
-    cb.classList.add("hidden"); db.classList.remove("hidden");
+    if(lk) lk.classList.add("hidden");
+    if(qb) qb.disabled=false;
+    if(vb) vb.disabled=false;
+    if(editing){
+      eb.textContent = lang==="zh"?"保存":"Save";
+      eb.className="btn sm sv"; eb.onclick=saveDetail; eb.classList.remove("hidden");
+      cb.classList.remove("hidden"); db.classList.add("hidden");
+    } else {
+      eb.textContent = lang==="zh"?"编辑":"Edit";
+      eb.className="btn sm sv"; eb.onclick=startEdit; eb.classList.remove("hidden");
+      cb.classList.add("hidden"); db.classList.remove("hidden");
+    }
   }
 }
 /* ---------------- 预估毛利（仅详情页内部显示） ---------------- */
@@ -2265,12 +2321,14 @@ function profitHTML(s){
 }
 function startEdit(){
   var s=data.find(function(x){return x.id===currentId;}); if(!s) return;
+  if(s.status==="settled"){ toast("该航次已离港结算，信息已锁定，无法编辑"); return; }
   editTodos = (s.todos||[]).map(function(t){return {title:t.title||"",detail:t.detail||"",done:!!t.done,type:(t.type||"normal"),onCount:(t.onCount||0),offCount:(t.offCount||0),crewOn:(t.crewOn||[]).map(crewClean),crewOff:(t.crewOff||[]).map(crewClean)};});
   editing=true; renderDetail();
 }
 function cancelEdit(){ editing=false; renderDetail(); }
 function saveDetail(){
   var s=data.find(function(x){return x.id===currentId;}); if(!s) return;
+  if(s.status==="settled"){ toast("该航次已离港结算，信息已锁定，无法保存"); return; }
   var upd={};
   allFields.forEach(function(f){
     if(f.type==="multiselect"){ upd[f.key] = multiSelVal("d-"+f.key); return; }
@@ -2281,13 +2339,162 @@ function saveDetail(){
   if(upd.eta) upd.eta=upd.eta.replace("T"," ");
   if(upd.etd) upd.etd=upd.etd.replace("T"," ");
   upd.todos = editTodos.map(serializeTodo);
+  /* 状态由非结算转为「离港结算」时记录结算时间（用于航次结算列表） */
+  if(upd.status==="settled" && s.status!=="settled") upd.settledAt = new Date().toISOString();
   Object.assign(s,upd);
   save(data); editing=false; renderDetail(); refresh(); toast("已保存");
 }
 function detailDelete(){
+  var s=data.find(function(x){return x.id===currentId;}); if(s && s.status==="settled"){ toast("该航次已离港结算，信息已锁定，无法删除"); return; }
   if(!confirm("确认删除该代理船舶记录？")) return;
   data=data.filter(function(x){return x.id!==currentId;});
   save(data); showPage("dashboard"); refresh(); toast("已删除");
+}
+/* ---------------- 航次结算：列出所有 status==="settled" 的航次 ----------------
+   状态改为「离港结算」即自动归集于此（无需单独建表，filter 保证只显示离港结算信息）；
+   点击行 → 屏幕预览 INVOICE；行末「取消结算」按钮把状态改回「已离港」并移出本清单。 */
+/* 航次结算：依「离泊时间 etd」做日期筛选。
+   筛选器 = 实际月份下拉（由已结算航次的 etd 派生，真实存在才出现）+ 自定义起止日期区间（二选一，选了月份则区间让位）。 */
+var settleDefaulted=false;
+function settlePopulateMonths(){
+  var sel=document.getElementById("settle-month"); if(!sel) return;
+  var set={};
+  (data||[]).forEach(function(s){
+    if(s.status==="settled" && s.etd && s.etd.length>=7){
+      var m=s.etd.slice(0,7);
+      if(m && /^\d{4}-\d{2}$/.test(m)) set[m]=true;
+    }
+  });
+  var months=Object.keys(set).sort().reverse();
+  var cur=sel.value;
+  var html='<option value="">全部</option>'+months.map(function(m){
+    return '<option value="'+m+'">'+m.slice(0,4)+'年'+m.slice(5)+'月</option>';
+  }).join("");
+  sel.innerHTML=html;
+  if(cur && set[cur]) sel.value=cur; else sel.value="";
+  /* 首次渲染默认选中「本月」（仅当本月确有结算数据时）；之后尊重用户选择 */
+  if(!settleDefaulted){
+    var now=new Date();
+    var cm=now.getFullYear()+"-"+pad2(now.getMonth()+1);
+    if(set[cm]) sel.value=cm;
+    settleDefaulted=true;
+  }
+}
+function settleFiltered(){
+  var list=(data||[]).filter(function(s){ return s.status==="settled"; });
+  var sel=document.getElementById("settle-month");
+  var month=sel?sel.value:"";
+  var fv=(document.getElementById("settle-from")||{value:""}).value;
+  var tv=(document.getElementById("settle-to")||{value:""}).value;
+  if(month){
+    list=list.filter(function(s){ return s.etd && s.etd.slice(0,7)===month; });
+  } else if(fv || tv){
+    list=list.filter(function(s){
+      if(!s.etd) return false;
+      var d=s.etd.slice(0,10);
+      if(fv && d<fv) return false;
+      if(tv && d>tv) return false;
+      return true;
+    });
+  }
+  return list;
+}
+function settleResetFilter(){
+  var sel=document.getElementById("settle-month"); if(sel) sel.value="";
+  var f=document.getElementById("settle-from"); if(f) f.value="";
+  var t=document.getElementById("settle-to"); if(t) t.value="";
+  renderSettle();
+}
+function renderSettle(){
+  var box=document.getElementById("blk-settle"); if(!box) return;
+  var cnt=document.getElementById("settle-count");
+  settlePopulateMonths();
+  var list=settleFiltered();
+  if(cnt) cnt.textContent = list.length ? (list.length+" 条") : "";
+  if(!list.length){
+    var total=(data||[]).filter(function(s){return s.status==="settled";}).length;
+    box.innerHTML='<div class="empty" style="padding:20px">'+
+      (total ? '所选日期区间内没有符合条件的「离港结算」航次。' : '暂无「离港结算」状态的代理船舶。将某航次状态改为「离港结算」后，会自动归集到这里。')+
+      '</div>';
+    return;
+  }
+  var rows = list.map(function(s){
+    var q=s.quote;
+    var cur = (q && q.currency) || "CNY";
+    var m = quoteMath((q&&q.items)||[], cur);
+    var costTxt  = m.hasCost  ? (fmtMoney(m.costSum)+" "+cur)  : "—";
+    var quoteTxt = m.hasQuote ? (fmtMoney(m.quoteSum)+" "+cur) : "—";
+    var profitTxt= (m.hasCost && m.hasQuote) ? (fmtMoney(m.margin)+" "+cur+" ("+m.rate.toFixed(1)+"%)") : "—";
+    return '<tr onclick="previewInvoice('+s.id+')" style="cursor:pointer">'+
+      '<td>'+esc(s.cn||"")+(s.en?' <span class="en">'+esc(s.en)+'</span>':'')+'</td>'+
+      '<td>'+esc(s.principal||"—")+'</td>'+
+      '<td>'+esc(s.port||"—")+'</td>'+
+      '<td>'+fmt(s.etd)+'</td>'+
+      '<td style="text-align:right">'+costTxt+'</td>'+
+      '<td style="text-align:right">'+quoteTxt+'</td>'+
+      '<td style="text-align:right">'+profitTxt+'</td>'+
+      '<td>'+(s.settledAt?fmt(s.settledAt):"—")+'</td>'+
+      '<td style="text-align:right;white-space:nowrap"><button type="button" class="btn sm ghost" onclick="event.stopPropagation();cancelSettle('+s.id+')">取消结算</button></td>'+
+    '</tr>';
+  }).join("");
+  var html = '<table><thead><tr>'+
+    '<th>船名</th><th>委托方</th><th>港口</th><th>离泊时间</th>'+
+    '<th style="text-align:right">成本合计</th><th style="text-align:right">报价合计</th>'+
+    '<th style="text-align:right">利润（利润率）</th><th>结算时间</th><th></th>'+
+    '</tr></thead><tbody>'+rows+'</tbody></table>';
+  html += settleSummaryHTML(list);
+  box.innerHTML = html;
+}
+/* 所选区间统计：成本合计 / 报价合计 / 整体利润率（利润率 = (报价-成本)/报价）。
+   按币种分组（不同币种不能相加），某币种缺成本或报价时不算利润率。 */
+function settleSummaryHTML(list){
+  var groups={};
+  list.forEach(function(s){
+    var q=s.quote; if(!q) return;
+    var cur=(q.currency)||"CNY";
+    var m=quoteMath((q.items)||[],cur);
+    if(!m.hasCost && !m.hasQuote) return;
+    var g=groups[cur]||(groups[cur]={cost:0,quote:0,hasCost:false,hasQuote:false});
+    if(m.hasCost){ g.cost+=m.costSum; g.hasCost=true; }
+    if(m.hasQuote){ g.quote+=m.quoteSum; g.hasQuote=true; }
+  });
+  var curs=Object.keys(groups);
+  if(!curs.length) return '';
+  var rows=curs.map(function(cur){
+    var g=groups[cur];
+    if(g.hasCost && g.hasQuote){
+      var rate= g.quote>0 ? ((g.quote-g.cost)/g.quote*100) : 0;
+      return '<div class="ss-row"><span class="ss-cur">'+esc(cur)+'</span>'+
+        '<span>成本合计 <b>'+fmtMoney(g.cost)+'</b></span>'+
+        '<span>报价合计 <b>'+fmtMoney(g.quote)+'</b></span>'+
+        '<span>利润率 <b>'+rate.toFixed(1)+'%</b></span></div>';
+    }
+    var parts=[];
+    if(g.hasCost)  parts.push('成本合计 <b>'+fmtMoney(g.cost)+'</b>');
+    if(g.hasQuote) parts.push('报价合计 <b>'+fmtMoney(g.quote)+'</b>');
+    return '<div class="ss-row"><span class="ss-cur">'+esc(cur)+'</span><span>'+parts.join(' ｜ ')+'</span><span class="ss-note">（缺成本或报价，无法计算利润率）</span></div>';
+  }).join("");
+  return '<div class="settle-sum"><div class="ss-title">统计（所选区间）</div>'+rows+'</div>';
+}
+/* 航次结算清单：点击行 → 屏幕预览 INVOICE（只预览，不触发打印对话框）。
+   复用报价单的 buildInvoice + inv-preview 机制；返回按钮由 backToInvoiceEdit 处理（回到结算清单）。 */
+function previewInvoice(id){
+  var s=data.find(function(x){return x.id===id;}); if(!s) return;
+  currentId=id;
+  if(!buildInvoice()) return;
+  document.body.classList.add("inv-preview");
+  var ib=document.getElementById("inv-back");
+  ib.textContent="← 返回结算清单"; ib.classList.remove("hidden");
+  document.getElementById("inv-print-btn").classList.remove("hidden");
+  if(document.getElementById("invoice-print").innerHTML.replace(/\s/g,"")) document.body.classList.add("inv-print");
+}
+/* 取消结算：状态由「离港结算」改回「已离港」，清除结算时间，移出结算清单，信息恢复可编辑。 */
+function cancelSettle(id){
+  var s=data.find(function(x){return x.id===id;}); if(!s) return;
+  if(!confirm("确认取消「"+(s.cn||"")+"」的离港结算？\n取消后状态将变为「已离港」，该航次代理信息可重新编辑。")) return;
+  s.status="out";
+  s.settledAt=null;
+  save(data); renderSettle(); refresh(); toast("已取消结算，状态变为「已离港」");
 }
 
 var ANSUD_LOGO = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAHiAeIDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDx2iiivTPWCiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACr0GjapdxiS3028mRujRwMwP4gV1fwu8Kf8ACSeJBNcJmxsx5kmRwzfwj8+fwr6Sjs4okCIiqoGAF4AFediseqMuRK7M51FF2Pk5fCPiBgCNHvOf+mRoPhDxCBn+x7z/AL9GvrT7PHjp+ppPs6eg/X/GuD+2J32RHtj5KPhPxABk6Pe/9+TTT4X10f8AMIvP+/Jr64+zx91H6/40C2iz90fr/jVrNpdkL2z7HyP/AMIxrn/QJvP+/Ro/4RjXP+gTef8Afo19c/Z4/wC6KPs8f90Uf2u+yD277HyIfDetqCTpV4AP+mJqFtF1VBltMvAPUwN/hX2F5EX90UfZoz/CPyqo5s/5Re3fY+MpIpIZDHKjI46qwwR+FMr6S+KPg2LXPDc11aW6f2haL5kZAwWAI3Dj2zx64r5tr08NiFXjzI3hPmVwoooroKCiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKVVZ3CoCzMcAAZJNJXo/wAJPCq6xrR1S6TdbWbfICMhpMf0yD9cVjXrRo03OXQG7I9b+HnhlPDPhiC2b/j5lPnXBHdyP5DgfhXX5qFTgcU/NfE4ivKpNyb3OWWruPzS5pmaAa5lIiw/NLTM0ua0UxWHZpabmlBq1IVhaUGkzRVKVhCSqJIypHUYNfMPxN8Lnw54olkiUCzvGMsWOx/iH5n9a+n81xfxL8LjxJ4YmjjVftUH72An1HUfiMj8a9PAYr2dRX2ejNaUuVny/RSspRirAhgcEEcikr6k6wooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKAJ7O0mv72G0t13SzOEUe5r6n8K6DB4d0C20+AfcXLserMepryX4OeFxeajJrlyh8u3ytvnu2ME/kcfnXuZNfM51jFf2UXt+ZEn0H54oB5pmaM18253M7EoNOB5qIGnDrRzE2JKXNMB5p1Vcmw7NKDTKUHmrjIlofmlzTQaWtr3JsFBAYYIzRR0qoy5WLY+a/it4UbQPEr3kK/6HesXUj+F+rD8ev51wFfWPjbw5F4m8N3Ni6jzNu6Ju6sORivlO4t5bS5lt50KSxMUdT2IPNfW5fifa07PdHZTldEVFFFegaBRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABVzSdNm1fVILGAZklbH0HUn8qp17H8HvCoEb69dJ8z5SAEdB3P4/0rlxmIVCi59enqDPUNA0uHRdGt7GFdqxoBitHPNJ1NFfn9eo5ybZmOBpc03NLmsgHBqcDUYPNLmmmS0SinA1EDSg81alYlolzS1GDTgeapMloeDzSg03NGatSsTYfmlpgNOzWilcTQEZGK8E+MvhP7FqC67ap+7n+W4x2bsf6flXvefSsjxJo1vrui3NhcLmORce4Pb9a9DB4p0ail/VioS5WfIlFXNV06bSNVubCcYkgkKH39D+Iwap19jFqSTR1hRRRTAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigDX8NaLLr+vW1hGpKs2ZDg4Cjk/4fjX1FYWcWn2ENrCgSOJAqqBjHFeefCTw0thog1WePFxdHK5HITt+fX8a9KzXxuc47nquEXpHT/MTHZpc0zdQDzXz3NcVh+aXNNzS5qkyRc0oPNNzS5pgOzTgaZSjpTtclkgp2ajBpc1adlqS0SA80uaiB5p4q1K5LQ/NLmm0ZqhND80hGQRSZoz6VcZ2ZNjxb40eFdqxeILZR8mI7jHpng/mf1rxmvsTVdPg1XTLizuUDRTIVZT3yK+UPEehz+HddudNn5MTfI+D86nof89wa+uyrEqpT9m91+R0UpXVjKooor1jUKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACt/wd4ffxF4hgtSv7hDvmP+yO349KwOpwOtfQHww8L/ANh6CLy4jxeXeHcHqq/wj/Pqa8/MsUsPQbW70QHdQxpbwpFGAERQABT91MJ5oB5r8/rS5pDsPzSg03NLmsRMdmlB5poNLmqixWHg80uajzS5q09RND85qnf6vbae0SzSBS5wBVpmCoWPQV4L8QvE011r5SByEibA5rsw2HlWdok2PfY5VlRXUggjOafXFfD7xCNW0eON2zIgwc12eamtScdOomh2acDTKUGsE7EtEgNLuqMHmnVopiaHZpwqPNKD2p3E0SjHevKvjL4WF/pI1q3X/SLQfvAB95CRn8uv516nmormBLq3eKRQVYEEH0r0MHiXRmpLoKLs7nxtRXQeM/DsnhrxJc2ewi3LFoG7FT0H4dK5+vtqc41IqcdmdS1CiiirAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAoop0cbzSrHGpZ3IVVAyST2pAdf8ADnw3/b3iFZZkBtLX53z/ABN2H9a+hwAigAYAGAPaub8G+HYvDegQWoAMzfPO4/icjn8P8K6Hdmvhc1x3t6zs9Foi0h2fmp2ai704HmvC5h2JM0uaZmnA1RLQ4HmlzTc0Zo2JsPzSgjPNMzSSSLFG0jEAKMmtaabYHN+OPEKaNoshDYmdcKB7nFfONzeSXE7yvyWJPNdd8RfETavrDxK58qM4AriK+3yjBqlS55LViSOy8CeI30jVUUtiNjgjNfRVldLdWyTIchhmvkWN2jcOpwQc1718MPEv9paeLWVv3icc1yZtguV+1gtGJo9JzRmkB7UV8tKNpEDs04GmZpc0gaH5pQeajzTs0XaJaJc5pQaiDU4HNbwmS0cJ8UvC41vw/JPCoN1AN6+/+RXzf0NfZUqCWJo2AIYEHPpXzN8SPDP/AAjniaTykxaXWZIj2B/i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RRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAf/Z";
@@ -2551,6 +2758,7 @@ function quoteQty(v){
 function round2(n){ return Math.round(n*100)/100; }
 function generateQuote(){
   var s = data.find(function(x){return x.id===currentId;}); if(!s) return;
+  if(s.status==="settled"){ toast("该航次已离港结算，信息已锁定，无法修改报价单"); return; }
   var agent = localAgents.find(function(a){return a.company===s.localAgent;});
   var now = new Date();
   var ymd = now.getFullYear()+"-"+pad2(now.getMonth()+1)+"-"+pad2(now.getDate());
@@ -2605,7 +2813,7 @@ function generateQuote(){
       '</div>'+
       '<div class="q-rule"></div>'+
       '<div class="q-meta">'+
-        '<div class="q-billto"><div class="q-bt">CLIENT</div>'+
+        '<div class="q-billto"><div class="q-bt">CLIENT:</div>'+
         '<div class="q-bt-name">'+esc(s.principal||"—")+'</div>'+
         (client&&client.address?'<div class="q-bt-addr"><b>Company address:</b> '+invAddr(client.address)+'</div>':'')+
       '</div>'+
@@ -2615,7 +2823,7 @@ function generateQuote(){
       '<div class="q-sec"><div class="q-sec-t">VESSEL PARTICULARS</div><div class="q-grid">'+
         qline("Vessel Name", s.en)+
         qline("IMO", s.imo)+
-        qline("Port of Call", [s.port,s.berth].filter(Boolean).join(" / "))+
+        qline("Port of Call", s.port)+
       '</div></div>'+
       '<div class="q-sec"><div class="q-sec-t">FEE SCHEDULE</div>'+
         '<div class="q-feebar"><span class="q-hint">'+hint+'</span>'+curSel+'</div>'+
@@ -2982,7 +3190,7 @@ function buildInvoiceHtml(s, items, currency, qno, qdate){
     '<div class="q-sec"><div class="q-sec-t">VESSEL PARTICULARS</div><div class="q-grid">'+
       qline("Vessel Name", s.en)+
       qline("IMO", s.imo)+
-      qline("Port of Call", [s.port,s.berth].filter(Boolean).join(" / "))+
+      qline("Port of Call", s.port)+
       qline("ATA", fmt(s.eta))+
       qline("ATD", fmt(s.etd))+
     '</div></div>'+
@@ -3030,7 +3238,9 @@ function printInvoice(){
 function backToInvoiceEdit(){
   document.body.classList.remove("inv-preview");
   document.body.classList.remove("inv-print");
-  document.getElementById("inv-back").classList.add("hidden");
+  var ib=document.getElementById("inv-back");
+  ib.textContent="← 返回报价单"; ib.classList.add("hidden");
+  document.getElementById("inv-print-btn").classList.add("hidden");
   document.getElementById("invoice-print").innerHTML = "";
   window.scrollTo(0,0);
 }
@@ -3712,6 +3922,10 @@ function pickVoyRow(rows, en){
   return pool[0];
 }
 function voyBtnHTML(s){
+  /* 仅「在港」in /「即将到港」arr 的船可刷新盐田船期；已离港 / 离港结算的船船期已定，不再提供刷新 */
+  if(s.status!=="in" && s.status!=="arr"){
+    return '<span class="voy-na" title="仅「在港 / 即将到港」的船可刷新船期">—</span>';
+  }
   if(!isYantian(s.port)) return '<span class="voy-na" title="挂靠港不是盐田，不适用于盐田船期查询">—</span>';
   /* ⚠️ id 要安全地嵌进 onclick 属性：
      直接拼裸值 → 字符串 id 生成 quickVoyage(T1) → ReferenceError；
