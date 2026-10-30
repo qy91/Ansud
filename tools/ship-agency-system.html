@@ -83,11 +83,11 @@
   .page-title .en{font-size:13px;color:var(--muted);font-weight:400;margin-left:8px}
   .page-desc{color:var(--muted);font-size:13px;margin-bottom:18px}
 
-  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+  .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:20px}
   .stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
   .stat .k{font-size:12px;color:var(--muted)}
   .stat .v{font-size:26px;font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums}
-  .stat .v.s{color:var(--accent)} .stat .v.w{color:var(--warn)} .stat .v.i{color:var(--info)}
+  .stat .v.s{color:var(--accent)} .stat .v.w{color:var(--warn)} .stat .v.i{color:var(--info)} .stat .v.u{color:#6d28d9}
 
   .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
   .toolbar input,.toolbar select{padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px;background:#fff}
@@ -585,6 +585,7 @@
   .b-out{background:#e5e7eb;color:#4b5563}
   .b-proc{background:#dbeafe;color:#1d4ed8}
   .b-settled{background:#fee2e2;color:#b91c1c}
+  .b-une{background:#ede9fe;color:#6d28d9}
   /* 离港结算锁定提示 */
   .lock-note{margin:2px 0 14px;padding:10px 14px;border:1px solid #f3c0c0;background:#fff5f5;color:#b91c1c;border-radius:8px;font-size:13px;font-weight:600}
   .lock-note .ln-sub{display:block;font-weight:400;color:#9b4a4a;font-size:12px;margin-top:3px}
@@ -835,6 +836,7 @@
           <div class="stat"><div class="k">在港船舶 In Port</div><div class="v s" id="st-in">0</div></div>
           <div class="stat"><div class="k">即将到港 Arriving</div><div class="v w" id="st-arr">0</div></div>
           <div class="stat"><div class="k">今日离港 Departing</div><div class="v i" id="st-out">0</div></div>
+          <div class="stat"><div class="k">未委托 Unentrusted</div><div class="v u" id="st-uned">0</div></div>
           <div class="stat"><div class="k">代理总数 Total</div><div class="v" id="st-total">0</div></div>
         </div>
 
@@ -842,6 +844,7 @@
           <input id="search" placeholder="🔍 搜索船名 / 港口 / 航次…" oninput="shipPageReset();renderDashboard()">
           <select id="filter-status" onchange="shipPageReset();renderDashboard()">
             <option value="">全部状态</option>
+            <option value="uned">未委托</option>
             <option value="in">在港</option>
             <option value="arr">即将到港</option>
             <option value="out">已离港</option>
@@ -1300,13 +1303,13 @@
 /* ---------------- 版本号 ----------------
    显示在左上角系统名称右侧。每次做了可见改动，往上加：
    小修：末位 +1；新增功能：中间位 +1。 */
-var APP_VERSION = "v1.20.31";
+var APP_VERSION = "v1.20.34";
 (function(){ var el=document.getElementById("appVer"); if(el) el.textContent=APP_VERSION; })();
 
 /* ---------------- i18n ---------------- */
 var L = {
-  zh:{in:"在港",arr:"即将到港",out:"已离港",proc:"办理中",settled:"离港结算"},
-  en:{in:"In Port",arr:"Arriving",out:"Departed",proc:"Processing",settled:"Settled"}
+  zh:{in:"在港",arr:"即将到港",out:"已离港",proc:"办理中",settled:"离港结算",uned:"未委托"},
+  en:{in:"In Port",arr:"Arriving",out:"Departed",proc:"Processing",settled:"Settled",uned:"Unentrusted"}
 };
 var lang = "zh";
 
@@ -1640,6 +1643,7 @@ function clientOpts(){
 
 /* ---------------- field schema ---------------- */
 var statusOpts = [
+  {v:"uned", t:"未委托"},
   {v:"in",   t:"在港"},
   {v:"arr",  t:"即将到港"},
   {v:"out",  t:"已离港"},
@@ -1753,6 +1757,15 @@ window.addEventListener("resize", function(){ autoGrowAllTA(); });
 
 /* ---------------- helpers ---------------- */
 function fmt(s){ if(!s) return "—"; return s.replace("T"," ").slice(0,16); }
+/* 结算时间以北京时间（UTC+8）显示：存的是 UTC ISO 串，显示时 +8h 并取 UTC 分量即得北京墙钟。 */
+function fmtBJ(s){
+  if(!s) return "—";
+  var d=new Date(s);
+  if(isNaN(d.getTime())) return "—";
+  d=new Date(d.getTime()+8*3600*1000);
+  var p=function(n){return (n<10?"0":"")+n;};
+  return d.getUTCFullYear()+"-"+p(d.getUTCMonth()+1)+"-"+p(d.getUTCDate())+" "+p(d.getUTCHours())+":"+p(d.getUTCMinutes());
+}
 function toast(m){ var t=document.getElementById("toast"); t.textContent=m; t.classList.add("show"); setTimeout(function(){t.classList.remove("show");},1800); }
 function esc(s){ return (s||"").replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c];}); }
 /* 换行符转 <br>：必须在 esc() 之后调用（否则 <br> 会被转义成 &lt;br&gt;）。
@@ -1761,18 +1774,20 @@ function nl2br(s){ return (s==null?"":String(s)).replace(/\r\n|\r|\n/g,"<br>"); 
 /* 打印稿防连字符断行：把「-」换成不换行连字符 U+2011（外观相同，但浏览器不会在此处折行）。
    必须在 esc() 之后调用（esc 不产生「-」，nl2br 的 <br> 也不含「-」，先后均安全）。 */
 function nbHyphen(s){ return (s==null?"":String(s)).replace(/-/g,"\u2011"); }
-function statusBadge(st){ var cls={in:"b-in",arr:"b-arr",out:"b-out",proc:"b-proc",settled:"b-settled"}[st]; return '<span class="badge '+cls+'">'+(L[lang][st]||st)+'</span>'; }
+function statusBadge(st){ var cls={in:"b-in",arr:"b-arr",out:"b-out",proc:"b-proc",settled:"b-settled",uned:"b-une"}[st]; return '<span class="badge '+cls+'">'+(L[lang][st]||st)+'</span>'; }
 
 /* ---------------- stats ---------------- */
 function updateStats(){
-  var inN=0,arrN=0,outN=0;
+  var inN=0,arrN=0,outN=0,unedN=0;
   data.forEach(function(s){
-    if(s.status==="in") inN++; else if(s.status==="arr") arrN++; else if(s.status==="out") outN++;
+    if(s.status==="in") inN++; else if(s.status==="arr") arrN++; else if(s.status==="out") outN++; else if(s.status==="uned") unedN++;
   });
   document.getElementById("st-in").textContent=inN;
   document.getElementById("st-arr").textContent=arrN;
   document.getElementById("st-out").textContent=outN;
-  document.getElementById("st-total").textContent=data.length;
+  document.getElementById("st-uned").textContent=unedN;
+  /* 代理总数不含「未委托」 */
+  document.getElementById("st-total").textContent=(data||[]).filter(function(s){return s.status!=="uned";}).length;
 }
 
 /* ---------------- dashboard list ---------------- */
@@ -2276,7 +2291,7 @@ function renderDetail(){
     eb.classList.add("hidden"); cb.classList.add("hidden"); db.classList.add("hidden");
     if(qb) qb.disabled=true;
     if(vb) vb.disabled=true;
-    if(lk){ lk.classList.remove("hidden"); lk.innerHTML='🔒 该航次已「离港结算」，所有代理信息已锁定，仅可查看，无法修改。'+(s.settledAt?('<span class="ln-sub">结算时间：'+esc(fmt(s.settledAt))+'</span>'):''); }
+    if(lk){ lk.classList.remove("hidden"); lk.innerHTML='🔒 该航次已「离港结算」，所有代理信息已锁定，仅可查看，无法修改。'+(s.settledAt?('<span class="ln-sub">结算时间：'+esc(fmtBJ(s.settledAt))+'</span>'):''); }
   } else {
     if(lk) lk.classList.add("hidden");
     if(qb) qb.disabled=false;
@@ -2433,7 +2448,7 @@ function renderSettle(){
       '<td style="text-align:right">'+costTxt+'</td>'+
       '<td style="text-align:right">'+quoteTxt+'</td>'+
       '<td style="text-align:right">'+profitTxt+'</td>'+
-      '<td>'+(s.settledAt?fmt(s.settledAt):"—")+'</td>'+
+      '<td>'+(s.settledAt?fmtBJ(s.settledAt):"—")+'</td>'+
       '<td style="text-align:right;white-space:nowrap"><button type="button" class="btn sm ghost" onclick="event.stopPropagation();cancelSettle('+s.id+')">取消结算</button></td>'+
     '</tr>';
   }).join("");
