@@ -310,12 +310,22 @@
 
   /* fee table (agent) */
   .fee-tbl{display:flex;flex-direction:column;gap:8px;padding:12px 20px}
-  .fee-row{display:grid;grid-template-columns:1.3fr .9fr .8fr .85fr .6fr 1.15fr 32px;gap:8px;align-items:center}
-  .fee-row.fee-head{font-size:12px;color:var(--muted);font-weight:600}
-  .fee-row input{padding:7px 9px;border:1px solid var(--brand);border-radius:6px;font-size:13px;font-family:inherit;width:100%}
-  .fee-row input:focus{outline:none;box-shadow:0 0 0 3px rgba(11,94,156,.12)}
-  .fee-row select{padding:7px 9px;border:1px solid var(--brand);border-radius:6px;font-size:13px;font-family:inherit;width:100%;background:#fff}
-  .fee-row select:focus{outline:none;box-shadow:0 0 0 3px rgba(11,94,156,.12)}
+  .afee-tbl{width:100%;table-layout:auto;border-collapse:separate;border-spacing:0 8px;background:transparent;border:none;border-radius:0;overflow:visible}
+  .afee-tbl th{font-size:12px;color:var(--muted);font-weight:600;text-align:left;padding:0 4px;border-bottom:none;background:transparent;white-space:nowrap}
+  .afee-tbl th:first-child,.afee-tbl td:first-child{width:50%}
+  .afee-tbl td{padding:0 4px;border-bottom:none;text-align:left;vertical-align:middle}
+  .afee-tbl td:nth-child(2){min-width:64px}
+  .afee-tbl td:nth-child(3),.afee-tbl td:nth-child(4){min-width:78px}
+  .afee-tbl td:nth-child(5){min-width:64px}
+  .afee-tbl td:nth-child(6){min-width:120px}
+  .afee-tbl td:last-child{width:34px;padding-right:0;text-align:right}
+  .afee-tbl input{padding:7px 9px;border:1px solid var(--brand);border-radius:6px;font-size:13px;font-family:inherit;width:100%;box-sizing:border-box}
+  .afee-tbl input.afx{width:100%;min-width:0;max-width:100%}
+  .afee-tbl td:nth-child(2) input.afx{max-width:90px}
+  .afee-tbl td:nth-child(3) input.afx,.afee-tbl td:nth-child(4) input.afx{max-width:110px}
+  .afee-tbl td:nth-child(6) input.afx{max-width:220px}
+  .afee-tbl select{padding:7px 6px;border:1px solid var(--brand);border-radius:6px;font-size:13px;font-family:inherit;width:100%;background:#fff}
+  .afee-tbl input:focus,.afee-tbl select:focus{outline:none;box-shadow:0 0 0 3px rgba(11,94,156,.12)}
   .fee-empty{font-size:13px;color:var(--muted)}
 
   /* profit (detail, internal only) */
@@ -1131,7 +1141,7 @@
 
 <!-- ===================== AGENT MODAL ===================== -->
 <div id="agent-mask" class="mask hidden">
-  <div class="modal" style="width:880px;max-width:100%">
+  <div class="modal" style="width:1180px;max-width:100%">
     <div class="mh" id="agent-mh">新增本港代理/服务商</div>
     <div class="mb">
       <div class="fields-grid">
@@ -1155,8 +1165,7 @@
       <div class="block" style="margin-top:14px">
         <div class="block-h">💰 收费价格表 <span class="en">Fee Schedule</span></div>
         <div class="fee-tbl">
-          <div class="fee-row fee-head"><span>收费项目</span><span>计费单位</span><span>成本价</span><span>对外报价</span><span>币种</span><span>备注</span><span></span></div>
-          <div id="agent-fees"></div>
+          <table class="afee-tbl"><thead><tr><th style="width:50%">收费项目</th><th>计费单位</th><th>成本价</th><th>对外报价</th><th>币种</th><th>备注</th><th></th></tr></thead><tbody id="agent-fees"></tbody></table>
         </div>
         <button class="btn sm ghost" style="margin-top:10px" onclick="addAgentFee()">＋ 添加收费项</button>
       </div>
@@ -1348,7 +1357,7 @@
 /* ---------------- 版本号 ----------------
    显示在左上角系统名称右侧。每次做了可见改动，往上加：
    小修：末位 +1；新增功能：中间位 +1。 */
-var APP_VERSION = "v1.20.39";;;;
+var APP_VERSION = "v1.20.43";;;;
 (function(){ var el=document.getElementById("appVer"); if(el) el.textContent=APP_VERSION; })();
 
 /* ---------------- i18n ---------------- */
@@ -4605,23 +4614,29 @@ function agentDetailRow(a){
 }
 function renderAgentFees(){
   var box=document.getElementById("agent-fees"); if(!box) return;
-  if(!agentFees.length){ box.innerHTML='<div class="fee-empty" style="padding:10px 4px;color:var(--muted)">暂无收费项，点击下方「＋ 添加收费项」</div>'; return; }
+  if(!agentFees.length){ box.innerHTML='<tr><td colspan="7" class="fee-empty" style="padding:10px 4px">暂无收费项，点击下方「＋ 添加收费项」</td></tr>'; return; }
   box.innerHTML=agentFees.map(function(t,i){
-    return '<div class="fee-row">'+
-      '<input placeholder="如：船舶代理费" value="'+esc(t.item)+'" oninput="updAgentFee('+i+',\'item\',this.value)">'+
-      '<input placeholder="如：每艘次" value="'+esc(t.unit)+'" oninput="updAgentFee('+i+',\'unit\',this.value)">'+
-      '<input placeholder="成本价" value="'+esc(t.cost||"")+'" oninput="updAgentFee('+i+',\'cost\',this.value)">'+
-      '<input placeholder="对外报价" value="'+esc(t.price)+'" oninput="updAgentFee('+i+',\'price\',this.value)">'+
-      '<select onchange="updAgentFee('+i+',\'currency\',this.value)">'+
+    return '<tr>'+
+      '<td><input placeholder="如：船舶代理费" value="'+esc(t.item)+'" oninput="updAgentFee('+i+',\'item\',this.value)"></td>'+
+      '<td><input class="afx" placeholder="如：每艘次" value="'+esc(t.unit)+'" oninput="updAgentFee('+i+',\'unit\',this.value)"></td>'+
+      '<td><input class="afx" placeholder="成本价" value="'+esc(t.cost||"")+'" oninput="updAgentFee('+i+',\'cost\',this.value)"></td>'+
+      '<td><input class="afx" placeholder="对外报价" value="'+esc(t.price)+'" oninput="updAgentFee('+i+',\'price\',this.value)"></td>'+
+      '<td><select onchange="updAgentFee('+i+',\'currency\',this.value)">'+
         ['CNY','USD'].map(function(c){ return '<option value="'+c+'"'+((t.currency==="USD"?"USD":"CNY")===c?' selected':'')+'>'+c+'</option>'; }).join('')+
-      '</select>'+
-      '<input placeholder="备注" value="'+esc(t.note)+'" oninput="updAgentFee('+i+',\'note\',this.value)">'+
-      '<button class="icon-btn danger" onclick="delAgentFee('+i+')">✕</button>'+
-    '</div>';
+      '</select></td>'+
+      '<td><input class="afx" placeholder="备注" value="'+esc(t.note)+'" oninput="updAgentFee('+i+',\'note\',this.value)"></td>'+
+      '<td><button class="icon-btn danger" onclick="delAgentFee('+i+')">✕</button></td>'+
+    '</tr>';
   }).join("");
+  agentFeeAutoSize();
+}
+function agentFeeAutoSize(){
+  var box=document.getElementById("agent-fees"); if(!box) return;
+  var ins=box.querySelectorAll("input.afx");
+  for(var i=0;i<ins.length;i++){ var v=(ins[i].value||"").length; ins[i].size=Math.max(4,v+1); }
 }
 function addAgentFee(){ agentFees.push({item:"",unit:"",cost:"",price:"",currency:"CNY",note:""}); renderAgentFees(); }
-function updAgentFee(i,k,v){ if(agentFees[i]) agentFees[i][k]=v; }
+function updAgentFee(i,k,v){ if(agentFees[i]) agentFees[i][k]=v; agentFeeAutoSize(); }
 function delAgentFee(i){ agentFees.splice(i,1); renderAgentFees(); }
 function openAgentModal(){
   editingAgentId=null;
