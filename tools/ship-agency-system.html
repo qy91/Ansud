@@ -139,6 +139,10 @@
   body.inv-preview #inv-print-btn{display:block}
   #inv-print-btn{left:auto;right:16px}
   .invoice{width:210mm;margin:0 auto;background:#fff;padding:14mm;box-sizing:border-box}
+  /* 一船两票（v1.20.36）：每张 INVOICE 包一层 .inv-page —— 屏幕预览时彼此留白分隔，
+     打印时逐张分页（每张票从新的一页开始）。 */
+  #invoice-print .inv-page{margin:0 auto 18px}
+  #invoice-print .inv-page:last-child{margin-bottom:0}
   /* 与 @media print 里 .quote .q-fee 的一套规则完全相同。
      全局 th,td{padding:11px 14px;font-size:13px} 的特异性只有 0,0,2，
      会被这里的类选择器压住，故加 !important 确认真实生效。 */
@@ -372,6 +376,26 @@
   .quote .q-fee th{white-space:nowrap}
   .quote .q-fee .col-chk{width:30px;text-align:center}
   .quote .q-fee .col-del{width:34px;text-align:center}
+  /* 「单据」归属列（v1.20.36 一船两票）：内部编辑用，打印稿隐藏。
+     位置在 col-chk 之后（第 3 列），与原型一致；通行行的 colspan 不变（仍跨 no..rem）。
+     v1.20.37：列宽由 92px 改为内容自适应（width:1% + nowrap），把富余宽度还给 Item 列。 */
+  .quote .q-fee .col-doc{width:1%;white-space:nowrap;text-align:center}
+  .quote .q-fee td.col-doc select{font-size:12.5px;padding:4px 6px;text-align:center;width:auto}
+  /* 单据分组工具条：每个单据一个 chip（色点 + 编号 + 该单据小计 + 删除） */
+  .quote .q-docbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 8px;
+    padding:10px 12px;background:#f8fafc;border:1px solid var(--line);border-radius:9px}
+  .quote .q-docchip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);
+    background:#fff;border-radius:8px;padding:5px 9px;font-size:12.5px;cursor:default}
+  .quote .q-docchip .dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
+  .quote .q-docchip .amt{color:var(--muted);font-variant-numeric:tabular-nums}
+  .quote .q-docchip .x{border:none;background:transparent;color:#c0392b;cursor:pointer;
+    font-size:13px;padding:0 2px;line-height:1}
+  .quote .q-docchip .x:hover{color:#8e1b12}
+  .quote .q-docchip.on{border-color:var(--brand);box-shadow:0 0 0 3px rgba(11,94,156,.10)}
+  .quote .q-docbar .q-doc-info{margin-left:auto;font-size:12px;color:var(--muted)}
+  .quote .q-docbar .q-doc-add{margin-left:auto}
+  /* 聚焦某张单据时，该单据的行左侧加一条竖线 */
+  .quote .q-fee tr.doc-focus td.col-doc{box-shadow:inset 3px 0 0 var(--brand)}
   .quote .q-fee input[type=text]{width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:6px;font-size:13px;font-family:inherit;background:#fff;color:#1d2939}
   /* ITEM 列允许换行：编辑态用 textarea，打印态用 .ptxt（nl2br 已转 <br>） */
   .quote .q-fee textarea.q-fee-ta{width:100%;min-height:40px;resize:vertical;padding:6px 8px;border:1px solid var(--line);border-radius:6px;font-size:13px;font-family:inherit;background:#fff;color:#1d2939;line-height:1.35}
@@ -392,8 +416,10 @@
   .quote .q-fee th.col-qty,.quote .q-fee td.col-qty,
   .quote .q-fee th.col-up,.quote .q-fee td.col-up,
   .quote .q-fee th.col-cost,.quote .q-fee td.col-cost,
-  .quote .q-fee th.col-amt,.quote .q-fee td.col-amt,
-  .quote .q-fee th.col-rem,.quote .q-fee td.col-rem{white-space:nowrap;width:1%}
+  .quote .q-fee th.col-amt,.quote .q-fee td.col-amt{white-space:nowrap;width:1%}
+  /* Remarks 列（v1.20.37）：给个下限宽度，否则「2 times」这类短备注会被挤成竖排两行。
+     仍保留 width:1% + nowrap 的自适应口径，min-width 只是兜底，表格变窄时优先挤压 Item 列。 */
+  .quote .q-fee th.col-rem,.quote .q-fee td.col-rem{white-space:nowrap;width:1%;min-width:110px}
   .quote .q-fee td.col-unit input,.quote .q-fee td.col-qty input,
   .quote .q-fee td.col-up input,.quote .q-fee td.col-cost input{
     width:auto;min-width:0;field-sizing:content}
@@ -422,6 +448,9 @@
   .quote .q-fee-chk{width:16px;height:16px;cursor:pointer}
   .quote .q-fee-del{border:none;background:transparent;color:#c0392b;cursor:pointer;font-size:15px;line-height:1;padding:3px}
   .quote .q-fee-copy{border:none;background:transparent;color:var(--brand);cursor:pointer;font-size:14px;line-height:1;padding:3px}
+/* 小节标题行尾「转回普通收费项」按钮（v1.20.39） */
+.q-fee-sec{border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:14px;line-height:1;padding:3px}
+.q-fee-sec:hover{color:var(--brand)}
   .quote .q-fee-copy:hover{color:var(--brand-d);text-decoration:underline}
   .quote .q-fee .col-del{width:64px;text-align:center;white-space:nowrap}
   /* 拖动排序：第一列是抓取手柄，仅在编辑态可见（打印时隐藏） */
@@ -447,6 +476,9 @@
   .quote .q-dd-opt input{flex:0 0 auto;width:15px;height:15px;accent-color:var(--brand);cursor:pointer}
   .quote .q-dd-opt.on{background:#eaf3fa}
   .quote .q-fee-add{margin-top:10px}
+  /* 收费项操作条（v1.20.38）：添加收费项 / 添加小节标题 两个按钮并排 */
+  .quote .q-fee-addbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+  .quote .q-fee-addbar .btn{margin-top:0}
   .quote .q-note{font-size:12px;color:var(--muted);margin-top:16px;border-top:1px dashed #d0d7de;padding-top:10px}
   .quote .empty{padding:14px;text-align:center;color:var(--muted)}
 
@@ -478,6 +510,9 @@
     .quote .q-fee tr{break-inside:avoid;page-break-inside:avoid}
     .quote .q-fee thead{display:table-header-group}
     .quote .q-grid{break-inside:avoid;page-break-inside:avoid}
+    /* 船名通常最长（如 "MV. OCEAN PIONEER"），打印态按 1.4 : 0.85 : 0.9 分配宽度，
+       避免船名被折成两行；IMO / Port of Call 的值较短，收窄也放得下。 */
+    .quote .q-grid{grid-template-columns:minmax(0,1.4fr) minmax(0,0.85fr) minmax(0,0.9fr)}
     .quote input[type=text]{border:none !important;background:transparent !important;padding:0 !important;height:auto !important;color:#1d2939 !important;font-size:13px !important}
     /* 占位符（收费项目/计费单位/单价/备注）只在屏幕上提示，打印时不出现 */
     .quote input::placeholder{color:transparent !important}
@@ -486,6 +521,8 @@
     .quote .q-fee th.col-chk,.quote .q-fee td.col-chk,
     .quote .q-fee th.col-del,.quote .q-fee td.col-del,
     .quote .q-fee th.col-drag,.quote .q-fee td.col-drag{display:none !important}
+    /* 「单据」归属列是内部编辑用的（v1.20.36 一船两票），打印稿不出现 */
+    .quote .q-fee th.col-doc,.quote .q-fee td.col-doc{display:none !important}
     /* 成本价是内部信息，报价单打印稿一律不出现 */
     .quote .q-fee th.col-cost,.quote .q-fee td.col-cost{display:none !important}
     /* TOTAL 行里的「成本 / 毛利」同样只在屏幕可见 */
@@ -519,7 +556,12 @@
        但保留 TOTAL 汇总里的汇率与外币金额两行（.q-total-fx）。 */
     .quote .q-total-fx{display:block !important}
     .quote .q-fee tr.off{display:none !important}
-    .quote .q-hint,.quote .q-fee-add,.quote .q-curwrap,.quote .q-fxwrap,.quote .q-pickbar{display:none !important}
+    .quote .q-hint,.quote .q-fee-addbar,.quote .q-fee-add,.quote .q-curwrap,.quote .q-fxwrap,.quote .q-pickbar,.quote .q-docbar{display:none !important}
+    /* 窄列的打印文本不折行（否则 "per call" 会被拆成 per / call 两行）。
+       Remarks 仍靠 542 行那条 white-space:pre-wrap 保持可换行口径。 */
+    .quote .q-fee td.col-unit .ptxt,.quote .q-fee td.col-qty .ptxt,
+    .quote .q-fee td.col-up .ptxt,.quote .q-fee td.col-amt .ptxt,
+    .quote .q-fee td.col-no .ptxt{white-space:nowrap}
   }
   /* 通用打印保护：.layout 平时固定高度 + overflow:hidden 用于列表内部滚动，
      直接 Ctrl+P 打印整页列表时要把它放开，否则会被裁切到一屏内。
@@ -749,6 +791,9 @@
     /* 与报价单同一套打印规则：纸边距 / 信纸抬头 / 页码全部来自 @page doc */
     #invoice-print{page:doc}
     #invoice-print .quote{padding:0 !important;border:none !important;width:auto !important;max-width:100% !important}
+    /* 一船两票：多张 INVOICE 逐张分页，每张票从新的一页开始 */
+    #invoice-print .inv-page{break-after:page;page-break-after:always;margin:0 !important}
+    #invoice-print .inv-page:last-child{break-after:auto;page-break-after:auto}
   }
 
   .mask{position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:flex-start;justify-content:center;z-index:50;padding:40px 16px;overflow:auto}
@@ -835,7 +880,7 @@
         <div class="stats">
           <div class="stat"><div class="k">在港船舶 In Port</div><div class="v s" id="st-in">0</div></div>
           <div class="stat"><div class="k">即将到港 Arriving</div><div class="v w" id="st-arr">0</div></div>
-          <div class="stat"><div class="k">今日离港 Departing</div><div class="v i" id="st-out">0</div></div>
+          <div class="stat"><div class="k">已离港未结算 Departed Unsettled</div><div class="v i" id="st-out">0</div></div>
           <div class="stat"><div class="k">未委托 Unentrusted</div><div class="v u" id="st-uned">0</div></div>
           <div class="stat"><div class="k">代理总数 Total</div><div class="v" id="st-total">0</div></div>
         </div>
@@ -847,7 +892,7 @@
             <option value="uned">未委托</option>
             <option value="in">在港</option>
             <option value="arr">即将到港</option>
-            <option value="out">已离港</option>
+            <option value="out">已离港未结算</option>
           </select>
           <span data-psp="ship"></span>
           <div class="right"><button class="btn sm" onclick="openModal()">＋ 新增船舶</button></div>
@@ -1273,11 +1318,11 @@
 
 <!-- ===================== QUOTE MODAL ===================== -->
 <div id="quote-mask" class="mask hidden">
-  <div class="modal" style="width:840px;max-width:100%">
+  <div class="modal" style="width:1180px;max-width:100%">
     <div class="mh">Quotation <span class="en">船舶代理报价单</span>
       <span style="float:right;margin-top:-2px">
         <button class="btn ghost sm" onclick="saveQuote()">💾 保存</button>
-        <button class="btn ghost sm" onclick="window.print()">🖨 打印 QUOTATION</button>
+        <button class="btn ghost sm" onclick="printQuote()">🖨 打印 QUOTATION</button>
         <button class="btn ghost sm" onclick="printInvoice()">🧾 打印 INVOICE</button>
       </span>
     </div>
@@ -1303,13 +1348,13 @@
 /* ---------------- 版本号 ----------------
    显示在左上角系统名称右侧。每次做了可见改动，往上加：
    小修：末位 +1；新增功能：中间位 +1。 */
-var APP_VERSION = "v1.20.34";
+var APP_VERSION = "v1.20.39";;;;
 (function(){ var el=document.getElementById("appVer"); if(el) el.textContent=APP_VERSION; })();
 
 /* ---------------- i18n ---------------- */
 var L = {
-  zh:{in:"在港",arr:"即将到港",out:"已离港",proc:"办理中",settled:"离港结算",uned:"未委托"},
-  en:{in:"In Port",arr:"Arriving",out:"Departed",proc:"Processing",settled:"Settled",uned:"Unentrusted"}
+  zh:{in:"在港",arr:"即将到港",out:"已离港未结算",proc:"办理中",settled:"离港结算",uned:"未委托"},
+  en:{in:"In Port",arr:"Arriving",out:"Departed Unsettled",proc:"Processing",settled:"Settled",uned:"Unentrusted"}
 };
 var lang = "zh";
 
@@ -1646,7 +1691,7 @@ var statusOpts = [
   {v:"uned", t:"未委托"},
   {v:"in",   t:"在港"},
   {v:"arr",  t:"即将到港"},
-  {v:"out",  t:"已离港"},
+  {v:"out",  t:"已离港未结算"},
   {v:"settled", t:"离港结算"}
 ];
 var flagOptsDefault = [
@@ -2367,7 +2412,7 @@ function detailDelete(){
 }
 /* ---------------- 航次结算：列出所有 status==="settled" 的航次 ----------------
    状态改为「离港结算」即自动归集于此（无需单独建表，filter 保证只显示离港结算信息）；
-   点击行 → 屏幕预览 INVOICE；行末「取消结算」按钮把状态改回「已离港」并移出本清单。 */
+   点击行 → 屏幕预览 INVOICE；行末「取消结算」按钮把状态改回「已离港未结算」并移出本清单。 */
 /* 航次结算：依「离泊时间 etd」做日期筛选。
    筛选器 = 实际月份下拉（由已结算航次的 etd 派生，真实存在才出现）+ 自定义起止日期区间（二选一，选了月份则区间让位）。 */
 var settleDefaulted=false;
@@ -2503,13 +2548,13 @@ function previewInvoice(id){
   document.getElementById("inv-print-btn").classList.remove("hidden");
   if(document.getElementById("invoice-print").innerHTML.replace(/\s/g,"")) document.body.classList.add("inv-print");
 }
-/* 取消结算：状态由「离港结算」改回「已离港」，清除结算时间，移出结算清单，信息恢复可编辑。 */
+/* 取消结算：状态由「离港结算」改回「已离港未结算」，清除结算时间，移出结算清单，信息恢复可编辑。 */
 function cancelSettle(id){
   var s=data.find(function(x){return x.id===id;}); if(!s) return;
-  if(!confirm("确认取消「"+(s.cn||"")+"」的离港结算？\n取消后状态将变为「已离港」，该航次代理信息可重新编辑。")) return;
+  if(!confirm("确认取消「"+(s.cn||"")+"」的离港结算？\n取消后状态将变为「已离港未结算」，该航次代理信息可重新编辑。")) return;
   s.status="out";
   s.settledAt=null;
-  save(data); renderSettle(); refresh(); toast("已取消结算，状态变为「已离港」");
+  save(data); renderSettle(); refresh(); toast("已取消结算，状态变为「已离港未结算」");
 }
 
 var ANSUD_LOGO = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAHiAeIDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDx2iiivTPWCiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACr0GjapdxiS3028mRujRwMwP4gV1fwu8Kf8ACSeJBNcJmxsx5kmRwzfwj8+fwr6Sjs4okCIiqoGAF4AFediseqMuRK7M51FF2Pk5fCPiBgCNHvOf+mRoPhDxCBn+x7z/AL9GvrT7PHjp+ppPs6eg/X/GuD+2J32RHtj5KPhPxABk6Pe/9+TTT4X10f8AMIvP+/Jr64+zx91H6/40C2iz90fr/jVrNpdkL2z7HyP/AMIxrn/QJvP+/Ro/4RjXP+gTef8Afo19c/Z4/wC6KPs8f90Uf2u+yD277HyIfDetqCTpV4AP+mJqFtF1VBltMvAPUwN/hX2F5EX90UfZoz/CPyqo5s/5Re3fY+MpIpIZDHKjI46qwwR+FMr6S+KPg2LXPDc11aW6f2haL5kZAwWAI3Dj2zx64r5tr08NiFXjzI3hPmVwoooroKCiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKVVZ3CoCzMcAAZJNJXo/wAJPCq6xrR1S6TdbWbfICMhpMf0yD9cVjXrRo03OXQG7I9b+HnhlPDPhiC2b/j5lPnXBHdyP5DgfhXX5qFTgcU/NfE4ivKpNyb3OWWruPzS5pmaAa5lIiw/NLTM0ua0UxWHZpabmlBq1IVhaUGkzRVKVhCSqJIypHUYNfMPxN8Lnw54olkiUCzvGMsWOx/iH5n9a+n81xfxL8LjxJ4YmjjVftUH72An1HUfiMj8a9PAYr2dRX2ejNaUuVny/RSspRirAhgcEEcikr6k6wooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKAJ7O0mv72G0t13SzOEUe5r6n8K6DB4d0C20+AfcXLserMepryX4OeFxeajJrlyh8u3ytvnu2ME/kcfnXuZNfM51jFf2UXt+ZEn0H54oB5pmaM18253M7EoNOB5qIGnDrRzE2JKXNMB5p1Vcmw7NKDTKUHmrjIlofmlzTQaWtr3JsFBAYYIzRR0qoy5WLY+a/it4UbQPEr3kK/6HesXUj+F+rD8ev51wFfWPjbw5F4m8N3Ni6jzNu6Ju6sORivlO4t5bS5lt50KSxMUdT2IPNfW5fifa07PdHZTldEVFFFegaBRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABVzSdNm1fVILGAZklbH0HUn8qp17H8HvCoEb69dJ8z5SAEdB3P4/0rlxmIVCi59enqDPUNA0uHRdGt7GFdqxoBitHPNJ1NFfn9eo5ybZmOBpc03NLmsgHBqcDUYPNLmmmS0SinA1EDSg81alYlolzS1GDTgeapMloeDzSg03NGatSsTYfmlpgNOzWilcTQEZGK8E+MvhP7FqC67ap+7n+W4x2bsf6flXvefSsjxJo1vrui3NhcLmORce4Pb9a9DB4p0ail/VioS5WfIlFXNV06bSNVubCcYkgkKH39D+Iwap19jFqSTR1hRRRTAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigDX8NaLLr+vW1hGpKs2ZDg4Cjk/4fjX1FYWcWn2ENrCgSOJAqqBjHFeefCTw0thog1WePFxdHK5HITt+fX8a9KzXxuc47nquEXpHT/MTHZpc0zdQDzXz3NcVh+aXNNzS5qkyRc0oPNNzS5pgOzTgaZSjpTtclkgp2ajBpc1adlqS0SA80uaiB5p4q1K5LQ/NLmm0ZqhND80hGQRSZoz6VcZ2ZNjxb40eFdqxeILZR8mI7jHpng/mf1rxmvsTVdPg1XTLizuUDRTIVZT3yK+UPEehz+HddudNn5MTfI+D86nof89wa+uyrEqpT9m91+R0UpXVjKooor1jUKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACt/wd4ffxF4hgtSv7hDvmP+yO349KwOpwOtfQHww8L/ANh6CLy4jxeXeHcHqq/wj/Pqa8/MsUsPQbW70QHdQxpbwpFGAERQABT91MJ5oB5r8/rS5pDsPzSg03NLmsRMdmlB5poNLmqixWHg80uajzS5q09RND85qnf6vbae0SzSBS5wBVpmCoWPQV4L8QvE011r5SByEibA5rsw2HlWdok2PfY5VlRXUggjOafXFfD7xCNW0eON2zIgwc12eamtScdOomh2acDTKUGsE7EtEgNLuqMHmnVopiaHZpwqPNKD2p3E0SjHevKvjL4WF/pI1q3X/SLQfvAB95CRn8uv516nmormBLq3eKRQVYEEH0r0MHiXRmpLoKLs7nxtRXQeM/DsnhrxJc2ewi3LFoG7FT0H4dK5+vtqc41IqcdmdS1CiiirAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAoop0cbzSrHGpZ3IVVAyST2pAdf8ADnw3/b3iFZZkBtLX53z/ABN2H9a+hwAigAYAGAPaub8G+HYvDegQWoAMzfPO4/icjn8P8K6Hdmvhc1x3t6zs9Foi0h2fmp2ai704HmvC5h2JM0uaZmnA1RLQ4HmlzTc0Zo2JsPzSgjPNMzSSSLFG0jEAKMmtaabYHN+OPEKaNoshDYmdcKB7nFfONzeSXE7yvyWJPNdd8RfETavrDxK58qM4AriK+3yjBqlS55LViSOy8CeI30jVUUtiNjgjNfRVldLdWyTIchhmvkWN2jcOpwQc1718MPEv9paeLWVv3icc1yZtguV+1gtGJo9JzRmkB7UV8tKNpEDs04GmZpc0gaH5pQeajzTs0XaJaJc5pQaiDU4HNbwmS0cJ8UvC41vw/JPCoN1AN6+/+RXzf0NfZUqCWJo2AIYEHPpXzN8SPDP/AAjniaTykxaXWZIj2B/i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RRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAf/Z";
@@ -2537,19 +2582,119 @@ function closeQuote(){ document.getElementById("quote-mask").classList.add("hidd
 var quoteItems = [];
 var quoteCurrency = "CNY";
 var quoteItemSeq = 0;   /* 给每条收费项分配稳定 _id，用于拖动排序时定位（不被行号 i 干扰） */
+/* ★ 一船两票（v1.20.36）：收费项按「单据」分组，同一委托方 / 同一币种拆成多张 INVOICE。
+   单据只有编号（A/B/C…），不设名称。底层仍是**一张**报价单（s.quote），
+   成本 / 毛利 / 结算清单口径完全不变 —— 分组只影响「开票时拆几张 INVOICE」。 */
+var quoteDocIds = ["A"];      /* 单据编号列表（有序） */
+var quoteActiveDoc = "A";    /* 当前聚焦的单据：新增收费项默认归到它 */
+var DOC_COLORS = ["#378add","#1d9e75","#7f77dd","#ba7517","#c0392b","#0f766e"];
+function qDocColor(id){ var i=quoteDocIds.indexOf(id); return DOC_COLORS[(i<0?0:i)%DOC_COLORS.length]; }
+/* 某条收费项归属的单据：老数据没有 doc 字段 → 归入第一个单据 */
+function qDocOf(f){ return (f && f.doc && quoteDocIds.indexOf(f.doc)>=0) ? f.doc : quoteDocIds[0]; }
+function qDocItems(id){ return quoteItems.filter(function(f){ return qDocOf(f)===id; }); }
+function qDocMath(id){ return quoteMath(qDocItems(id), quoteCurrency); }
+/* 行内容是否完全空白（删除单据时：空白行直接删，有内容的行迁移到别的单据）。
+   判定只看 item/unit/price/cost/note —— 数量默认就是 "1"，不能算作内容，
+   否则「刚点了＋添加收费项还没填」的空行在删单据时会残留。 */
+function qItemBlank(f){
+  return !String(f.item==null?"":f.item).trim() && !String(f.unit==null?"":f.unit).trim() &&
+         !String(f.price==null?"":f.price).trim() &&
+         !String(f.cost==null?"":f.cost).trim() && !String(f.note==null?"":f.note).trim();
+}
+/* 单据分组工具条：每个单据一个 chip（色点 + 编号 + 该单据小计 + 删除按钮） */
+function renderQuoteDocBar(){
+  var bar=document.getElementById("quote-docbar"); if(!bar) return;
+  var html="";
+  quoteDocIds.forEach(function(id){
+    var m=qDocMath(id);
+    var n=qDocItems(id).length;
+    html+='<span class="q-docchip'+(id===quoteActiveDoc?' on':'')+'" onclick="focusQuoteDoc(\''+id+'\')" title="点击聚焦该单据（后续新增的收费项归入它）">'+
+      '<span class="dot" style="background:'+qDocColor(id)+'"></span>'+
+      '<b>单据 '+esc(id)+'</b>'+
+      '<span class="amt">'+fmtMoney(m.quoteSum)+' '+esc(quoteCurrency)+' · '+n+' 项</span>'+
+      (quoteDocIds.length>1?'<button type="button" class="x" onclick="event.stopPropagation();delQuoteDoc(\''+id+'\')" title="删除该单据（收费项会并入其它单据）">✕</button>':'')+
+    '</span>';
+  });
+  var nInv = quoteDocIds.filter(function(id){
+    return qDocItems(id).some(function(f){ return f.inc!==false; });
+  }).length;
+  html+='<button type="button" class="btn sm ghost q-doc-add" onclick="addQuoteDoc()">＋ 新增单据</button>';
+  html+='<span class="q-doc-info">共 '+quoteDocIds.length+' 张单据 · 将生成 '+nInv+' 张 INVOICE · 新增收费项归入「单据 '+esc(quoteActiveDoc)+'」</span>';
+  bar.innerHTML=html;
+}
+/* 新增单据：下一个可用字母编号，并把它设为当前聚焦单据 */
+function addQuoteDoc(){
+  var id="";
+  for(var i=0;i<26;i++){ var c=String.fromCharCode(65+i); if(quoteDocIds.indexOf(c)<0){ id=c; break; } }
+  if(!id){ id="D"+(quoteDocIds.length+1); }
+  quoteDocIds.push(id);
+  quoteActiveDoc=id;
+  renderQuoteDocBar(); buildQuoteFeeRows(); renderQuoteTotal();
+  toast("已新增单据 "+id+"，请把需要单独开票的收费项归属改为它");
+}
+/* 删除单据：完全空白的行直接删掉，有内容的行迁移到剩下的第一张单据 */
+function delQuoteDoc(id){
+  if(quoteDocIds.length<=1){ toast("至少保留一张单据"); return; }
+  var rest=quoteDocIds.filter(function(x){ return x!==id; });
+  var fb=rest[0];
+  quoteItems=quoteItems.filter(function(f){
+    if(qDocOf(f)!==id) return true;
+    if(qItemBlank(f)) return false;   /* 空白行直接删 */
+    f.doc=fb; return true;            /* 有内容的迁移到第一张 */
+  });
+  quoteDocIds=rest;
+  if(quoteActiveDoc===id) quoteActiveDoc=fb;
+  renderQuoteDocBar(); buildQuoteFeeRows(); renderQuoteTotal();
+  toast("已删除单据 "+id+"（收费项已并入单据 "+fb+"）");
+}
+/* 改某条收费项的归属单据 */
+function setQuoteDoc(i,v){
+  if(!quoteItems[i]) return;
+  quoteItems[i].doc=v;
+  quoteActiveDoc=v;
+  buildQuoteFeeRows(); renderQuoteTotal();
+}
+/* 点击 chip：聚焦该单据（行高亮 + 后续新增收费项归入它） */
+function focusQuoteDoc(id){
+  quoteActiveDoc=id;
+  renderQuoteDocBar();
+  var tb=document.getElementById("quote-fee-body"); if(!tb) return;
+  tb.querySelectorAll("tr").forEach(function(tr){
+    var td=tr.querySelector("td.col-doc");
+    tr.classList.toggle("doc-focus", !!(td && td.getAttribute("data-doc")===id));
+  });
+}
 /* 当前报价单的编号/日期（generateQuote 时确定；保存后随航次存库，重开不再变） */
 var quoteNo = "", quoteDate = "";
-/* 通行行判定：Unit / Qty / Unit Price 三项都为空 → 该行合并成一格通栏，只显示 ITEM 内容
-   （典型用法：在费用明细里插「PORT CHARGES」这类小节标题）。三列只要填了任意一项就是普通行。 */
-function feeRowIsThrough(f){
+/* ★ 小节标题判定（v1.20.39）：改为**显式标记** f.sec === true。
+   不再用「Unit / Qty / Unit Price 三列为空」自动推断 —— 那样一不小心把三列清空
+   （或刚插入还没填的空行）就会突然变成通栏标题，行号、单据归属也跟着变。
+   现在只有用户主动点「＋ 添加小节标题」插入的行（或被显式转换的行）才是小节标题。 */
+function quoteRowIsSection(f){
+  if(!f) return false;
+  if(f.sec != null) return f.sec === true;
+  /* 旧数据没有 sec 字段：历史上被当作小节标题的行（三列全空）继续识别为小节，
+     避免升级后已保存的 PORT CHARGES 这类标题突然变成普通行。 */
+  return quoteRowWasImplicitSection(f);
+}
+function quoteRowWasImplicitSection(f){
   return !String(f.unit==null?"":f.unit).trim() &&
          !String(f.qty==null?"":f.qty).trim() &&
          !String(f.price==null?"":f.price).trim();
 }
+/* 兼容旧调用点（报价单与 INVOICE 渲染都用这个名字） */
+function feeRowIsThrough(f){ return quoteRowIsSection(f); }
+/* 保存/载入时给数量补默认值「1」（数量留空按 1 计）。
+   小节标题行不参与计费，数量保持空。 */
+function quoteQtySaved(f){
+  if(quoteRowIsSection(f)) return "";
+  var qv = String(f.qty==null?"":f.qty).trim();
+  return qv !== "" ? f.qty : "1";
+}
 function buildQuoteFeeRows(){
   var tb=document.getElementById("quote-fee-body"); if(!tb) return;
   if(!quoteItems.length){
-    tb.innerHTML='<tr><td colspan="11" class="empty">暂无收费项，点击下方「＋ 添加收费项」手动添加。</td></tr>';
+    tb.innerHTML='<tr><td colspan="12" class="empty">暂无收费项，点击下方「＋ 添加收费项」手动添加。</td></tr>';
     return;
   }
   /* 行序号：通行行不占号，只对普通行连续编号（1,2,3…），故先算好再渲染 */
@@ -2563,6 +2708,13 @@ function buildQuoteFeeRows(){
   tb.innerHTML = quoteItems.map(function(it,i){
     if(it._id==null) it._id = "q"+(++quoteItemSeq);   /* 稳定唯一 id，拖动排序据此定位 */
     var off = it.inc ? "" : " off";
+    /* 当前聚焦单据的行加高亮（doc-focus） */
+    if(qDocOf(it)===quoteActiveDoc) off += " doc-focus";
+    /* 「单据」归属单元格：下拉选择该行开票时归入哪张单据（打印稿隐藏该列） */
+    var docCell = '<td class="col-doc" data-doc="'+esc(qDocOf(it))+'">'+
+      '<select onchange="setQuoteDoc('+i+',this.value)">'+
+        quoteDocIds.map(function(d){ return '<option value="'+esc(d)+'"'+(d===qDocOf(it)?' selected':'')+'>单据 '+esc(d)+'</option>'; }).join("")+
+      '</select></td>';
     function cell(cls, val, key, ph, readonly, ml){
       var edit = ml
         ? '<textarea rows="2" class="q-fee-ta" placeholder="'+ph+'" oninput="updQuoteItem('+i+',\''+key+'\',this)">'+esc(val)+'</textarea>'
@@ -2578,17 +2730,19 @@ function buildQuoteFeeRows(){
       return '<tr class="q-fee-through'+off+'" data-id="'+it._id+'">'+
         '<td class="col-drag"><span class="q-drag" title="按住拖动调整顺序">⠿</span></td>'+
         '<td class="col-chk"><input type="checkbox" class="q-fee-chk" '+(it.inc?"checked":"")+' onchange="toggleQuoteItem('+i+',this)"></td>'+
+        docCell+
         '<td class="col-through" colspan="8">'+
           '<textarea rows="1" class="q-fee-ta" placeholder="收费项目" oninput="updQuoteItem('+i+',\'item\',this)">'+esc(it.item==null?"":it.item)+'</textarea>'+
           '<span class="ptxt">'+nl2br(esc(it.item==null?"":it.item))+'</span>'+
         '</td>'+
-        '<td class="col-del"><button type="button" class="q-fee-copy" onclick="copyQuoteItem('+i+')" title="在本行下方插入一条相同的收费项">⧉</button>'+
+        '<td class="col-del"><button type="button" class="q-fee-sec" onclick="toggleQuoteSection('+i+')" title="转回普通收费项（取消小节标题）">↩</button>'+
           '<button type="button" class="q-fee-del" onclick="delQuoteItem('+i+')">✕</button></td>'+
       '</tr>';
     }
     return '<tr class="'+off+'" data-id="'+it._id+'">'+
       '<td class="col-drag"><span class="q-drag" title="按住拖动调整顺序">⠿</span></td>'+
       '<td class="col-chk"><input type="checkbox" class="q-fee-chk" '+(it.inc?"checked":"")+' onchange="toggleQuoteItem('+i+',this)"></td>'+
+      docCell+
       '<td class="num col-no">'+esc(feeNos[i])+'</td>'+
       cell("col-item", it.item, "item", "收费项目", false, true)+
       cell("col-unit", it.unit, "unit", "计费单位")+
@@ -2702,16 +2856,65 @@ function updQuoteItem(i,key,el){ if(!quoteItems[i]) return; quoteItems[i][key]=e
   if(key==="price"||key==="qty"||key==="cost") renderQuoteTotal();
 }
 function toggleQuoteItem(i,el){ if(!quoteItems[i]) return; quoteItems[i].inc=el.checked; var tr=el.closest("tr"); if(tr) tr.classList.toggle("off",!el.checked); renderQuoteTotal(); }
-function addQuoteItem(){ quoteItems.push({item:"",unit:"",qty:"1",price:"",cost:"",note:"",inc:true}); buildQuoteFeeRows(); renderQuoteTotal(); }
+/* 普通收费项：数量默认 1，且**不会**因为三列为空自动变成小节标题（v1.20.39） */
+function addQuoteItem(){ quoteItems.push({item:"",unit:"",qty:"1",price:"",cost:"",note:"",inc:true,doc:quoteActiveDoc,sec:false}); buildQuoteFeeRows(); renderQuoteTotal(); }
+/* 添加小节标题（v1.20.38 引入 / v1.20.39 改为显式 sec 标记）：
+   插入一条 sec:true 的行 → 渲染成横跨整行的加粗小节标题（如「PORT CHARGES」），
+   不占行序号、不参与合计。只有这条路径产生的行才是小节标题。 */
+function addQuoteSection(){
+  quoteItems.push({item:"",unit:"",qty:"",price:"",cost:"",note:"",inc:true,doc:quoteActiveDoc,sec:true});
+  buildQuoteFeeRows(); renderQuoteTotal();
+  /* 直接把光标送进新标题框，省一次点击 */
+  var tb=document.getElementById("quote-fee-body");
+  if(!tb) return;
+  var rows=tb.querySelectorAll("tr.q-fee-through");
+  var last=rows[rows.length-1];
+  var ta=last?last.querySelector("textarea"):null;
+  if(ta){ try{ ta.focus(); }catch(e){} }
+}
+/* 小节标题 ⇄ 普通收费项 互转（v1.20.39）。
+   转回收费项时数量按「留空=1」补默认值；转成标题时清掉单位/数量/单价三项。 */
+function toggleQuoteSection(i){
+  var f=quoteItems[i]; if(!f) return;
+  if(quoteRowIsSection(f)){
+    f.sec=false;
+    if(String(f.qty==null?"":f.qty).trim()==="") f.qty="1";
+    toast("已转回收费项");
+  }else{
+    f.sec=true; f.unit=""; f.qty=""; f.price="";
+    toast("已转为小节标题");
+  }
+  buildQuoteFeeRows(); renderQuoteTotal();
+}
+/* 打印稿的 FEE SCHEDULE 比屏幕少 5 列（拖拽/勾选/单据/删除/成本全部 display:none），
+   而通行行屏幕态是 colspan="8"（跨 no..rem）。打印时若不收窄成 7，就会多跨一列，
+   把后面的单元格整体挤乱（现象：小节标题被打上 No./Qty，后续行错位）。v1.20.38 修复。 */
+function quoteThroughPrintColspan(on){
+  var list=document.querySelectorAll(".quote .q-fee td.col-through");
+  for(var i=0;i<list.length;i++){
+    var td=list[i];
+    if(on){
+      if(td.getAttribute("colspan")!=="7"){
+        td.setAttribute("data-cs", td.getAttribute("colspan")||"8");
+        td.setAttribute("colspan","7");
+      }
+    }else{
+      var cs=td.getAttribute("data-cs");
+      if(cs){ td.setAttribute("colspan",cs); td.removeAttribute("data-cs"); }
+    }
+  }
+}
 function delQuoteItem(i){ quoteItems.splice(i,1); buildQuoteFeeRows(); renderQuoteTotal(); }
 /* 复制一行：在原行下方插入一条内容相同的收费项（数量重置为 1），
-   方便同一收费项目按不同数量/备注拆成多行。 */
+   方便同一收费项目按不同数量/备注拆成多行。归属单据一并复制。 */
 function copyQuoteItem(i){
   var src = quoteItems[i]; if(!src) return;
   quoteItems.splice(i+1, 0, {
     item:src.item||"", unit:src.unit||"", qty:"1",
     price:src.price||"", cost:(src.cost||""), note:src.note||"",
-    inc:(src.inc!==false)
+    inc:(src.inc!==false), doc:(src.doc||quoteActiveDoc),
+    /* 复制出来的行永远按「普通收费项」处理（数量已重置为 1），不继承小节标题标记 */
+    sec:false
   });
   buildQuoteFeeRows(); renderQuoteTotal();
   toast("已复制「" + ((src.item||"未命名")) + "」");
@@ -2719,6 +2922,8 @@ function copyQuoteItem(i){
 function renderQuoteTotal(){
   var m = quoteMath();
   var el=document.getElementById("quote-total");
+  /* 单据分组工具条的小计随收费项变动一起刷新 */
+  renderQuoteDocBar();
   if(!el) return;
   /* 打印稿才显示的 Amount 列：数量 × 单价，逐行回填 */
   quoteItems.forEach(function(f,i){
@@ -2790,18 +2995,28 @@ function generateQuote(){
   var qno = quoteNo, dmy = quoteDate;
   var client = localClients.find(function(c){return c.company===s.principal;});
   if(saved && saved.fxRate!=null) quoteFxRate = saved.fxRate||"";
+  /* ★ 单据分组：一船两票。旧数据没有 docs 字段 → 只有一张单据 A，收费项全部归 A。
+     新数据 s.quote.docs = ["A","B",…]，s.quote.items[].doc = 归属的单据编号。 */
+  if(saved && saved.docs && saved.docs.length){ quoteDocIds = saved.docs.slice(); }
+  else { quoteDocIds = ["A"]; }
+  quoteActiveDoc = quoteDocIds[0];
   if(saved){
     quoteCurrency = saved.currency || "CNY";
     quoteItems = (saved.items||[]).map(function(f){
-      /* 兼容旧版保存的报价单（没有 qty / cost 字段）→ 数量补 1，成本留空 */
-      return {item:f.item||"",unit:f.unit||"",qty:(f.qty==null||f.qty===""?"1":f.qty),price:f.price||"",cost:(f.cost||""),note:f.note||"",inc:f.inc!==false};
+      /* 兼容旧版保存的报价单（没有 qty / cost / doc / sec 字段）→ 数量补 1，成本留空，归属第一张单据。
+         sec 原样带上；旧数据没有该字段时，quoteRowIsSection() 会按「三列全空」回溯识别，
+         已保存的小节标题不会因升级而变成普通行。 */
+      return {item:f.item||"",unit:f.unit||"",qty:quoteQtySaved(f),price:f.price||"",cost:(f.cost||""),note:f.note||"",inc:f.inc!==false,
+              /* 字段缺失时保持 undefined（不是 false），quoteRowIsSection() 才会走旧数据回溯 */
+              sec:(f.sec==null ? undefined : f.sec===true),
+              doc:(f.doc && quoteDocIds.indexOf(f.doc)>=0 ? f.doc : quoteDocIds[0])};
     });
   } else {
     var firstCur = (agent && agent.fees && agent.fees.length) ? agent.fees[0].currency : "";
     quoteCurrency = (firstCur==="USD") ? "USD" : "CNY";
     quoteFxRate = "";   /* 未保存过报价单则无汇率 */
     quoteItems = (agent?(agent.fees||[]):[]).map(function(f){
-      return {item:f.item||"",unit:f.unit||"",qty:(f.qty==null||f.qty===""?"1":f.qty),price:f.price||"",cost:(f.cost||""),note:f.note||"",inc:true};
+      return {item:f.item||"",unit:f.unit||"",qty:quoteQtySaved(f),price:f.price||"",cost:(f.cost||""),note:f.note||"",inc:true,doc:quoteDocIds[0]};
     });
   }
   var hint = saved
@@ -2843,16 +3058,21 @@ function generateQuote(){
       '<div class="q-sec"><div class="q-sec-t">FEE SCHEDULE</div>'+
         '<div class="q-feebar"><span class="q-hint">'+hint+'</span>'+curSel+'</div>'+
         qPickBarHTML(s)+
+        '<div class="q-docbar" id="quote-docbar"></div>'+
         '<table class="q-fee"><thead><tr>'+
-          '<th class="col-drag"></th><th class="col-chk"></th><th class="num col-no">No.</th><th class="col-item">Item</th><th class="col-unit">Unit</th><th class="col-qty" style="text-align:right">Qty</th><th class="col-up" style="text-align:right">Unit Price</th><th class="col-amt" style="text-align:right">Amount</th><th class="col-cost" style="text-align:right">Cost</th><th class="col-rem">Remarks</th><th class="col-del"></th>'+
+          '<th class="col-drag"></th><th class="col-chk"></th><th class="col-doc">单据</th><th class="num col-no">No.</th><th class="col-item">Item</th><th class="col-unit">Unit</th><th class="col-qty" style="text-align:right">Qty</th><th class="col-up" style="text-align:right">Unit Price</th><th class="col-amt" style="text-align:right">Amount</th><th class="col-cost" style="text-align:right">Cost</th><th class="col-rem">Remarks</th><th class="col-del"></th>'+
         '</tr></thead><tbody id="quote-fee-body"></tbody></table>'+
-        '<button type="button" class="btn sm ghost q-fee-add" onclick="addQuoteItem()">＋ 添加收费项</button>'+
+        '<div class="q-fee-addbar">'+
+          '<button type="button" class="btn sm ghost q-fee-add" onclick="addQuoteItem()">＋ 添加收费项</button>'+
+          '<button type="button" class="btn sm ghost q-fee-add" onclick="addQuoteSection()">＋ 添加小节标题</button>'+
+        '</div>'+
         '<div class="q-total" id="quote-total">TOTAL: —</div>'+
       '</div>'+
     '</div>';
   document.getElementById("quote-body").innerHTML = html;
   buildQuoteFeeRows();
   renderQuoteTotal();
+  renderQuoteDocBar();
   document.getElementById("quote-mask").classList.remove("hidden");
 }
 /* 保存报价单：编号/日期/币种/收费项（含勾选状态）随航次存库（s.quote）。
@@ -2864,8 +3084,11 @@ function saveQuote(){
     date: quoteDate,
     currency: quoteCurrency,
     fxRate: quoteFxRate||"",
+    /* 单据分组（一船两票）：单据编号列表 + 每条收费项的归属单据 */
+    docs: quoteDocIds.slice(),
     items: quoteItems.map(function(it){
-      return {item:it.item||"",unit:it.unit||"",qty:(it.qty==null||it.qty===""?"1":it.qty),price:it.price||"",cost:(it.cost||""),note:it.note||"",inc:!!it.inc};
+      /* sec：小节标题标记（v1.20.39 起显式落库，不再靠三列为空推断） */
+      return {item:it.item||"",unit:it.unit||"",qty:quoteQtySaved(it),price:it.price||"",cost:(it.cost||""),note:it.note||"",inc:!!it.inc,doc:qDocOf(it),sec:quoteRowIsSection(it)};
     }),
     savedAt: new Date().toISOString()
   };
@@ -2984,7 +3207,7 @@ function addQuoteItemFromPrice(){
     if(!f) return;
     quoteItems.push({
       item:f.item||"", unit:f.unit||"", qty:"1",
-      price:f.price||"", cost:(f.cost||""), note:f.note||"", inc:true
+      price:f.price||"", cost:(f.cost||""), note:f.note||"", inc:true, doc:quoteActiveDoc, sec:false
     });
     added++; lastName = (f.item||"").trim();
   });
@@ -3228,7 +3451,24 @@ function invoicePrintDate(){
   var d = new Date();
   return "["+pad2(d.getDate())+" / "+pad2(d.getMonth()+1)+" / "+d.getFullYear()+"]";
 }
-/* 生成并预览 INVOICE（打印前调用） */
+/* ★ 一船两票：把收费项按「单据」分组。
+   每组出一张 INVOICE；只出**有勾选收费项**的单据（全部取消勾选的不出票）。
+   老数据（无 doc 字段）全部归入第一张单据 A，行为与旧版完全一致。 */
+function quoteDocGroups(items, docs){
+  var ids = (docs && docs.length) ? docs.slice() : ["A"];
+  var out=[];
+  ids.forEach(function(id){
+    var gi=(items||[]).filter(function(f){
+      var d=(f && f.doc && ids.indexOf(f.doc)>=0) ? f.doc : ids[0];
+      return d===id;
+    });
+    if(!gi.length) return;
+    if(!gi.some(function(f){ return f.inc!==false; })) return;  /* 整组未勾选 → 不出票 */
+    out.push({id:id, items:gi});
+  });
+  return out;
+}
+/* 生成并预览 INVOICE（打印前调用）—— 一船两票时可一次生成多张 */
 function buildInvoice(){
   var s = data.find(function(x){return x.id===currentId;}); if(!s) return false;
   var q = s.quote;
@@ -3238,9 +3478,34 @@ function buildInvoice(){
   /* 编号沿用报价单（保证报价单与发票一一对应）；DATE 用打印当下真实日期 */
   var qno   = (q && q.no)   || quoteNo   || "";
   var qdate = invoicePrintDate();
-  document.getElementById("invoice-print").innerHTML = buildInvoiceHtml(s, items, currency, qno, qdate);
+  /* 单据分组：已保存的报价单用其 docs；未保存过则用当前编辑态的分组 */
+  var docs = (q && q.docs && q.docs.length) ? q.docs.slice()
+            : (q ? ["A"] : quoteDocIds.slice());
+  var groups = quoteDocGroups(items, docs);
+  if(!groups.length){ toast("没有勾选任何收费项，无法生成 INVOICE"); return false; }
+  /* 实际生成多张票时，编号加后缀 [ASD2026103005-A]（后缀在方括号内）；
+     只有一张票时编号保持原样 —— 与旧版完全一致，不影响已有单据。 */
+  var multi = groups.length>1;
+  var html = groups.map(function(g){
+    var no = qno;
+    if(multi && no){
+      no = /\]$/.test(no) ? no.replace(/\]$/,"-"+g.id+"]") : (no+"-"+g.id);
+    }
+    /* 每张票包一层 .inv-page：屏幕预览时彼此分隔，打印时逐张分页 */
+    return '<div class="inv-page">'+buildInvoiceHtml(s, g.items, currency, no, qdate)+'</div>';
+  }).join("");
+  document.getElementById("invoice-print").innerHTML = html;
   return true;
-  return true;
+}
+/* 打印 QUOTATION（v1.20.38）：必须显式声明这次打的是报价单。
+   否则 beforeprint 只要看到 #invoice-print 里还留着上次生成的 INVOICE，
+   就会给 body 挂 inv-print（把报价单整块 display:none），
+   「打印 QUOTATION」结果打出来的是 INVOICE —— 报价单的内容一条都不出现。 */
+var quotePrintPending = false;
+function printQuote(){
+  quotePrintPending = true;
+  document.body.classList.remove("inv-print","v-print","oktb-print");
+  try{ window.print(); }finally{ quotePrintPending = false; }
 }
 function printInvoice(){
   if(!buildInvoice()) return;
@@ -3937,7 +4202,7 @@ function pickVoyRow(rows, en){
   return pool[0];
 }
 function voyBtnHTML(s){
-  /* 仅「在港」in /「即将到港」arr 的船可刷新盐田船期；已离港 / 离港结算的船船期已定，不再提供刷新 */
+  /* 仅「在港」in /「即将到港」arr 的船可刷新盐田船期；已离港未结算 / 离港结算的船船期已定，不再提供刷新 */
   if(s.status!=="in" && s.status!=="arr"){
     return '<span class="voy-na" title="仅「在港 / 即将到港」的船可刷新船期">—</span>';
   }
@@ -5861,6 +6126,13 @@ function backToVoucherEdit(){
    只在凭证区确实有内容时才挂，否则会让「生成报价 → 打印」那条路径
    被 body.v-print #quote-mask{display:none} 误伤成空白页。 */
 window.addEventListener("beforeprint", function(){
+  /* 打印态的表格列数比屏幕少（见 quoteThroughPrintColspan 注释），先把通行行收窄 */
+  quoteThroughPrintColspan(true);
+  /* 用户明确点了「打印 QUOTATION」→ 只打报价单，不要被下面「INVOICE 优先」的判定劫持 */
+  if(quotePrintPending){
+    document.body.classList.remove("inv-print","v-print","oktb-print");
+    return;
+  }
   var pa = document.getElementById("voucher-print");
   var ip = document.getElementById("invoice-print");
   var op = document.getElementById("oktb-print");
@@ -5880,10 +6152,20 @@ window.addEventListener("beforeprint", function(){
   if(op && op.innerHTML.replace(/\s/g,"")) document.body.classList.add("oktb-print");
 });
 window.addEventListener("afterprint", function(){
+  quoteThroughPrintColspan(false);
   document.body.classList.remove("v-print");
   document.body.classList.remove("inv-print");
   document.body.classList.remove("oktb-print");
 });
+/* 兜底：某些环境（无头打印 / 嵌入 WebView / 直接 printToPDF）不派发 beforeprint，
+   但一定会切换 print 媒体查询，所以再挂一道 matchMedia 监听。 */
+(function(){
+  if(!window.matchMedia) return;
+  var mq = window.matchMedia("print");
+  var onchange = function(e){ quoteThroughPrintColspan(!!(e && e.matches)); };
+  if(mq.addEventListener) mq.addEventListener("change", onchange);
+  else if(mq.addListener) mq.addListener(onchange);
+})();
 function vFmtDate(iso){
   if(!iso) return "";
   var d = new Date(iso);
