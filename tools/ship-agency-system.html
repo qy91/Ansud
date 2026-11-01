@@ -1370,7 +1370,7 @@
 /* ---------------- 版本号 ----------------
    显示在左上角系统名称右侧。每次做了可见改动，往上加：
    小修：末位 +1；新增功能：中间位 +1。 */
-var APP_VERSION = "v1.20.47";;;;
+var APP_VERSION = "v1.20.49";;;;
 (function(){ var el=document.getElementById("appVer"); if(el) el.textContent=APP_VERSION; })();
 
 /* ---------------- i18n ---------------- */
@@ -1868,7 +1868,7 @@ function updateStats(){
 
 /* ---------------- dashboard list ---------------- */
 /* ---------------- 列表分页 + 每页数量 + 表头排序（按表分别保存到 Neon） ----------------
-   设置按表独立存储：{ ship:{size,sortKey,sortDir}, vessel:{...}, agent:{...}, client:{...} }
+   设置按表独立存储：{ ship, vessel, agent, client, settle } 各表独立保存 size/sortKey/sortDir
    size 为每页条数，0 表示全部；sortKey/sortDir 记录各表当前排序列与方向。
    数据走 app_settings 的 uiSettings 键（api_save_uisettings），与业务数据同一库，
    换设备 / 清缓存都不丢；写库带 800ms 防抖，连续翻页不会把请求打爆。
@@ -1887,7 +1887,7 @@ function uiSave(){
    localLegacy = 浏览器里遗留的旧 localStorage 数据，仅首次迁移用。 */
 function applyUISettings(fromDb, localLegacy){
   UI = {};
-  ["ship","vessel","agent","client"].forEach(function(k){
+  ["ship","vessel","agent","client","settle"].forEach(function(k){
     var d = (fromDb && fromDb[k]) || {};
     UI[k] = {
       size:      (typeof d.size === "number" && d.size >= 0) ? d.size : 20,
@@ -1895,9 +1895,9 @@ function applyUISettings(fromDb, localLegacy){
       sortDir:   (d.sortDir === "desc") ? "desc" : (d.sortKey ? "asc" : null)
     };
   });
-  /* 首次迁移：库里没有任何设置（四个表都是默认值）而本地有旧数据 → 搬上去 */
+  /* 首次迁移：库里没有任何设置（各表都是默认值）而本地有旧数据 → 搬上去 */
   if(localLegacy && Object.keys(localLegacy).length){
-    var dbEmpty = ["ship","vessel","agent","client"].every(function(k){ return !fromDb || !fromDb[k]; });
+    var dbEmpty = ["ship","vessel","agent","client","settle"].every(function(k){ return !fromDb || !fromDb[k]; });
     if(dbEmpty){
       Object.keys(localLegacy).forEach(function(k){
         if(!UI[k]) return;
@@ -1917,26 +1917,29 @@ function applyUISettings(fromDb, localLegacy){
     }catch(e){}
   }
 }
-var pager = {ship:1, vessel:1, agent:1, client:1};
+var pager = {ship:1, vessel:1, agent:1, client:1, settle:1};
 function renderByKey(key){
   if(key==="ship") renderDashboard();
   else if(key==="vessel") renderVessels();
   else if(key==="agent") renderAgents();
   else if(key==="client") renderClients();
+  else if(key==="settle") renderSettle();
 }
 /* 排序列配置：表 -> 列key -> 数据字段（__fees 表示代理收费项数量） */
 var SORT_CFG = {
   ship:   {cn:"cn", en:"en", port:"port", berth:"berth", eta:"eta", etd:"etd", status:"status"},
   vessel: {cn:"cn", en:"en", imo:"imo", mmsi:"mmsi", flag:"flag", type:"type", loa:"loa", beam:"beam", nt:"nt"},
   agent:  {company:"company", kind:"__kind", contact:"contact", phone:"phone", email:"email", address:"address", fees:"__fees", remark:"remark"},
-  client: {company:"company", ptype:"ptype", address:"address", contacts:"__contacts", vip:"__vip"}
+  client: {company:"company", ptype:"ptype", address:"address", contacts:"__contacts", vip:"__vip"},
+  settle: {cn:"cn", principal:"principal", port:"port", etd:"etd", cost:"__cost", quote:"__quote", profit:"__profit", settledAt:"settledAt"}
 };
 /* 表头列定义：非排序列 k 为 null */
 var COLS = {
   ship:   [{t:"#",w:"44px"},{k:"cn",t:"中文船名"},{k:"en",t:"英文船名"},{k:"port",t:"港口 PORT"},{k:"berth",t:"泊位"},{k:"eta",t:"靠泊时间 ETA"},{k:"etd",t:"离泊时间 ETD"},{k:"status",t:"状态"},{t:"船期",w:"96px"}],
   vessel: [{t:"#",w:"44px"},{k:"cn",t:"中文船名"},{k:"en",t:"英文船名"},{k:"imo",t:"IMO"},{k:"mmsi",t:"MMSI"},{k:"flag",t:"国籍"},{k:"type",t:"类型"},{k:"loa",t:"船长(m)"},{k:"beam",t:"船宽(m)"},{k:"nt",t:"净吨"},{t:"操作"}],
   agent:  [{t:"#",w:"44px"},{k:"company",t:"公司名"},{k:"kind",t:"类型"},{k:"contact",t:"联系人"},{k:"phone",t:"电话"},{k:"email",t:"邮箱"},{k:"address",t:"地址 / 邮编"},{k:"fees",t:"收费项目数"},{t:"操作"}],
-  client: [{t:"#",w:"44px"},{k:"company",t:"公司名称 Company"},{k:"ptype",t:"委托方类别",w:"110px"},{k:"address",t:"地址 Address"},{k:"contacts",t:"联系人",w:"90px"},{k:"vip",t:"VIP",w:"70px"},{t:"操作",w:"212px"}]
+  client: [{t:"#",w:"44px"},{k:"company",t:"公司名称 Company"},{k:"ptype",t:"委托方类别",w:"110px"},{k:"address",t:"地址 Address"},{k:"contacts",t:"联系人",w:"90px"},{k:"vip",t:"VIP",w:"70px"},{t:"操作",w:"212px"}],
+  settle: [{k:"cn",t:"船名"},{k:"principal",t:"委托方"},{k:"port",t:"港口"},{k:"etd",t:"离泊时间"},{k:"cost",t:"成本合计",r:true},{k:"quote",t:"报价合计",r:true},{k:"profit",t:"利润（利润率）",r:true},{k:"settledAt",t:"结算时间"},{t:""}]
 };
 function sortVal(key, colKey, item){
   var field = SORT_CFG[key][colKey];
@@ -1945,6 +1948,10 @@ function sortVal(key, colKey, item){
   /* 委托方按公司聚合后的派生列 */
   if(field==="__contacts") return (item.contacts||[]).length;
   if(field==="__vip") return (item.vipCount||0);
+  /* 航次结算：成本/报价/利润为按币种汇总后的派生数值，供排序比较 */
+  if(field==="__cost")   return (item.__cost==null)   ? "" : item.__cost;
+  if(field==="__quote")  return (item.__quote==null)  ? "" : item.__quote;
+  if(field==="__profit") return (item.__profit==null) ? "" : item.__profit;
   var v = item[field];
   return (v==null) ? "" : v;
 }
@@ -1978,10 +1985,14 @@ function toggleSort(key, colKey){
 }
 function headRow(key){
   return COLS[key].map(function(c){
-    if(!c.k) return '<th'+(c.w?' style="width:'+c.w+'"':'')+'>'+c.t+'</th>';
+    var stl="";
+    if(c.w) stl += "width:"+c.w;
+    if(c.r) stl += (stl?";":"")+"text-align:right";
+    var stlAttr = stl ? ' style="'+stl+'"' : "";
+    if(!c.k) return '<th'+stlAttr+'>'+c.t+'</th>';
     var st=uiState(key);
     var ind = st.sortKey===c.k ? (st.sortDir==="asc" ? " ▲" : " ▼") : " ⇅";
-    return '<th'+(c.w?' style="width:'+c.w+'"':'')+' data-sort="'+key+':'+c.k+'" onclick="toggleSort(\''+key+'\',\''+c.k+'\')">'+c.t+'<span class="si">'+ind+'</span></th>';
+    return '<th'+stlAttr+' data-sort="'+key+':'+c.k+'" onclick="toggleSort(\''+key+'\',\''+c.k+'\')">'+c.t+'<span class="si">'+ind+'</span></th>';
   }).join("");
 }
 function setHead(key){
@@ -1993,7 +2004,7 @@ function setPageSize(key, v){
   uiSave(); pager[key]=1; renderByKey(key); renderPageSizeSel(key);
 }
 function renderPageSizeSel(key){
-  if(!key){ ["ship","vessel","agent","client"].forEach(renderPageSizeSel); return; }
+  if(!key){ ["ship","vessel","agent","client","settle"].forEach(renderPageSizeSel); return; }
   var st=uiState(key);
   var cur = st.size===0 ? "all" : st.size;
   var html = '每页 <select onchange="setPageSize(\''+key+'\', this.value)">'+
@@ -2509,6 +2520,14 @@ function renderSettle(){
       '</div>';
     return;
   }
+  /* 预计算排序所需的派生数值（与 settleSummaryHTML 共用同一口径） */
+  list.forEach(function(s){
+    var q=s.quote; var cur=(q&&q.currency)||"CNY"; var m=quoteMath((q&&q.items)||[],cur);
+    s.__cost   = m.hasCost  ? m.costSum  : null;
+    s.__quote  = m.hasQuote ? m.quoteSum : null;
+    s.__profit = (m.hasCost && m.hasQuote) ? m.margin : null;
+  });
+  list = applySort("settle", list);
   var rows = list.map(function(s){
     var q=s.quote;
     var cur = (q && q.currency) || "CNY";
@@ -2528,44 +2547,50 @@ function renderSettle(){
       '<td style="text-align:right;white-space:nowrap"><button type="button" class="btn sm ghost" onclick="event.stopPropagation();cancelSettle('+s.id+')">取消结算</button></td>'+
     '</tr>';
   }).join("");
-  var html = '<table><thead><tr>'+
-    '<th>船名</th><th>委托方</th><th>港口</th><th>离泊时间</th>'+
-    '<th style="text-align:right">成本合计</th><th style="text-align:right">报价合计</th>'+
-    '<th style="text-align:right">利润（利润率）</th><th>结算时间</th><th></th>'+
-    '</tr></thead><tbody>'+rows+'</tbody></table>';
+  var html = '<table><thead id="settle-thead"></thead><tbody id="settle-tbody">'+rows+'</tbody></table>';
   html += settleSummaryHTML(list);
   box.innerHTML = html;
+  setHead("settle");   /* 用通用表头（带排序指示 + 点击排序），排序设置经 uiSave 持久化 */
 }
-/* 所选区间统计：成本合计 / 报价合计 / 整体利润率（利润率 = (报价-成本)/报价）。
-   按币种分组（不同币种不能相加），某币种缺成本或报价时不算利润率。 */
+/* 所选区间统计（v1.20.49）：成本合计 / 报价合计 / 利润 / 利润率（利润率 = (报价-成本)/报价）。
+   统一折算成 RMB：USD 航次按其报价单里填写的汇率（CNY/USD）乘算折成人民币后相加，
+   这样不同币种才能汇总；该航次报价单没填汇率时无法折算，单独列出提醒。 */
 function settleSummaryHTML(list){
-  var groups={};
+  var cost=0, quote=0, has=false;   /* RMB 口径合计 */
+  var nofx=[];                      /* 缺汇率、无法折算的航次 */
   list.forEach(function(s){
     var q=s.quote; if(!q) return;
     var cur=(q.currency)||"CNY";
     var m=quoteMath((q.items)||[],cur);
     if(!m.hasCost && !m.hasQuote) return;
-    var g=groups[cur]||(groups[cur]={cost:0,quote:0,hasCost:false,hasQuote:false});
-    if(m.hasCost){ g.cost+=m.costSum; g.hasCost=true; }
-    if(m.hasQuote){ g.quote+=m.quoteSum; g.hasQuote=true; }
-  });
-  var curs=Object.keys(groups);
-  if(!curs.length) return '';
-  var rows=curs.map(function(cur){
-    var g=groups[cur];
-    if(g.hasCost && g.hasQuote){
-      var rate= g.quote>0 ? ((g.quote-g.cost)/g.quote*100) : 0;
-      return '<div class="ss-row"><span class="ss-cur">'+esc(cur)+'</span>'+
-        '<span>成本合计 <b>'+fmtMoney(g.cost)+'</b></span>'+
-        '<span>报价合计 <b>'+fmtMoney(g.quote)+'</b></span>'+
-        '<span>利润率 <b>'+rate.toFixed(1)+'%</b></span></div>';
+    if(cur==="USD"){
+      var fx=parseFloat(String(q.fxRate==null?"":q.fxRate).replace(/[^0-9.]/g,""));
+      if(!(fx>0)){ nofx.push(s.cn||s.en||("航次#"+s.id)); return; }
+      if(m.hasCost){ cost+=m.costSum*fx; has=true; }
+      if(m.hasQuote){ quote+=m.quoteSum*fx; has=true; }
+    }else{
+      if(m.hasCost){ cost+=m.costSum; has=true; }
+      if(m.hasQuote){ quote+=m.quoteSum; has=true; }
     }
-    var parts=[];
-    if(g.hasCost)  parts.push('成本合计 <b>'+fmtMoney(g.cost)+'</b>');
-    if(g.hasQuote) parts.push('报价合计 <b>'+fmtMoney(g.quote)+'</b>');
-    return '<div class="ss-row"><span class="ss-cur">'+esc(cur)+'</span><span>'+parts.join(' ｜ ')+'</span><span class="ss-note">（缺成本或报价，无法计算利润率）</span></div>';
-  }).join("");
-  return '<div class="settle-sum"><div class="ss-title">统计（所选区间）</div>'+rows+'</div>';
+  });
+  if(!has && !nofx.length) return '';
+  cost=round2(cost); quote=round2(quote);
+  var rows='';
+  if(has){
+    var profit=round2(quote-cost);
+    var rate = quote>0 ? ((quote-cost)/quote*100) : 0;
+    rows+='<div class="ss-row"><span class="ss-cur">RMB</span>'+
+      '<span>成本合计 <b>'+fmtMoney(cost)+'</b></span>'+
+      '<span>报价合计 <b>'+fmtMoney(quote)+'</b></span>'+
+      '<span>利润 <b>'+fmtMoney(profit)+'</b></span>'+
+      '<span>利润率 <b>'+rate.toFixed(1)+'%</b></span></div>';
+  }
+  if(nofx.length){
+    rows+='<div class="ss-row"><span class="ss-cur">USD</span>'+
+      '<span>未折算计入上方 RMB 统计（报价单未填汇率）：</span>'+
+      '<span class="ss-note">'+esc(nofx.join("、"))+'</span></div>';
+  }
+  return '<div class="settle-sum"><div class="ss-title">统计（所选区间，USD 按各航次汇率折算为 RMB）</div>'+rows+'</div>';
 }
 /* 航次结算清单：点击行 → 屏幕预览 INVOICE（只预览，不触发打印对话框）。
    复用报价单的 buildInvoice + inv-preview 机制；返回按钮由 backToInvoiceEdit 处理（回到结算清单）。 */
@@ -2964,15 +2989,15 @@ function renderQuoteTotal(){
     cell.textContent = (isNaN(p) || String(f.price).trim()==="") ? "" : fmtMoney(round2(p*quoteQty(f.qty)));
   });
   var txt = "TOTAL: "+(m.hasQuote ? (fmtMoney(m.quoteSum)+" "+quoteCurrency) : "\u2014");
-  /* 汇率与外币金额：与 INVOICE 打印稿同款，报价单打印时也显示 */
+  /* 汇率与外币金额：与 INVOICE 打印稿同款，报价单打印时也显示。
+     v1.20.49：USD 单据只显示 TOTAL，汇率/RMB 换算都不显示（换算统一放航次结算统计）；CNY 单据保留 USD 换算。 */
   var fxLine = "";
-  var fx = parseFloat(String(quoteFxRate).replace(/[^0-9.]/g,""));
-  if(!isNaN(fx) && fx>0 && m.hasQuote){
-    var cur = (quoteCurrency==="USD") ? "USD" : "CNY";
-    var amt = round2(m.quoteSum/fx);
-    fxLine = '<span class="q-total-fx">CNY/USD Ex. Rate: '+fmtMoney(fx)+'</span>'+
-             '<span class="q-total-fx">Total Amount in '+(cur==="USD"?"CNY":"USD")+': '+
-               (cur==="USD" ? "RMB " : "$")+fmtMoney(amt)+'</span>';
+  if(quoteCurrency!=="USD"){
+    var fx = parseFloat(String(quoteFxRate).replace(/[^0-9.]/g,""));
+    if(!isNaN(fx) && fx>0 && m.hasQuote){
+      fxLine = '<span class="q-total-fx">CNY/USD Ex. Rate: '+fmtMoney(fx)+'</span>'+
+               '<span class="q-total-fx">Total Amount in USD: $'+fmtMoney(round2(m.quoteSum/fx))+'</span>';
+    }
   }
   el.innerHTML = '<span>'+txt+'</span>'+fxLine;
   /* 成本与毛利只显示在屏幕上，打印稿必须隐藏（内部信息不能给客户看） */
@@ -3363,17 +3388,17 @@ function letterheadContact(){
 var quoteFxRate = "";
 
 /* 底部汇总：与报价单底部 TOTAL 完全同款（右对齐纯文字，无表格边框）。
-   三行分别是 TOTAL / CNY/USD Ex. Rate / Total Amount in USD。 */
+   CNY 单据：TOTAL / CNY/USD Ex. Rate / Total Amount in USD（÷汇率，方向正确）。
+   USD 单据（v1.20.49）：只显示 TOTAL 一行，汇率与 RMB 换算都不在单据上显示 —— 换算统一放到航次结算统计里做。 */
 function invAmountBlock(m, currency){
   var h = '<div class="q-total q-sum">';
   h += '<span>TOTAL: '+(m.hasQuote ? (esc(currency)+" "+fmtMoney(m.quoteSum)) : "\u2014")+'</span>';
-  var fx = parseFloat(String(quoteFxRate).replace(/[^0-9.]/g,""));
-  if(!isNaN(fx) && fx>0 && m.hasQuote){
-    var cur = (currency==="USD") ? "USD" : "CNY";
-    var amt = round2(m.quoteSum/fx);
-    h += '<span>CNY/USD Ex. Rate: '+fmtMoney(fx)+'</span>';
-    h += '<span>Total Amount in '+(cur==="USD"?"CNY":"USD")+': '+
-         (cur==="USD" ? "RMB " : "$")+fmtMoney(amt)+'</span>';
+  if(currency!=="USD"){
+    var fx = parseFloat(String(quoteFxRate).replace(/[^0-9.]/g,""));
+    if(!isNaN(fx) && fx>0 && m.hasQuote){
+      h += '<span>CNY/USD Ex. Rate: '+fmtMoney(fx)+'</span>';
+      h += '<span>Total Amount in USD: $'+fmtMoney(round2(m.quoteSum/fx))+'</span>';
+    }
   }
   h += '</div>';
   return h;
@@ -3507,6 +3532,8 @@ function buildInvoice(){
   var items = (q && q.items && q.items.length) ? q.items : quoteItems;
   if(!items || !items.length){ toast("报价单还没有收费项，请先添加并保存报价单"); return false; }
   var currency = (q && q.currency) || quoteCurrency || "CNY";
+  /* 汇率同样从该航次报价单回载（v1.20.49）：否则从结算清单直接预览时用的是编辑器残留值 */
+  if(q && q.fxRate!=null) quoteFxRate = q.fxRate||"";
   /* 编号沿用报价单（保证报价单与发票一一对应）；
      DATE：已结算航次固定为「结算时间」（北京日期，来源 s.settledAt）；未结算则取打印当下真实日期 */
   var qno   = (q && q.no)   || quoteNo   || "";
@@ -3566,7 +3593,7 @@ function showPage(p){
   var nav=document.querySelector('.nav[data-page="'+p+'"]');
   if(nav) nav.classList.add("active");
 }
-function refresh(){ ["ship","vessel","agent","client"].forEach(renderPageSizeSel); updateStats(); renderDashboard(); autoGrowAllTA(); }
+function refresh(){ ["ship","vessel","agent","client","settle"].forEach(renderPageSizeSel); updateStats(); renderDashboard(); renderSettle(); autoGrowAllTA(); }
 
 /* ---------------- modal (新增) ---------------- */
 var newTodos=[];
@@ -6355,7 +6382,7 @@ function boot(){
         var o = JSON.parse(localStorage.getItem("shipAgencyPageSize_v1") || "null");
         if(o && typeof o.size === "number"){
           var t = {};
-          ["ship","vessel","agent","client"].forEach(function(k){ t[k] = {size:o.size, sortKey:null, sortDir:null}; });
+          ["ship","vessel","agent","client","settle"].forEach(function(k){ t[k] = {size:o.size, sortKey:null, sortDir:null}; });
           return t;
         }
       }catch(e){}
