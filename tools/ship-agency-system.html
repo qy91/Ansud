@@ -158,7 +158,7 @@
   .invoice .q-fee th.col-qty,.invoice .q-fee td.col-qty,
   .invoice .q-fee th.col-up,.invoice .q-fee td.col-up,
   .invoice .q-fee th.col-amt,.invoice .q-fee td.col-amt{white-space:nowrap !important;width:1% !important}
-  .invoice .q-fee th.col-rem,.invoice .q-fee td.col-rem{width:auto !important;white-space:nowrap !important}
+  .invoice .q-fee th.col-rem,.invoice .q-fee td.col-rem{width:1% !important;white-space:nowrap !important}
 
   /* ---------- OKTB 打印（套 OKTB.pdf 模板信纸抬头，流程同 INVOICE） ---------- */
   #oktb-print{display:none}
@@ -312,20 +312,30 @@
   .fee-tbl{display:flex;flex-direction:column;gap:8px;padding:12px 20px}
   .afee-tbl{width:100%;table-layout:auto;border-collapse:separate;border-spacing:0 8px;background:transparent;border:none;border-radius:0;overflow:visible}
   .afee-tbl th{font-size:12px;color:var(--muted);font-weight:600;text-align:left;padding:0 4px;border-bottom:none;background:transparent;white-space:nowrap}
-  .afee-tbl th:first-child,.afee-tbl td:first-child{width:50%}
+  .afee-tbl th:first-child,.afee-tbl td:first-child{width:28px;padding:0 2px;text-align:center;vertical-align:middle}
+  .afee-tbl th.col-item,.afee-tbl td.col-item{width:50%}
   .afee-tbl td{padding:0 4px;border-bottom:none;text-align:left;vertical-align:middle}
-  .afee-tbl td:nth-child(2){min-width:64px}
-  .afee-tbl td:nth-child(3),.afee-tbl td:nth-child(4){min-width:78px}
-  .afee-tbl td:nth-child(5){min-width:64px}
-  .afee-tbl td:nth-child(6){min-width:120px}
-  .afee-tbl td:last-child{width:34px;padding-right:0;text-align:right}
+  .afee-tbl td:nth-child(3){min-width:64px}
+  .afee-tbl td:nth-child(4),.afee-tbl td:nth-child(5){min-width:78px}
+  .afee-tbl td:nth-child(6){min-width:64px}
+  .afee-tbl td:nth-child(7){min-width:120px}
+  .afee-tbl td:last-child{width:64px;padding-right:0;text-align:right;white-space:nowrap}
   .afee-tbl input{padding:7px 9px;border:1px solid var(--brand);border-radius:6px;font-size:13px;font-family:inherit;width:100%;box-sizing:border-box}
   .afee-tbl input.afx{width:100%;min-width:0;max-width:100%}
-  .afee-tbl td:nth-child(2) input.afx{max-width:90px}
-  .afee-tbl td:nth-child(3) input.afx,.afee-tbl td:nth-child(4) input.afx{max-width:110px}
-  .afee-tbl td:nth-child(6) input.afx{max-width:220px}
+  .afee-tbl td:nth-child(3) input.afx{max-width:90px}
+  .afee-tbl td:nth-child(4) input.afx,.afee-tbl td:nth-child(5) input.afx{max-width:110px}
+  .afee-tbl td:nth-child(7) input.afx{max-width:220px}
   .afee-tbl select{padding:7px 6px;border:1px solid var(--brand);border-radius:6px;font-size:13px;font-family:inherit;width:100%;background:#fff}
   .afee-tbl input:focus,.afee-tbl select:focus{outline:none;box-shadow:0 0 0 3px rgba(11,94,156,.12)}
+  /* 拖拽手柄 + 复制/删除按钮 + 排序视觉态（复用报价单 .q-drag 机制） */
+  .afee-tbl .q-drag{cursor:grab;user-select:none;font-size:15px;line-height:1;display:inline-block;padding:4px 2px;touch-action:none;color:var(--muted)}
+  .afee-tbl .q-drag:active{cursor:grabbing}
+  .afee-tbl tr.q-dragging{opacity:.4;background:#eef4fb}
+  .afee-tbl tr.drop-above td{border-top:2px solid var(--brand)}
+  .afee-tbl tr.drop-below td{border-bottom:2px solid var(--brand)}
+  .afee-tbl .fee-copy,.afee-tbl .fee-del{border:none;border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:14px;line-height:1;margin-left:4px;vertical-align:middle}
+  .afee-tbl .fee-copy{background:#e8f1fb;color:#2f6db5}
+  .afee-tbl .fee-del{background:#fdecec;color:#c0392b}
   .fee-empty{font-size:13px;color:var(--muted)}
 
   /* profit (detail, internal only) */
@@ -427,9 +437,9 @@
   .quote .q-fee th.col-up,.quote .q-fee td.col-up,
   .quote .q-fee th.col-cost,.quote .q-fee td.col-cost,
   .quote .q-fee th.col-amt,.quote .q-fee td.col-amt{white-space:nowrap;width:1%}
-  /* Remarks 列（v1.20.37）：给个下限宽度，否则「2 times」这类短备注会被挤成竖排两行。
-     仍保留 width:1% + nowrap 的自适应口径，min-width 只是兜底，表格变窄时优先挤压 Item 列。 */
-  .quote .q-fee th.col-rem,.quote .q-fee td.col-rem{white-space:nowrap;width:1%;min-width:110px}
+  /* Remarks 列：纯内容自适应——width:1%(+nowrap) 使列宽=该列最宽备注，不写死下限；
+     所有非 Item 列都是 1%+nowrap，于是 Item(width:auto) 吸收全部剩余宽度。 */
+  .quote .q-fee th.col-rem,.quote .q-fee td.col-rem{white-space:nowrap;width:1%}
   .quote .q-fee td.col-unit input,.quote .q-fee td.col-qty input,
   .quote .q-fee td.col-up input,.quote .q-fee td.col-cost input{
     width:auto;min-width:0;field-sizing:content}
@@ -520,9 +530,12 @@
     .quote .q-fee tr{break-inside:avoid;page-break-inside:avoid}
     .quote .q-fee thead{display:table-header-group}
     .quote .q-grid{break-inside:avoid;page-break-inside:avoid}
-    /* 船名通常最长（如 "MV. OCEAN PIONEER"），打印态按 1.4 : 0.85 : 0.9 分配宽度，
-       避免船名被折成两行；IMO / Port of Call 的值较短，收窄也放得下。 */
-    .quote .q-grid{grid-template-columns:minmax(0,1.4fr) minmax(0,0.85fr) minmax(0,0.9fr)}
+    /* 船名通常最长（如 "MV. OCEAN PIONEER"），打印态按 1.35 : 1.05 : 0.85 分配宽度，
+       避免船名被折成两行；中列要放下 ATA/ATD 的「日期+时间」（约105px，第二行落到中列），
+       故中列必须比第三列宽；IMO / Port of Call 的值较短，第三列收窄也放得下。
+       值统一 nowrap，时间绝不折行。 */
+    .quote .q-grid{grid-template-columns:minmax(0,1.35fr) minmax(0,1.05fr) minmax(0,0.85fr)}
+    .quote .q-grid>div span{white-space:nowrap}
     .quote input[type=text]{border:none !important;background:transparent !important;padding:0 !important;height:auto !important;color:#1d2939 !important;font-size:13px !important}
     /* 占位符（收费项目/计费单位/单价/备注）只在屏幕上提示，打印时不出现 */
     .quote input::placeholder{color:transparent !important}
@@ -544,7 +557,7 @@
     .quote .q-fee th,.quote .q-fee td{padding:1.1mm 2mm;font-size:10pt;line-height:1.25;
       vertical-align:middle}
     .quote .q-fee th{font-size:9.5pt}
-    /* 打印列宽：Item 填满剩余，其余列按内容自适应（窄列 nowrap 贴紧内容，Remarks 适度留白可换行） */
+    /* 打印列宽：Item(width:auto) 填满剩余，其余列 width:1%+nowrap 贴内容；Remarks 同样 content 自适应（列宽=最宽备注） */
     .quote .q-fee th.col-no,.quote .q-fee td.col-no{width:7mm}
     .quote .q-fee th.col-item,.quote .q-fee td.col-item{width:auto}
     .quote .q-fee th.col-unit,.quote .q-fee td.col-unit,
@@ -553,7 +566,7 @@
     .quote .q-fee th.col-amt,.quote .q-fee td.col-amt{white-space:nowrap;width:1%}
     /* No. 列同样只在打印稿出现（基础样式里 .col-no 是 display:none，这里捞回来） */
     .quote .q-fee th.col-no,.quote .q-fee td.col-no{display:table-cell !important}
-    .quote .q-fee th.col-rem,.quote .q-fee td.col-rem{width:auto;white-space:nowrap}
+    .quote .q-fee th.col-rem,.quote .q-fee td.col-rem{width:1%;white-space:nowrap}
     /* 打印时用可换行的纯文本替代单行 input，与 INVOICE 的表格观感一致 */
     .quote .q-fee td input[type=text]{display:none !important}
     .quote .q-fee td textarea{display:none !important}
@@ -1165,7 +1178,7 @@
       <div class="block" style="margin-top:14px">
         <div class="block-h">💰 收费价格表 <span class="en">Fee Schedule</span></div>
         <div class="fee-tbl">
-          <table class="afee-tbl"><thead><tr><th style="width:50%">收费项目</th><th>计费单位</th><th>成本价</th><th>对外报价</th><th>币种</th><th>备注</th><th></th></tr></thead><tbody id="agent-fees"></tbody></table>
+          <table class="afee-tbl"><thead><tr><th></th><th class="col-item" style="width:50%">收费项目</th><th>计费单位</th><th>成本价</th><th>对外报价</th><th>币种</th><th>备注</th><th></th></tr></thead><tbody id="agent-fees"></tbody></table>
         </div>
         <button class="btn sm ghost" style="margin-top:10px" onclick="addAgentFee()">＋ 添加收费项</button>
       </div>
@@ -1357,7 +1370,7 @@
 /* ---------------- 版本号 ----------------
    显示在左上角系统名称右侧。每次做了可见改动，往上加：
    小修：末位 +1；新增功能：中间位 +1。 */
-var APP_VERSION = "v1.20.43";;;;
+var APP_VERSION = "v1.20.47";;;;
 (function(){ var el=document.getElementById("appVer"); if(el) el.textContent=APP_VERSION; })();
 
 /* ---------------- i18n ---------------- */
@@ -1819,6 +1832,15 @@ function fmtBJ(s){
   d=new Date(d.getTime()+8*3600*1000);
   var p=function(n){return (n<10?"0":"")+n;};
   return d.getUTCFullYear()+"-"+p(d.getUTCMonth()+1)+"-"+p(d.getUTCDate())+" "+p(d.getUTCHours())+":"+p(d.getUTCMinutes());
+}
+/* 与 fmtBJ 同源：把 UTC ISO 转成发票用的「北京日期」[DD / MM / YYYY]（仅取日期，截去时分）。
+   已结算航次的发票 DATE 冻结为此值，不受重打印时系统日期影响。 */
+function fmtDateBJ(iso){
+  if(!iso) return "";
+  var d=new Date(iso); if(isNaN(d.getTime())) return "";
+  d=new Date(d.getTime()+8*3600*1000);
+  var p=function(n){return (n<10?"0":"")+n;};
+  return "["+p(d.getUTCDate())+" / "+p(d.getUTCMonth()+1)+" / "+d.getUTCFullYear()+"]";
 }
 function toast(m){ var t=document.getElementById("toast"); t.textContent=m; t.classList.add("show"); setTimeout(function(){t.classList.remove("show");},1800); }
 function esc(s){ return (s||"").replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c];}); }
@@ -3454,7 +3476,8 @@ function buildInvoiceHtml(s, items, currency, qno, qdate){
   '</div>';
 }
 
-/* INVOICE 的 Date 使用「打印时刻」的真实日期，而非报价单保存时的日期。
+/* INVOICE 的 Date：未结算航次取「打印时刻」真实日期；已结算航次（status==="settled"）则
+   冻结为结算时间 s.settledAt 的北京日期（fmtDateBJ），重打印不再变化。
    格式与报价单一致的 [DD / MM / YYYY]，保证打印稿视觉统一。 */
 function invoicePrintDate(){
   var d = new Date();
@@ -3484,9 +3507,10 @@ function buildInvoice(){
   var items = (q && q.items && q.items.length) ? q.items : quoteItems;
   if(!items || !items.length){ toast("报价单还没有收费项，请先添加并保存报价单"); return false; }
   var currency = (q && q.currency) || quoteCurrency || "CNY";
-  /* 编号沿用报价单（保证报价单与发票一一对应）；DATE 用打印当下真实日期 */
+  /* 编号沿用报价单（保证报价单与发票一一对应）；
+     DATE：已结算航次固定为「结算时间」（北京日期，来源 s.settledAt）；未结算则取打印当下真实日期 */
   var qno   = (q && q.no)   || quoteNo   || "";
-  var qdate = invoicePrintDate();
+  var qdate = (s.status==="settled" && s.settledAt) ? fmtDateBJ(s.settledAt) : invoicePrintDate();
   /* 单据分组：已保存的报价单用其 docs；未保存过则用当前编辑态的分组 */
   var docs = (q && q.docs && q.docs.length) ? q.docs.slice()
             : (q ? ["A"] : quoteDocIds.slice());
@@ -4612,12 +4636,16 @@ function agentDetailRow(a){
   }
   return '<tr class="cx-sub"><td colspan="9"><div class="cx-wrap">'+meta+remark+fees+'</div></td></tr>';
 }
+var agentFeeSeq=0;
 function renderAgentFees(){
   var box=document.getElementById("agent-fees"); if(!box) return;
-  if(!agentFees.length){ box.innerHTML='<tr><td colspan="7" class="fee-empty" style="padding:10px 4px">暂无收费项，点击下方「＋ 添加收费项」</td></tr>'; return; }
+  if(!agentFees.length){ box.innerHTML='<tr><td colspan="8" class="fee-empty" style="padding:10px 4px">暂无收费项，点击下方「＋ 添加收费项」</td></tr>'; return; }
   box.innerHTML=agentFees.map(function(t,i){
-    return '<tr>'+
-      '<td><input placeholder="如：船舶代理费" value="'+esc(t.item)+'" oninput="updAgentFee('+i+',\'item\',this.value)"></td>'+
+    if(t._id==null) t._id="a"+(++agentFeeSeq);
+    else { var _n=parseInt(String(t._id).replace(/\D/g,""),10); if(!isNaN(_n)&&_n>agentFeeSeq) agentFeeSeq=_n; }
+    return '<tr data-id="'+esc(t._id)+'">'+
+      '<td><span class="q-drag" title="按住拖动调整顺序">⠿</span></td>'+
+      '<td class="col-item"><input placeholder="如：船舶代理费" value="'+esc(t.item)+'" oninput="updAgentFee('+i+',\'item\',this.value)"></td>'+
       '<td><input class="afx" placeholder="如：每艘次" value="'+esc(t.unit)+'" oninput="updAgentFee('+i+',\'unit\',this.value)"></td>'+
       '<td><input class="afx" placeholder="成本价" value="'+esc(t.cost||"")+'" oninput="updAgentFee('+i+',\'cost\',this.value)"></td>'+
       '<td><input class="afx" placeholder="对外报价" value="'+esc(t.price)+'" oninput="updAgentFee('+i+',\'price\',this.value)"></td>'+
@@ -4625,15 +4653,90 @@ function renderAgentFees(){
         ['CNY','USD'].map(function(c){ return '<option value="'+c+'"'+((t.currency==="USD"?"USD":"CNY")===c?' selected':'')+'>'+c+'</option>'; }).join('')+
       '</select></td>'+
       '<td><input class="afx" placeholder="备注" value="'+esc(t.note)+'" oninput="updAgentFee('+i+',\'note\',this.value)"></td>'+
-      '<td><button class="icon-btn danger" onclick="delAgentFee('+i+')">✕</button></td>'+
+      '<td><button type="button" class="fee-copy" onclick="copyAgentFee('+i+')" title="在本行下方插入一条相同的收费项">⧉</button>'+
+        '<button type="button" class="fee-del" onclick="delAgentFee('+i+')">✕</button></td>'+
     '</tr>';
   }).join("");
   agentFeeAutoSize();
+  if(!box.__dragBound){ aBindFeeDrag(box); box.__dragBound=true; }
 }
 function agentFeeAutoSize(){
   var box=document.getElementById("agent-fees"); if(!box) return;
   var ins=box.querySelectorAll("input.afx");
   for(var i=0;i<ins.length;i++){ var v=(ins[i].value||"").length; ins[i].size=Math.max(4,v+1); }
+}
+/* 拖动排序：事件委托绑在 tbody 上（tbody 不随重渲染重建，只挂一次）。
+   为避免与行内 input 文本选择冲突，只有按住最左 ⠿ 手柄才允许拖整行：
+   mousedown 手柄时临时把该 <tr> 设为 draggable，dragend/mouseup 再复原。 */
+var aDragSrcId=null;
+function aBindFeeDrag(tb){
+  if(!tb) return;
+  tb.addEventListener("mousedown", function(e){
+    var h=e.target.closest?e.target.closest(".q-drag"):null;
+    var tr=h&&h.closest?h.closest("tr"):null;
+    if(tr) tr.setAttribute("draggable","true");
+  });
+  tb.addEventListener("mouseup", aResetFeeDrag);
+  tb.addEventListener("dragstart", function(e){
+    var tr=e.target.closest?e.target.closest("tr"):null;
+    if(!tr) return;
+    aDragSrcId=tr.getAttribute("data-id");
+    e.dataTransfer.effectAllowed="move";
+    try{ e.dataTransfer.setData("text/plain",aDragSrcId||""); }catch(_){}
+    tr.classList.add("q-dragging");
+  });
+  tb.addEventListener("dragover", function(e){
+    if(aDragSrcId==null) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect="move";
+    tb.querySelectorAll("tr.drop-above,tr.drop-below").forEach(function(x){ x.classList.remove("drop-above","drop-below"); });
+    var tr=e.target.closest?e.target.closest("tr"):null;
+    if(!tr||tr.getAttribute("data-id")===aDragSrcId) return;
+    var r=tr.getBoundingClientRect();
+    tr.classList.add((e.clientY-r.top)<r.height/2?"drop-above":"drop-below");
+  });
+  tb.addEventListener("drop", function(e){
+    if(aDragSrcId==null) return;
+    e.preventDefault();
+    var tr=e.target.closest?e.target.closest("tr"):null;
+    var src=aDragSrcId;
+    aResetFeeDrag();
+    if(!tr) return;
+    var tgt=tr.getAttribute("data-id");
+    if(!tgt||tgt===src) return;
+    var r=tr.getBoundingClientRect();
+    reorderAgentFees(src,tgt,(e.clientY-r.top)<r.height/2);
+  });
+  tb.addEventListener("dragend", aResetFeeDrag);
+}
+function aResetFeeDrag(){
+  var tb=document.getElementById("agent-fees");
+  if(tb) tb.querySelectorAll("tr").forEach(function(tr){
+    tr.classList.remove("q-dragging","drop-above","drop-below");
+    tr.removeAttribute("draggable");
+  });
+  aDragSrcId=null;
+}
+function reorderAgentFees(srcId,tgtId,above){
+  var from=-1,to=-1,k;
+  for(k=0;k<agentFees.length;k++){ if(agentFees[k]._id===srcId){ from=k; break; } }
+  if(from<0) return;
+  var item=agentFees.splice(from,1)[0];
+  for(k=0;k<agentFees.length;k++){ if(agentFees[k]._id===tgtId){ to=k; break; } }
+  if(to<0) agentFees.push(item);
+  else agentFees.splice(above?to:to+1,0,item);
+  renderAgentFees();
+  toast("已调整收费项顺序");
+}
+function copyAgentFee(i){
+  var src=agentFees[i]; if(!src) return;
+  agentFees.splice(i+1,0,{
+    item:src.item||"", unit:src.unit||"", cost:(src.cost||""),
+    price:src.price||"", currency:(src.currency||"CNY"), note:src.note||"",
+    _id:"a"+(++agentFeeSeq)
+  });
+  renderAgentFees();
+  toast("已复制「"+(src.item||"未命名")+"」");
 }
 function addAgentFee(){ agentFees.push({item:"",unit:"",cost:"",price:"",currency:"CNY",note:""}); renderAgentFees(); }
 function updAgentFee(i,k,v){ if(agentFees[i]) agentFees[i][k]=v; agentFeeAutoSize(); }
