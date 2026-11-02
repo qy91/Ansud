@@ -93,6 +93,20 @@
   .toolbar input,.toolbar select{padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px;background:#fff}
   .toolbar input{min-width:220px}
   .toolbar .right{margin-left:auto;display:flex;gap:10px}
+  /* 工具栏里的多选下拉（状态筛选，v1.20.53）：按钮按内容撑宽，不占满一行 */
+  .toolbar .msel-dd{min-width:158px}
+  .toolbar .msel-dd-btn{width:auto;min-width:158px;padding:9px 30px 9px 12px;border-radius:8px;font-size:14px;
+    background:#fff;line-height:1.2}
+  .toolbar .msel-dd-box{width:auto;min-width:180px;right:auto}
+  .toolbar .msel-dd-box .msel-dd-opt{white-space:nowrap}
+  /* ⚠ .toolbar label{display:inline-flex} / .toolbar input{min-width:220px} 会渗进下拉浮层，
+     导致勾选项被横排、复选框被拉宽 → 浮层内按选择器优先级夺回 */
+  .toolbar .msel-dd-box label{display:flex;align-items:center;gap:8px;font-size:13px;padding:6px 8px;min-width:0}
+  .toolbar .msel-dd-box input[type=checkbox]{min-width:0;width:15px;height:15px;padding:0;border:none;box-shadow:none;accent-color:var(--brand)}
+  .msel-dd-foot{border-top:1px solid var(--line);margin:4px -4px -4px;padding:6px 4px 0}
+  .msel-clear{width:100%;text-align:left;border:none;background:transparent;color:var(--brand-d);
+    font-size:12px;font-family:inherit;cursor:pointer;padding:5px 8px;border-radius:6px}
+  .msel-clear:hover{background:#eef2f7}
   .toolbar label{display:inline-flex;align-items:center;gap:4px;font-size:13px;color:#475467}
   .toolbar .settle-or{color:#98a2b3;font-size:13px}
   .settle-sum{display:flex;flex-wrap:wrap;gap:8px 28px;padding:12px 16px;border-top:2px solid var(--brand);background:#f5f9fc;font-size:13px;color:#344054}
@@ -910,13 +924,8 @@
 
         <div class="toolbar">
           <input id="search" placeholder="🔍 搜索船名 / 港口 / 航次…" oninput="shipPageReset();renderDashboard()">
-          <select id="filter-status" onchange="shipPageReset();renderDashboard()">
-            <option value="">全部状态</option>
-            <option value="uned">未委托</option>
-            <option value="in">在港</option>
-            <option value="arr">即将到港</option>
-            <option value="out">已离港未结算</option>
-          </select>
+          <!-- 状态筛选（v1.20.53）：下拉多选，勾选后自动保存到 uisettings，下次打开沿用 -->
+          <span id="status-filter-mount"></span>
           <span data-psp="ship"></span>
           <div class="right"><button class="btn sm" onclick="openModal()">＋ 新增船舶</button></div>
         </div>
@@ -1370,7 +1379,7 @@
 /* ---------------- 版本号 ----------------
    显示在左上角系统名称右侧。每次做了可见改动，往上加：
    小修：末位 +1；新增功能：中间位 +1。 */
-var APP_VERSION = "v1.20.52";;;;
+var APP_VERSION = "v1.20.53";;;;
 (function(){ var el=document.getElementById("appVer"); if(el) el.textContent=APP_VERSION; })();
 
 /* ---------------- i18n ---------------- */
@@ -1894,6 +1903,12 @@ function applyUISettings(fromDb, localLegacy){
       sortKey:   (typeof d.sortKey === "string" && d.sortKey) ? d.sortKey : null,
       sortDir:   (d.sortDir === "desc") ? "desc" : (d.sortKey ? "asc" : null)
     };
+    /* 状态筛选（v1.20.53）：只有代理船舶列表有这一项，存的是多选状态的数组 */
+    if(k === "ship"){
+      UI[k].statusIn = Array.isArray(d.statusIn)
+        ? d.statusIn.filter(function(v){ return typeof v === "string"; })
+        : [];
+    }
   });
   /* 首次迁移：库里没有任何设置（各表都是默认值）而本地有旧数据 → 搬上去 */
   if(localLegacy && Object.keys(localLegacy).length){
@@ -2046,13 +2061,97 @@ function setPagerHTML(key, total){
   if(el) el.innerHTML = pagerBarHTML(key, total);
 }
 
+/* ---------- 当前代理船舶：状态筛选（下拉多选，v1.20.53） ----------
+   选项直接复用船舶表单的 statusOpts（5 态：未委托 / 在港 / 即将到港 /
+   已离港未结算 / 离港结算），保证筛选与详情页状态口径永远一致。
+   选中值存 UI.ship.statusIn，随 uiSave 写进 app_settings.uisettings，
+   和每页条数 / 排序一样跨设备保存；空数组 = 全部状态。 */
+var SHIP_STATUS_OPTS = statusOpts.map(function(o){ return {v:o.v, t:o.t}; });
+function statusFilterSel(){
+  var st = uiState("ship");
+  if(!Array.isArray(st.statusIn)) st.statusIn = [];
+  /* 兜掉已经不存在的状态值（防止旧数据/手改库带进无效值） */
+  st.statusIn = st.statusIn.filter(function(v){
+    return SHIP_STATUS_OPTS.some(function(o){ return o.v===v; });
+  });
+  return st.statusIn;
+}
+function statusFilterLabel(arr){
+  if(!arr.length) return "全部状态";
+  if(arr.length===1){
+    var o = SHIP_STATUS_OPTS.filter(function(x){ return x.v===arr[0]; })[0];
+    return "状态：" + (o ? o.t : arr[0]);
+  }
+  return "状态：" + arr.length + " 项";
+}
+function statusFilterHTML(arr){
+  return '<div class="msel-dd" id="status-filter">'+
+    '<button type="button" class="msel-dd-btn" id="status-filter-btn" onclick="toggleMultiSel(event,\'status-filter\')">'+
+      esc(statusFilterLabel(arr))+'</button>'+
+    '<div class="msel-dd-box hidden" id="status-filter-box">'+
+      SHIP_STATUS_OPTS.map(function(o){
+        var on = arr.indexOf(o.v)>-1;
+        return '<label class="msel-dd-opt'+(on?' on':'')+'" data-v="'+esc(o.v)+'">'+
+          '<input type="checkbox" value="'+esc(o.v)+'"'+(on?' checked':'')+
+          ' onchange="onStatusFilterToggle(this)">'+
+          '<span>'+esc(o.t)+'</span></label>';
+      }).join("")+
+      '<div class="msel-dd-foot"><button type="button" class="msel-clear" onclick="clearStatusFilter()">清空（显示全部状态）</button></div>'+
+    '</div>'+
+  '</div>';
+}
+/* 首次渲染时挂上；之后只同步按钮文字，避免重建 DOM 把展开的下拉关掉 */
+function mountStatusFilter(){
+  var host=document.getElementById("status-filter-mount"); if(!host) return;
+  if(host.getAttribute("data-mounted")==="1"){ syncStatusFilterLabel(); return; }
+  host.innerHTML = statusFilterHTML(statusFilterSel());
+  host.setAttribute("data-mounted","1");
+}
+function syncStatusFilterLabel(){
+  var btn=document.getElementById("status-filter-btn");
+  if(btn) btn.textContent = statusFilterLabel(statusFilterSel());
+  var arr=statusFilterSel();
+  var box=document.getElementById("status-filter-box");
+  if(box && box.querySelectorAll){
+    Array.prototype.forEach.call(box.querySelectorAll("input[type=checkbox]"), function(c){
+      c.checked = arr.indexOf(c.value)>-1;
+    });
+    Array.prototype.forEach.call(box.querySelectorAll(".msel-dd-opt"), function(l){
+      l.classList.toggle("on", arr.indexOf(l.getAttribute("data-v"))>-1);
+    });
+  }
+}
+function onStatusFilterToggle(cb){
+  var arr=statusFilterSel();
+  var v=cb.value, i=arr.indexOf(v);
+  if(cb.checked && i<0) arr.push(v);
+  if(!cb.checked && i>=0) arr.splice(i,1);
+  var box=document.getElementById("status-filter-box");
+  if(box && box.querySelectorAll){
+    Array.prototype.forEach.call(box.querySelectorAll(".msel-dd-opt"), function(l){
+      if(l.getAttribute("data-v")===v) l.classList.toggle("on", !!cb.checked);
+    });
+  }
+  var btn=document.getElementById("status-filter-btn");
+  if(btn) btn.textContent = statusFilterLabel(arr);
+  uiSave();                 /* 自动保存（与排序/每页条数同一条通道） */
+  shipPageReset(); renderDashboard();
+}
+function clearStatusFilter(){
+  var arr=statusFilterSel(); arr.length=0;
+  syncStatusFilterLabel();
+  uiSave();
+  shipPageReset(); renderDashboard();
+}
+
 function renderDashboard(){
+  mountStatusFilter();
   var q=(document.getElementById("search").value||"").toLowerCase();
-  var fs=document.getElementById("filter-status").value;
+  var fsel=statusFilterSel();          /* 空数组 = 全部状态 */
   var tb=document.getElementById("ship-tbody");
   setHead("ship"); renderPageSizeSel("ship");
   var list=data.filter(function(s){
-    if(fs && s.status!==fs) return false;
+    if(fsel.length && fsel.indexOf(s.status)<0) return false;
     var hay=(s.cn+s.en+(s.port||"")+(s.berth||"")+s.voy).toLowerCase();
     if(q && !hay.includes(q)) return false;
     return true;
