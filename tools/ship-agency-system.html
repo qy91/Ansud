@@ -1370,7 +1370,7 @@
 /* ---------------- 版本号 ----------------
    显示在左上角系统名称右侧。每次做了可见改动，往上加：
    小修：末位 +1；新增功能：中间位 +1。 */
-var APP_VERSION = "v1.20.49";;;;
+var APP_VERSION = "v1.20.52";;;;
 (function(){ var el=document.getElementById("appVer"); if(el) el.textContent=APP_VERSION; })();
 
 /* ---------------- i18n ---------------- */
@@ -3562,6 +3562,10 @@ function buildInvoice(){
    就会给 body 挂 inv-print（把报价单整块 display:none），
    「打印 QUOTATION」结果打出来的是 INVOICE —— 报价单的内容一条都不出现。 */
 var quotePrintPending = false;
+/* 打印意图（v1.20.50）：beforeprint 里 INVOICE 优先级最高，
+   #invoice-print 里残留的旧 INVOICE 会劫持「生成 OKTB / 打印凭证」的打印，
+   打出来是别的船的发票。各打印入口先声明本次要打什么，beforeprint 优先按意图走。 */
+var printIntent = "";
 function printQuote(){
   quotePrintPending = true;
   document.body.classList.remove("inv-print","v-print","oktb-print");
@@ -3569,10 +3573,16 @@ function printQuote(){
 }
 function printInvoice(){
   if(!buildInvoice()) return;
+  /* 退出可能残留的 OKTB / 凭证预览态（v1.20.50）：
+     body.oktb-preview 的 CSS 会把 #invoice-print 整块 display:none，
+     不清掉的话新生成的发票在屏幕和打印稿里都看不见 */
+  document.body.classList.remove("oktb-preview","v-preview");
   document.body.classList.add("inv-preview");
   document.getElementById("inv-back").classList.remove("hidden");
   /* 保险：万一 beforeprint 未触发，先把打印标记打上 */
   if(document.getElementById("invoice-print").innerHTML.replace(/\s/g,"")) document.body.classList.add("inv-print");
+  /* 声明打印意图为 INVOICE（v1.20.50）：否则 #voucher-print 里的残留凭证会抢打印 */
+  printIntent = "invoice";
   setTimeout(function(){ window.print(); }, 60);
 }
 function backToInvoiceEdit(){
@@ -4003,10 +4013,24 @@ function crewManifestView(t,i){
    按「航空公司 + 航班」分组，同组一封；不同组各自独立成封（打印时自动分页）。 */
 /* OKTB 是英文函件：日期一律出 1985-05-12（不带「年月日」），新旧两种存值都认 */
 function dobTxt(v){ return fmtBirthdayEN(v); }
+/* 英文序数词（v1.20.51）：1st / 2nd / 3rd / 4th / 11th / 21st / 22nd / 23rd …
+   原来 OKTB 的 Date 行固定写死 " th "，2 号就打成了 "2 th Nov 2026"。 */
+function enOrdinal(n){
+  n = Number(n);
+  if(!isFinite(n)) return String(n);
+  var v = Math.abs(n) % 100;          /* 11/12/13 结尾是 th，不是 st/nd/rd */
+  if(v >= 11 && v <= 13) return n + "th";
+  switch(Math.abs(n) % 10){
+    case 1: return n + "st";
+    case 2: return n + "nd";
+    case 3: return n + "rd";
+    default: return n + "th";
+  }
+}
 function oktbLetter(info, grp){
   var d = new Date();
   var mon = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getMonth()];
-  var dateStr = d.getDate()+" th "+mon+" "+d.getFullYear();
+  var dateStr = enOrdinal(d.getDate())+" "+mon+" "+d.getFullYear();
   var port = String(info.port||"YANTIAN").toUpperCase();
   var vessel = String(info.vessel||"").toUpperCase();
   var rows = grp.list.map(function(c,j){
@@ -4028,7 +4052,7 @@ function oktbLetter(info, grp){
     '<div class="oktb-row"><b>Fm:</b> Ansud Shipping Agency Co., Ltd.</div>'+
     '<div class="oktb-row"><b>Date:</b> '+dateStr+'</div>'+
     '<div class="oktb-re">Re: MV. '+esc(vessel)+' – Joining Crew</div>'+
-    '<div class="oktb-title">INVITATION LETTER FOR CREW &ldquo;OKEY TO BOARD&rdquo;</div>'+
+    '<div class="oktb-title">INVITATION LETTER FOR CREW &ldquo;OKAY TO BOARD&rdquo;</div>'+
     '<p>Dear Sirs,</p>'+
     '<p>KINDLY BE ADVISED THAT WE ARE THE SHIPPING AGENT FOR SUBJECT VESSEL AT CHINA. AMONG PORT STAY PERIOD, THERE WILL BE BELOW CREW MEMBERS FOR JOIING VSL IN THIS PORT.</p>'+
     '<div class="oktb-sub">PERSONEL DETAILS</div>'+
@@ -4068,7 +4092,13 @@ function generateOKTB(i){
   if(!box){ toast("打印容器缺失"); return; }
   box.innerHTML = buildOKTBHTML(info, on);
   document.body.classList.add("oktb-preview");
+  /* 退出可能残留的 INVOICE 预览态（v1.20.50）：
+     否则 body 上还挂着 inv-preview，屏幕预览里会看到上一条船的发票 */
+  document.body.classList.remove("inv-preview","inv-print","v-preview","v-print");
   var back=document.getElementById("oktb-back"); if(back) back.classList.remove("hidden");
+  /* 声明本次打印意图为 OKTB：beforeprint 里若只看「#invoice-print 有没有残留」，
+     就会误判成打印发票，打出来是别的船的 INVOICE（v1.20.50 修） */
+  printIntent = "oktb";
   setTimeout(function(){ document.body.classList.add("oktb-print"); window.print(); }, 60);
 }
 function backFromOKTB(){
@@ -6249,6 +6279,8 @@ function vcheckReady(){
 function generateVouchers(){
   if(!vcheckReady()) return;
   document.getElementById("voucher-print").innerHTML = selectedTrips().map(buildVoucherHtml).join("");
+  /* 退出可能残留的 OKTB / INVOICE 预览态（v1.20.50）：预览模式之间会互相 display:none */
+  document.body.classList.remove("oktb-preview","inv-preview");
   document.body.classList.add("v-preview");
   var b = document.getElementById("v-back"); if(b) b.classList.remove("hidden");
   window.scrollTo(0,0);
@@ -6259,6 +6291,8 @@ function printVouchers(){
   pa.innerHTML = selectedTrips().map(buildVoucherHtml).join("");
   /* 保险：万一 beforeprint 没触发（个别浏览器/嵌入场景），这里先把标记打上 */
   if(pa.innerHTML.replace(/\s/g,"")) document.body.classList.add("v-print");
+  /* 声明打印意图为凭证（v1.20.50）：防止 #invoice-print 里的残留发票劫持打印 */
+  printIntent = "voucher";
   window.print();
 }
 function backToVoucherEdit(){
@@ -6276,6 +6310,24 @@ window.addEventListener("beforeprint", function(){
   /* 用户明确点了「打印 QUOTATION」→ 只打报价单，不要被下面「INVOICE 优先」的判定劫持 */
   if(quotePrintPending){
     document.body.classList.remove("inv-print","v-print","oktb-print");
+    return;
+  }
+  /* 打印意图优先（v1.20.50）：本轮明确要打哪种单据，就打哪一种，
+     不能再被 #invoice-print 里的残留 INVOICE 劫持（否则「生成 OKTB」打出来是别的船的发票）。 */
+  var intent = printIntent;
+  if(intent==="oktb"  && document.getElementById("oktb-print")   && document.getElementById("oktb-print").innerHTML.replace(/\s/g,"")){
+    document.body.classList.add("oktb-print");
+    document.body.classList.remove("inv-print","v-print");
+    return;
+  }
+  if(intent==="voucher" && document.getElementById("voucher-print") && document.getElementById("voucher-print").innerHTML.replace(/\s/g,"")){
+    document.body.classList.add("v-print");
+    document.body.classList.remove("inv-print","oktb-print");
+    return;
+  }
+  if(intent==="invoice" && document.getElementById("invoice-print") && document.getElementById("invoice-print").innerHTML.replace(/\s/g,"")){
+    document.body.classList.add("inv-print");
+    document.body.classList.remove("v-print","oktb-print");
     return;
   }
   var pa = document.getElementById("voucher-print");
@@ -6298,6 +6350,7 @@ window.addEventListener("beforeprint", function(){
 });
 window.addEventListener("afterprint", function(){
   quoteThroughPrintColspan(false);
+  printIntent = "";
   document.body.classList.remove("v-print");
   document.body.classList.remove("inv-print");
   document.body.classList.remove("oktb-print");
