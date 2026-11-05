@@ -83,11 +83,11 @@
   .page-title .en{font-size:13px;color:var(--muted);font-weight:400;margin-left:8px}
   .page-desc{color:var(--muted);font-size:13px;margin-bottom:18px}
 
-  .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:20px}
+  .stats{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:20px}
   .stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
   .stat .k{font-size:12px;color:var(--muted)}
   .stat .v{font-size:26px;font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums}
-  .stat .v.s{color:var(--accent)} .stat .v.w{color:var(--warn)} .stat .v.i{color:var(--info)} .stat .v.u{color:#6d28d9}
+  .stat .v.s{color:var(--accent)} .stat .v.w{color:var(--warn)} .stat .v.i{color:var(--info)} .stat .v.u{color:#6d28d9} .stat .v.q{color:#0e7490}
 
   .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
   .toolbar input,.toolbar select{padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px;background:#fff}
@@ -361,6 +361,48 @@
   .profit-card.pos .pv{color:#0f8a4a}
   .profit-card.neg .pv{color:#c0392b}
   .profit-empty{font-size:13px;color:var(--muted)}
+
+  /* 垫付报销（详情页）：全局 table/th,td 样式会渗入，下面用更高特异性夺回 */
+  .reimb-hint{font-size:12px;color:var(--muted);margin:2px 0 10px}
+  /* 折叠条：明细列表默认收起，点击才展开；汇总卡片不受影响、始终可见 */
+  .reimb-fold{display:flex;align-items:center;gap:9px;width:100%;box-sizing:border-box;
+    padding:9px 12px;margin:0 0 10px;border:1px solid var(--line);border-radius:8px;
+    background:#fff;color:var(--ink);font-family:inherit;font-size:13px;text-align:left;cursor:pointer}
+  .reimb-fold:hover{border-color:#c7d5e5;background:#f8fafc}
+  .reimb-fold .rf-arrow{color:var(--brand-d);font-size:12px;width:12px;flex:0 0 auto}
+  .reimb-fold .rf-title{font-weight:600;white-space:nowrap}
+  .reimb-fold .rf-sum{color:var(--muted);font-size:12px;margin-left:auto;text-align:right;
+    font-variant-numeric:tabular-nums}
+  .reimb-fold .rf-sum b{color:var(--ink);font-weight:600}
+  .reimb-fold-hint{font-size:12px;color:var(--muted);margin:-4px 0 10px}
+  .reimb-tbl{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .reimb-tbl th,.reimb-tbl td{padding:7px 9px;font-size:13px;border-bottom:1px solid var(--line);text-align:left;background:#fff}
+  .reimb-tbl th{background:#f8fafc;color:var(--muted);font-weight:600;white-space:nowrap}
+  .reimb-tbl tr:hover td{background:#fff;cursor:default}
+  .reimb-tbl tr:last-child td{border-bottom:none}
+  .reimb-tbl input{width:100%;box-sizing:border-box;padding:6px 8px;border:1px solid var(--line);border-radius:6px;
+    font-size:13px;font-family:inherit;background:#fff;color:var(--ink)}
+  .reimb-tbl input.rb-num{width:64px;text-align:right}
+  .reimb-tbl input.rb-price{width:110px;text-align:right}
+  .reimb-tbl .rb-amt{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .reimb-tbl .rb-del{border:none;background:#fdecec;color:#c0392b;border-radius:6px;width:28px;height:28px;
+    cursor:pointer;font-size:14px;line-height:1}
+  .reimb-empty{color:var(--muted);text-align:center;padding:14px}
+  .reimb-add{margin-top:10px}
+  .reimb-sumgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:16px}
+  .reimb-card{background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+  .reimb-card .pk{font-size:12px;color:var(--muted);margin-bottom:8px;font-weight:600}
+  .reimb-card .pv{font-size:19px;font-weight:700;font-variant-numeric:tabular-nums}
+  .reimb-card .pv.ok{color:#0f8a4a}
+  .reimb-card .pv.bad{color:#c0392b}
+  .reimb-person{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:4px 0;border-bottom:1px dashed var(--line)}
+  .reimb-person:last-child{border-bottom:none}
+  .reimb-person b{font-variant-numeric:tabular-nums;white-space:nowrap}
+  .reimb-none{font-size:13px;color:var(--muted)}
+  .reimb-sub{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.5}
+  .reimb-flag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;margin-top:8px}
+  .reimb-flag.ok{background:#dcfce7;color:#15803d}
+  .reimb-flag.bad{background:#fee2e2;color:#b91c1c}
 
   /* quote */
   .quote{padding:24px 28px;background:#fff;color:#1d2939;font-size:13px;line-height:1.7}
@@ -665,6 +707,7 @@
   .b-proc{background:#dbeafe;color:#1d4ed8}
   .b-settled{background:#fee2e2;color:#b91c1c}
   .b-une{background:#ede9fe;color:#6d28d9}
+  .b-quoting{background:#cffafe;color:#0e7490}
   /* 离港结算锁定提示 */
   .lock-note{margin:2px 0 14px;padding:10px 14px;border:1px solid #f3c0c0;background:#fff5f5;color:#b91c1c;border-radius:8px;font-size:13px;font-weight:600}
   .lock-note .ln-sub{display:block;font-weight:400;color:#9b4a4a;font-size:12px;margin-top:3px}
@@ -917,6 +960,7 @@
         <div class="stats">
           <div class="stat"><div class="k">在港船舶 In Port</div><div class="v s" id="st-in">0</div></div>
           <div class="stat"><div class="k">即将到港 Arriving</div><div class="v w" id="st-arr">0</div></div>
+          <div class="stat"><div class="k">报价中 Quoting</div><div class="v q" id="st-quoting">0</div></div>
           <div class="stat"><div class="k">已离港未结算 Departed Unsettled</div><div class="v i" id="st-out">0</div></div>
           <div class="stat"><div class="k">未委托 Unentrusted</div><div class="v u" id="st-uned">0</div></div>
           <div class="stat"><div class="k">代理总数 Total</div><div class="v" id="st-total">0</div></div>
@@ -1101,6 +1145,11 @@
         <div class="block">
           <div class="block-h">💰 预估毛利 <span class="en">Estimated Margin</span><span class="profit-note">仅内部可见 · 按报价单（数量 × 单价 / 数量 × 成本）核算</span></div>
           <div class="block-b" id="blk-profit"></div>
+        </div>
+
+        <div class="block">
+          <div class="block-h">🧾 垫付报销 <span class="en">Disbursement / Reimbursement</span><span class="profit-note">点击「编辑」后录入 · 按报销人汇总 · 与报价单成本核对</span></div>
+          <div class="block-b" id="blk-reimb"></div>
         </div>
 
         <div id="detail-lock" class="lock-note hidden"></div>
@@ -1379,13 +1428,13 @@
 /* ---------------- 版本号 ----------------
    显示在左上角系统名称右侧。每次做了可见改动，往上加：
    小修：末位 +1；新增功能：中间位 +1。 */
-var APP_VERSION = "v1.20.53";;;;
+var APP_VERSION = "v1.20.57";;;;
 (function(){ var el=document.getElementById("appVer"); if(el) el.textContent=APP_VERSION; })();
 
 /* ---------------- i18n ---------------- */
 var L = {
-  zh:{in:"在港",arr:"即将到港",out:"已离港未结算",proc:"办理中",settled:"离港结算",uned:"未委托"},
-  en:{in:"In Port",arr:"Arriving",out:"Departed Unsettled",proc:"Processing",settled:"Settled",uned:"Unentrusted"}
+  zh:{in:"在港",arr:"即将到港",quoting:"报价中",out:"已离港未结算",proc:"办理中",settled:"离港结算",uned:"未委托"},
+  en:{in:"In Port",arr:"Arriving",quoting:"Quoting",out:"Departed Unsettled",proc:"Processing",settled:"Settled",uned:"Unentrusted"}
 };
 var lang = "zh";
 
@@ -1722,6 +1771,7 @@ var statusOpts = [
   {v:"uned", t:"未委托"},
   {v:"in",   t:"在港"},
   {v:"arr",  t:"即将到港"},
+  {v:"quoting", t:"报价中"},
   {v:"out",  t:"已离港未结算"},
   {v:"settled", t:"离港结算"}
 ];
@@ -1859,16 +1909,18 @@ function nl2br(s){ return (s==null?"":String(s)).replace(/\r\n|\r|\n/g,"<br>"); 
 /* 打印稿防连字符断行：把「-」换成不换行连字符 U+2011（外观相同，但浏览器不会在此处折行）。
    必须在 esc() 之后调用（esc 不产生「-」，nl2br 的 <br> 也不含「-」，先后均安全）。 */
 function nbHyphen(s){ return (s==null?"":String(s)).replace(/-/g,"\u2011"); }
-function statusBadge(st){ var cls={in:"b-in",arr:"b-arr",out:"b-out",proc:"b-proc",settled:"b-settled",uned:"b-une"}[st]; return '<span class="badge '+cls+'">'+(L[lang][st]||st)+'</span>'; }
+function statusBadge(st){ var cls={in:"b-in",arr:"b-arr",quoting:"b-quoting",out:"b-out",proc:"b-proc",settled:"b-settled",uned:"b-une"}[st]; return '<span class="badge '+cls+'">'+(L[lang][st]||st)+'</span>'; }
 
 /* ---------------- stats ---------------- */
 function updateStats(){
-  var inN=0,arrN=0,outN=0,unedN=0;
+  var inN=0,arrN=0,qN=0,outN=0,unedN=0;
   data.forEach(function(s){
-    if(s.status==="in") inN++; else if(s.status==="arr") arrN++; else if(s.status==="out") outN++; else if(s.status==="uned") unedN++;
+    if(s.status==="in") inN++; else if(s.status==="arr") arrN++; else if(s.status==="quoting") qN++;
+    else if(s.status==="out") outN++; else if(s.status==="uned") unedN++;
   });
   document.getElementById("st-in").textContent=inN;
   document.getElementById("st-arr").textContent=arrN;
+  document.getElementById("st-quoting").textContent=qN;
   document.getElementById("st-out").textContent=outN;
   document.getElementById("st-uned").textContent=unedN;
   /* 代理总数不含「未委托」 */
@@ -2175,7 +2227,7 @@ function renderDashboard(){
 /* ---------------- detail + inline edit ---------------- */
 var currentId=null, editing=false, editTodos=[];
 function openDetail(id){
-  currentId=id; editing=false;
+  currentId=id; editing=false; editReimb=[]; editTodos=[]; reimbOpen=false;
   showPage("detail");
   renderDetail();
 }
@@ -2465,6 +2517,7 @@ function renderDetail(){
   document.getElementById("blk-voyage").innerHTML = blockHTML(voyageFields, s, true);
   document.getElementById("blk-profit").innerHTML = profitHTML(s);
   renderTodoBlock();
+  renderReimb(s);
 
   var eb=document.getElementById("detail-edit-btn");
   var cb=document.getElementById("detail-cancel-btn");
@@ -2520,13 +2573,186 @@ function profitHTML(s){
     html += '<div class="profit-empty" style="padding:10px 0 0">提示：报价单中未填写「成本」列，毛利率暂无法计算。成本仅内部可见，打印与 INVOICE 均不输出。</div>';
   return html;
 }
+
+/* ---------------- 垫付报销（详情页，v1.20.55 / v1.20.56 改为编辑态） ----------------
+   数据结构：s.reimbursements = [{desc, qty, price, person}]（随 ships JSON 存库，无需改表）。
+   跟随整页「编辑 / 保存 / 取消」：startEdit 时把数据复制到 editReimb 副本，
+   编辑态只改副本（不写库），点「保存」随 saveDetail 一并写入，点「取消」丢弃副本。
+   已结算航次永远只读。金额 = 数量 × 单价（数量留空按 1 计），按报销人汇总；
+   与报价单「成本合计」比对，差值 = 成本 − 垫付总额，为 0 即「无差」（报销与成本匹配）。 */
+var editReimb = [];
+function reimbList(s){ return Array.isArray(s.reimbursements) ? s.reimbursements : []; }
+function reimbClean(r){ return {
+  desc:String(r.desc||""), qty:String(r.qty==null?"1":r.qty),
+  price:String(r.price||""), person:String(r.person||"")
+}; }
+/* 当前用于显示/编辑的数据源：编辑态用副本，否则用已保存的原始数据 */
+function reimbWork(s){ return editing ? editReimb : reimbList(s); }
+function reimbQty(v){ var n=parseFloat(String(v==null?"":v).replace(/[^0-9.]/g,"")); return (!isNaN(n)&&n>0)?n:1; }
+function reimbPrice(v){ var n=parseFloat(String(v==null?"":v).replace(/[^0-9.]/g,"")); return isNaN(n)?0:n; }
+function reimbAmt(r){ return round2(reimbPrice(r.price)*reimbQty(r.qty)); }
+function reimbTotal(list){ var t=0; list.forEach(function(r){ t+=reimbAmt(r); }); return round2(t); }
+function reimbByPerson(list){
+  var map={}, order=[];
+  list.forEach(function(r){
+    var p=String(r.person||"").trim() || "未填报销人";
+    if(!(p in map)){ map[p]=0; order.push(p); }
+    map[p]+=reimbAmt(r);
+  });
+  return order.map(function(p){ return {person:p, amt:round2(map[p])}; });
+}
+/* 成本口径与「预估毛利」完全一致：报价单各项 数量 × 成本 */
+function reimbCost(s){
+  var q=s.quote, cur=(q&&q.currency)||"CNY";
+  if(!q||!q.items||!q.items.length) return {has:false,sum:0,cur:cur};
+  var m=quoteMath(q.items,cur);
+  return {has:m.hasCost,sum:m.costSum,cur:m.currency};
+}
+/* 报销人输入建议：复用所有航次已录入过的报销人（含当前编辑副本里新填的） */
+function reimbPeopleOptions(){
+  var seen={};
+  (data||[]).forEach(function(s){
+    reimbList(s).forEach(function(r){ var p=String(r.person||"").trim(); if(p) seen[p]=1; });
+  });
+  editReimb.forEach(function(r){ var p=String(r.person||"").trim(); if(p) seen[p]=1; });
+  return Object.keys(seen).sort().map(function(p){ return '<option value="'+esc(p)+'"></option>'; }).join("");
+}
+/* 明细列表默认折叠，点击折叠条才展开；汇总卡片始终常显。
+   进入编辑态自动展开（方便录入），切换航次时重置为折叠。 */
+var reimbOpen=false;
+function toggleReimb(){
+  reimbOpen=!reimbOpen;
+  var s=data.find(function(x){return x.id===currentId;});
+  if(s) renderReimb(s);
+}
+function reimbFoldHTML(s,list){
+  var n=list.length, people=reimbByPerson(list).length, tot=fmtMoney(reimbTotal(list));
+  var cur=reimbCost(s).cur;
+  return '<button type="button" class="reimb-fold" onclick="toggleReimb()" '+
+    'title="'+(reimbOpen?'点击收起明细':'点击展开明细')+'">'+
+    '<span class="rf-arrow">'+(reimbOpen?'▾':'▸')+'</span>'+
+    '<span class="rf-title">报销明细 '+(reimbOpen?'（点击收起）':'（点击展开）')+'</span>'+
+    '<span class="rf-sum" id="reimb-fold-sum">'+n+' 条 · '+people+' 位报销人 · 合计 <b>'+tot+' '+esc(cur)+'</b></span>'+
+  '</button>';
+}
+function renderReimb(s){
+  var box=document.getElementById("blk-reimb"); if(!box) return;
+  var locked=(s.status==="settled");
+  var canEdit=editing && !locked;
+  var list=reimbWork(s), cost=reimbCost(s);
+  var h='<div class="reimb-hint">金额 = 数量 × 单价（数量留空按 1 计）；相同报销人自动汇总。'
+      +'金额与报价单成本同币种（<b>'+esc(cost.cur)+'</b>）。'
+      +(locked?'该航次已离港结算，仅可查看。'
+        :(canEdit?'正在编辑：改动需点页面底部「保存」生效，点「取消」放弃本次修改。'
+                 :'点击页面右上角「编辑」后可录入、修改垫付报销。'))+'</div>';
+  h+=reimbFoldHTML(s,list);
+  /* 明细区：仅在展开时输出（含 datalist / 表格 / 添加按钮） */
+  if(reimbOpen){
+    h+='<datalist id="reimb-people">'+reimbPeopleOptions()+'</datalist>';
+    h+='<table class="reimb-tbl"><thead><tr>'+
+      '<th>描述 Description</th><th style="width:78px">数量 Qty</th><th style="width:120px">单价 Unit Price</th>'+
+      '<th style="width:110px;text-align:right">金额 Amount</th><th style="width:150px">报销人 Claimant</th>'+
+      (canEdit?'<th style="width:44px"></th>':'')+'</tr></thead><tbody>';
+    if(!list.length){
+      h+='<tr><td class="reimb-empty" colspan="'+(canEdit?6:5)+'">暂无垫付报销记录'+
+        (canEdit?'，点击下方「＋ 添加一条」开始录入。':(locked?'。':'，点击「编辑」后可添加。'))+'</td></tr>';
+    } else {
+      list.forEach(function(r,i){
+        if(!canEdit){
+          h+='<tr><td>'+(esc(String(r.desc||""))||"—")+'</td><td>'+esc(String(r.qty==null?"1":r.qty))+'</td>'+
+            '<td>'+esc(String(r.price||""))+'</td><td class="rb-amt">'+fmtMoney(reimbAmt(r))+'</td>'+
+            '<td>'+(esc(String(r.person||""))||"—")+'</td></tr>';
+        } else {
+          h+='<tr>'+
+            '<td><input value="'+esc(String(r.desc||""))+'" placeholder="如：引航费垫付" onchange="updReimb('+i+',\'desc\',this.value)"></td>'+
+            '<td><input class="rb-num" value="'+esc(String(r.qty==null?"1":r.qty))+'" inputmode="decimal" onchange="updReimb('+i+',\'qty\',this.value)"></td>'+
+            '<td><input class="rb-price" value="'+esc(String(r.price||""))+'" inputmode="decimal" placeholder="0.00" onchange="updReimb('+i+',\'price\',this.value)"></td>'+
+            '<td class="rb-amt" data-rb-amt="'+i+'">'+fmtMoney(reimbAmt(r))+'</td>'+
+            '<td><input list="reimb-people" value="'+esc(String(r.person||""))+'" placeholder="报销人" onchange="updReimb('+i+',\'person\',this.value)"></td>'+
+            '<td><button type="button" class="rb-del" title="删除本行" onclick="delReimb('+i+')">✕</button></td>'+
+          '</tr>';
+        }
+      });
+    }
+    h+='</tbody></table>';
+    if(canEdit) h+='<div class="reimb-add"><button class="btn sm ghost" onclick="addReimb()">＋ 添加一条</button></div>';
+  }
+  /* 汇总区始终常显，折叠与否都不受影响 */
+  h+='<div id="reimb-summary"></div>';
+  box.innerHTML=h;
+  renderReimbSummary();
+}
+/* 汇总区单独重绘：输入时只更新金额单元格 + 本区，避免输入框被重建导致失焦。
+   数据源用 reimbWork(s) —— 编辑态反映未保存的副本，只读态反映已保存数据。 */
+function renderReimbSummary(){
+  var host=document.getElementById("reimb-summary"); if(!host) return;
+  var s=data.find(function(x){return x.id===currentId;}); if(!s) return;
+  var list=reimbWork(s), cost=reimbCost(s);
+  var total=reimbTotal(list), by=reimbByPerson(list), cur=cost.cur;
+  var h='<div class="reimb-sumgrid">';
+  h+='<div class="reimb-card"><div class="pk">按报销人 By Claimant</div>';
+  if(!by.length) h+='<div class="reimb-none">暂无记录</div>';
+  else h+=by.map(function(g){
+    return '<div class="reimb-person"><span>'+esc(g.person)+'</span><b>'+fmtMoney(g.amt)+'</b></div>';
+  }).join("");
+  h+='</div>';
+  h+='<div class="reimb-card"><div class="pk">总垫付金额 Total Advanced</div><div class="pv">'+fmtMoney(total)+' '+esc(cur)+'</div></div>';
+  h+='<div class="reimb-card"><div class="pk">成本合计 Cost（报价单）</div><div class="pv">'+
+      (cost.has?fmtMoney(cost.sum)+' '+esc(cur):'—')+'</div>'+
+      (cost.has?'':'<div class="reimb-sub">报价单未填成本，暂无法核对</div>')+'</div>';
+  if(cost.has){
+    var diff=round2(cost.sum-total), zero=Math.abs(diff)<0.005;
+    h+='<div class="reimb-card"><div class="pk">差值 Cost − 垫付 Difference</div>'+
+      '<div class="pv '+(zero?'ok':'bad')+'">'+(zero?'0':fmtMoney(diff))+' '+esc(cur)+'</div>'+
+      '<div class="reimb-flag '+(zero?'ok':'bad')+'">'+
+        (zero?'✓ 无差 · 报销与成本匹配':(diff>0?'尚差 '+fmtMoney(diff)+' 未录入':'垫付超出成本 '+fmtMoney(-diff)))+'</div></div>';
+  } else {
+    h+='<div class="reimb-card"><div class="pk">差值 Difference</div><div class="pv">—</div>'+
+      '<div class="reimb-sub">先在报价单填写「成本」列后再核对</div></div>';
+  }
+  h+='</div>';
+  host.innerHTML=h;
+  /* 折叠条摘要也跟着刷新（录入时明细区可能收起，但数字必须实时准确） */
+  var fold=document.getElementById("reimb-fold-sum");
+  if(fold) fold.innerHTML = list.length+' 条 · '+by.length+' 位报销人 · 合计 <b>'+fmtMoney(total)+' '+esc(cur)+'</b>';
+}
+/* 三个写入口都只在「编辑态 + 未结算」生效，且只改 editReimb 副本，不写库 */
+function reimbWritable(){
+  var s=data.find(function(x){return x.id===currentId;});
+  return (s && editing && s.status!=="settled") ? s : null;
+}
+function updReimb(i,k,v){
+  if(!reimbWritable() || !editReimb[i]) return;
+  editReimb[i][k]=v;
+  var cell=document.querySelector('#blk-reimb [data-rb-amt="'+i+'"]');
+  if(cell) cell.textContent=fmtMoney(reimbAmt(editReimb[i]));
+  /* 报销人变化时同步刷新 datalist 建议（datalist 不是输入框，重建不会导致失焦） */
+  if(k==="person"){
+    var dl=document.getElementById("reimb-people");
+    if(dl) dl.innerHTML=reimbPeopleOptions();
+  }
+  renderReimbSummary();
+}
+function addReimb(){
+  var s=reimbWritable(); if(!s) return;
+  editReimb.push({desc:"",qty:"1",price:"",person:""});
+  renderReimb(s);
+}
+function delReimb(i){
+  var s=reimbWritable(); if(!s) return;
+  editReimb.splice(i,1);
+  renderReimb(s);
+}
 function startEdit(){
   var s=data.find(function(x){return x.id===currentId;}); if(!s) return;
   if(s.status==="settled"){ toast("该航次已离港结算，信息已锁定，无法编辑"); return; }
   editTodos = (s.todos||[]).map(function(t){return {title:t.title||"",detail:t.detail||"",done:!!t.done,type:(t.type||"normal"),onCount:(t.onCount||0),offCount:(t.offCount||0),crewOn:(t.crewOn||[]).map(crewClean),crewOff:(t.crewOff||[]).map(crewClean)};});
+  /* 垫付报销同样复制一份编辑副本：编辑态录入只改副本，保存才写回记录 */
+  editReimb = reimbList(s).map(reimbClean);
+  reimbOpen=true;   /* 进入编辑态自动展开明细，方便直接录入 */
   editing=true; renderDetail();
 }
-function cancelEdit(){ editing=false; renderDetail(); }
+function cancelEdit(){ editing=false; editReimb=[]; reimbOpen=false; renderDetail(); }
 function saveDetail(){
   var s=data.find(function(x){return x.id===currentId;}); if(!s) return;
   if(s.status==="settled"){ toast("该航次已离港结算，信息已锁定，无法保存"); return; }
@@ -2540,10 +2766,14 @@ function saveDetail(){
   if(upd.eta) upd.eta=upd.eta.replace("T"," ");
   if(upd.etd) upd.etd=upd.etd.replace("T"," ");
   upd.todos = editTodos.map(serializeTodo);
+  /* 垫付报销：把编辑副本写回记录（与 todos 同批随 save(data) 入库）。
+     注意 Object.assign(s,upd) 全字段覆盖，reimbursements 必须显式带上，否则会被丢掉；
+     非编辑态被误调时保留原值，避免把已录入的数据清空。 */
+  upd.reimbursements = (editing ? editReimb : reimbList(s)).map(reimbClean);
   /* 状态由非结算转为「离港结算」时记录结算时间（用于航次结算列表） */
   if(upd.status==="settled" && s.status!=="settled") upd.settledAt = new Date().toISOString();
   Object.assign(s,upd);
-  save(data); editing=false; renderDetail(); refresh(); toast("已保存");
+  save(data); editing=false; reimbOpen=false; renderDetail(); refresh(); toast("已保存");
 }
 function detailDelete(){
   var s=data.find(function(x){return x.id===currentId;}); if(s && s.status==="settled"){ toast("该航次已离港结算，信息已锁定，无法删除"); return; }
@@ -4391,9 +4621,10 @@ function pickVoyRow(rows, en){
   return pool[0];
 }
 function voyBtnHTML(s){
-  /* 仅「在港」in /「即将到港」arr 的船可刷新盐田船期；已离港未结算 / 离港结算的船船期已定，不再提供刷新 */
-  if(s.status!=="in" && s.status!=="arr"){
-    return '<span class="voy-na" title="仅「在港 / 即将到港」的船可刷新船期">—</span>';
+  /* 仅「在港」in /「即将到港」arr /「报价中」quoting 的船可刷新盐田船期；
+     已离港未结算 / 离港结算的船船期已定，不再提供刷新 */
+  if(s.status!=="in" && s.status!=="arr" && s.status!=="quoting"){
+    return '<span class="voy-na" title="仅「在港 / 即将到港 / 报价中」的船可刷新船期">—</span>';
   }
   if(!isYantian(s.port)) return '<span class="voy-na" title="挂靠港不是盐田，不适用于盐田船期查询">—</span>';
   /* ⚠️ id 要安全地嵌进 onclick 属性：
