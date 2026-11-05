@@ -1428,7 +1428,7 @@
 /* ---------------- 版本号 ----------------
    显示在左上角系统名称右侧。每次做了可见改动，往上加：
    小修：末位 +1；新增功能：中间位 +1。 */
-var APP_VERSION = "v1.20.57";;;;
+var APP_VERSION = "v1.20.58";;;;
 (function(){ var el=document.getElementById("appVer"); if(el) el.textContent=APP_VERSION; })();
 
 /* ---------------- i18n ---------------- */
@@ -2608,6 +2608,31 @@ function reimbCost(s){
   var m=quoteMath(q.items,cur);
   return {has:m.hasCost,sum:m.costSum,cur:m.currency};
 }
+/* 报销录入恒为 RMB；账单（报价单）为 USD 时按报价单汇率折成 USD 与成本比对。
+   fx 定义是 CNY/USD（1 USD = fx CNY），故 RMB→USD 用「除」：
+   例 2,205 RMB ÷ 6.6 = 334.09 USD，正好与 334.09 USD 成本匹配。 */
+function reimbRateInfo(s){
+  var c=reimbCost(s), q=s.quote||{};
+  var fx=parseFloat(String(q.fxRate==null?"":q.fxRate).replace(/[^0-9.]/g,""));
+  var ok=fx>0;
+  return {cur:c.cur, fx:(ok?fx:0), usd:(c.cur==="USD"), missing:(c.cur==="USD" && !ok)};
+}
+/* 把 RMB 垫付总额折算成成本币种（CNY 账单 1:1 不折算） */
+function reimbToCost(total, ri){
+  return (ri.usd && ri.fx>0) ? round2(total/ri.fx) : total;
+}
+/* 汇总所需的所有派生值，折叠条与汇总卡片共用同一口径 */
+function reimbParts(s,list){
+  var cost=reimbCost(s), ri=reimbRateInfo(s);
+  var total=reimbTotal(list), by=reimbByPerson(list);
+  return {cost:cost, ri:ri, total:total, by:by, cmp:reimbToCost(total,ri)};
+}
+function reimbFoldSumHTML(s,list){
+  var p=reimbParts(s,list);
+  var t=list.length+' 条 · '+p.by.length+' 位报销人 · 合计 <b>'+fmtMoney(p.total)+' RMB</b>';
+  if(p.ri.usd && p.ri.fx>0) t+='（折 '+fmtMoney(p.cmp)+' '+esc(p.ri.cur)+'）';
+  return t;
+}
 /* 报销人输入建议：复用所有航次已录入过的报销人（含当前编辑副本里新填的） */
 function reimbPeopleOptions(){
   var seen={};
@@ -2626,23 +2651,27 @@ function toggleReimb(){
   if(s) renderReimb(s);
 }
 function reimbFoldHTML(s,list){
-  var n=list.length, people=reimbByPerson(list).length, tot=fmtMoney(reimbTotal(list));
-  var cur=reimbCost(s).cur;
   return '<button type="button" class="reimb-fold" onclick="toggleReimb()" '+
     'title="'+(reimbOpen?'点击收起明细':'点击展开明细')+'">'+
     '<span class="rf-arrow">'+(reimbOpen?'▾':'▸')+'</span>'+
     '<span class="rf-title">报销明细 '+(reimbOpen?'（点击收起）':'（点击展开）')+'</span>'+
-    '<span class="rf-sum" id="reimb-fold-sum">'+n+' 条 · '+people+' 位报销人 · 合计 <b>'+tot+' '+esc(cur)+'</b></span>'+
+    '<span class="rf-sum" id="reimb-fold-sum">'+reimbFoldSumHTML(s,list)+'</span>'+
   '</button>';
 }
 function renderReimb(s){
   var box=document.getElementById("blk-reimb"); if(!box) return;
   var locked=(s.status==="settled");
   var canEdit=editing && !locked;
-  var list=reimbWork(s), cost=reimbCost(s);
-  var h='<div class="reimb-hint">金额 = 数量 × 单价（数量留空按 1 计）；相同报销人自动汇总。'
-      +'金额与报价单成本同币种（<b>'+esc(cost.cur)+'</b>）。'
-      +(locked?'该航次已离港结算，仅可查看。'
+  var list=reimbWork(s), ri=reimbRateInfo(s);
+  var h='<div class="reimb-hint">金额 = 数量 × 单价（数量留空按 1 计），<b>报销按 RMB 录入</b>；相同报销人自动汇总。';
+  if(ri.usd){
+    h+='账单为 <b>USD</b>，按报价单汇率 '+(ri.fx>0?'<b>'+fmtMoney(ri.fx)+'</b>':'（未填）')+
+       ' 自动折成 USD 与成本比对；<b>按报销人显示的金额仍为 RMB</b>。';
+    if(ri.missing) h+=' <b style="color:#c0392b">请先在报价单填写 Ex. Rate，否则无法折算比对。</b>';
+  }else{
+    h+='账单为 <b>'+esc(ri.cur)+'</b>，与成本同币种直接比对。';
+  }
+  h+=' '+(locked?'该航次已离港结算，仅可查看。'
         :(canEdit?'正在编辑：改动需点页面底部「保存」生效，点「取消」放弃本次修改。'
                  :'点击页面右上角「编辑」后可录入、修改垫付报销。'))+'</div>';
   h+=reimbFoldHTML(s,list);
@@ -2650,8 +2679,8 @@ function renderReimb(s){
   if(reimbOpen){
     h+='<datalist id="reimb-people">'+reimbPeopleOptions()+'</datalist>';
     h+='<table class="reimb-tbl"><thead><tr>'+
-      '<th>描述 Description</th><th style="width:78px">数量 Qty</th><th style="width:120px">单价 Unit Price</th>'+
-      '<th style="width:110px;text-align:right">金额 Amount</th><th style="width:150px">报销人 Claimant</th>'+
+      '<th>描述 Description</th><th style="width:78px">数量 Qty</th><th style="width:120px">单价 Unit Price (RMB)</th>'+
+      '<th style="width:110px;text-align:right">金额 Amount (RMB)</th><th style="width:150px">报销人 Claimant</th>'+
       (canEdit?'<th style="width:44px"></th>':'')+'</tr></thead><tbody>';
     if(!list.length){
       h+='<tr><td class="reimb-empty" colspan="'+(canEdit?6:5)+'">暂无垫付报销记录'+
@@ -2683,38 +2712,52 @@ function renderReimb(s){
   renderReimbSummary();
 }
 /* 汇总区单独重绘：输入时只更新金额单元格 + 本区，避免输入框被重建导致失焦。
-   数据源用 reimbWork(s) —— 编辑态反映未保存的副本，只读态反映已保存数据。 */
+   数据源用 reimbWork(s) —— 编辑态反映未保存的副本，只读态反映已保存数据。
+   币种口径：报销侧一律 RMB；USD 账单时按报价单汇率折 USD 仅用于「与成本比对」。 */
 function renderReimbSummary(){
   var host=document.getElementById("reimb-summary"); if(!host) return;
   var s=data.find(function(x){return x.id===currentId;}); if(!s) return;
-  var list=reimbWork(s), cost=reimbCost(s);
-  var total=reimbTotal(list), by=reimbByPerson(list), cur=cost.cur;
+  var p=reimbParts(s,reimbWork(s));
+  var cost=p.cost, ri=p.ri, total=p.total, by=p.by, cmp=p.cmp;
   var h='<div class="reimb-sumgrid">';
-  h+='<div class="reimb-card"><div class="pk">按报销人 By Claimant</div>';
+  /* ① 按报销人：始终 RMB，不折算 */
+  h+='<div class="reimb-card"><div class="pk">按报销人 By Claimant（RMB）</div>';
   if(!by.length) h+='<div class="reimb-none">暂无记录</div>';
   else h+=by.map(function(g){
     return '<div class="reimb-person"><span>'+esc(g.person)+'</span><b>'+fmtMoney(g.amt)+'</b></div>';
   }).join("");
   h+='</div>';
-  h+='<div class="reimb-card"><div class="pk">总垫付金额 Total Advanced</div><div class="pv">'+fmtMoney(total)+' '+esc(cur)+'</div></div>';
+  /* ② 总垫付：RMB；USD 账单额外列出折算值供比对 */
+  h+='<div class="reimb-card"><div class="pk">总垫付金额 Total Advanced（RMB）</div>'+
+      '<div class="pv">'+fmtMoney(total)+' RMB</div>';
+  if(ri.usd && ri.fx>0){
+    h+='<div class="reimb-sub">按汇率 '+fmtMoney(ri.fx)+' 折合 <b>'+fmtMoney(cmp)+' '+esc(ri.cur)+'</b> 用于比对</div>';
+  }else if(ri.missing){
+    h+='<div class="reimb-sub" style="color:#c0392b">报价单未填汇率，无法折算</div>';
+  }
+  h+='</div>';
+  /* ③ 成本合计：报价单原币种 */
   h+='<div class="reimb-card"><div class="pk">成本合计 Cost（报价单）</div><div class="pv">'+
-      (cost.has?fmtMoney(cost.sum)+' '+esc(cur):'—')+'</div>'+
+      (cost.has?fmtMoney(cost.sum)+' '+esc(cost.cur):'—')+'</div>'+
       (cost.has?'':'<div class="reimb-sub">报价单未填成本，暂无法核对</div>')+'</div>';
-  if(cost.has){
-    var diff=round2(cost.sum-total), zero=Math.abs(diff)<0.005;
-    h+='<div class="reimb-card"><div class="pk">差值 Cost − 垫付 Difference</div>'+
-      '<div class="pv '+(zero?'ok':'bad')+'">'+(zero?'0':fmtMoney(diff))+' '+esc(cur)+'</div>'+
+  /* ④ 差值：成本 − 折算后的垫付，币种跟成本 */
+  if(cost.has && !ri.missing){
+    var diff=round2(cost.sum-cmp), zero=Math.abs(diff)<0.005;
+    h+='<div class="reimb-card"><div class="pk">差值 Cost − 垫付（'+esc(cost.cur)+'）</div>'+
+      '<div class="pv '+(zero?'ok':'bad')+'">'+(zero?'0':fmtMoney(diff))+' '+esc(cost.cur)+'</div>'+
       '<div class="reimb-flag '+(zero?'ok':'bad')+'">'+
-        (zero?'✓ 无差 · 报销与成本匹配':(diff>0?'尚差 '+fmtMoney(diff)+' 未录入':'垫付超出成本 '+fmtMoney(-diff)))+'</div></div>';
+        (zero?'✓ 无差 · 报销与成本匹配':(diff>0?'尚差 '+fmtMoney(diff)+' '+esc(cost.cur)+' 未录入':'垫付超出成本 '+fmtMoney(-diff)+' '+esc(cost.cur)))+'</div>'+
+      (ri.usd?'<div class="reimb-sub">已按汇率 '+fmtMoney(ri.fx)+' 将 '+fmtMoney(total)+' RMB 折为 '+fmtMoney(cmp)+' USD 后比对</div>':'')+
+      '</div>';
   } else {
     h+='<div class="reimb-card"><div class="pk">差值 Difference</div><div class="pv">—</div>'+
-      '<div class="reimb-sub">先在报价单填写「成本」列后再核对</div></div>';
+      '<div class="reimb-sub">'+(ri.missing?'请先在报价单填写汇率 Ex. Rate（CNY/USD）':'先在报价单填写「成本」列后再核对')+'</div></div>';
   }
   h+='</div>';
   host.innerHTML=h;
   /* 折叠条摘要也跟着刷新（录入时明细区可能收起，但数字必须实时准确） */
   var fold=document.getElementById("reimb-fold-sum");
-  if(fold) fold.innerHTML = list.length+' 条 · '+by.length+' 位报销人 · 合计 <b>'+fmtMoney(total)+' '+esc(cur)+'</b>';
+  if(fold) fold.innerHTML=reimbFoldSumHTML(s,reimbWork(s));
 }
 /* 三个写入口都只在「编辑态 + 未结算」生效，且只改 editReimb 副本，不写库 */
 function reimbWritable(){
