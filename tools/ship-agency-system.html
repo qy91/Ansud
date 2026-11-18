@@ -704,6 +704,34 @@
   .crew-table th,.crew-table td{border:1px solid var(--line);padding:5px 8px;text-align:left;white-space:nowrap}
   .crew-table th{background:#f3f5f7;font-weight:600;color:#444}
   .crew-actions{margin-top:10px}
+  
+  .sp-block{border:1px solid var(--line);border-radius:8px;padding:10px;margin-top:8px;background:#fafbfc}
+  .sp-block.ro{background:#fff}
+  .sp-counts{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:8px;font-size:13px;color:#555}
+  .sp-counts label{display:inline-flex;align-items:center;gap:6px}
+  .sp-num{width:64px;padding:5px 8px;border:1px solid var(--brand);border-radius:6px;font-size:14px}
+  .sp-sec{margin-top:10px;overflow-x:auto}
+  .sp-sec:first-of-type{margin-top:4px}
+  .sp-h{font-weight:600;font-size:13px;color:#333;margin-bottom:6px;border-left:3px solid var(--brand);padding-left:7px}
+  .sp-empty{color:#999;font-size:12px;padding:4px 0}
+  .sp-row{display:grid;gap:6px;align-items:end;margin-bottom:6px;min-width:max-content}
+  .sp-idx{font-size:12px;color:#888;text-align:center;padding-bottom:7px}
+  .sp-del{display:flex;align-items:flex-end;justify-content:center;padding-bottom:1px}
+  .sp-del button{width:26px;height:30px;border:1px solid #fecaca;background:#fff;color:#dc2626;border-radius:6px;cursor:pointer;font-size:13px;line-height:1;padding:0;font-family:inherit}
+  .sp-del button:hover{background:#fee2e2}
+  .sp-row .sp-cell{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .sp-row .sp-cell input{padding:6px 7px;border:1px solid var(--line);border-radius:6px;font-size:13px;width:100%;box-sizing:border-box;min-width:76px}
+  
+  .sp-edit{border-collapse:collapse;width:auto;font-size:13px;margin-top:4px}
+  .sp-edit th,.sp-edit td{border:1px solid var(--line);padding:4px 6px;white-space:nowrap}
+  .sp-edit th{background:#eef1f5;font-weight:600;color:#555;font-size:11px;text-align:center}
+  .sp-edit .sp-idx{color:#888;font-size:12px;text-align:center}
+  .sp-edit td input{padding:5px 6px;border:1px solid var(--line);border-radius:5px;font-size:13px;box-sizing:border-box;field-sizing:content;min-width:52px}
+  .sp-edit .sp-del button{width:22px;height:26px;border:1px solid #fecaca;background:#fff;color:#dc2626;border-radius:5px;cursor:pointer;font-size:12px;line-height:1;padding:0;font-family:inherit}
+  .sp-edit .sp-del button:hover{background:#fee2e2}
+  .sp-table{border-collapse:collapse;width:auto;font-size:13px;margin-top:4px}
+  .sp-table th,.sp-table td{border:1px solid var(--line);padding:5px 8px;text-align:left;white-space:nowrap}
+  .sp-table th{background:#f3f5f7;font-weight:600;color:#444}
   .todo-tag{display:inline-block;font-size:11px;background:#e8f0fe;color:#1a56b0;border-radius:4px;padding:1px 6px;margin-left:4px}
 
   .detail-actions{margin-top:4px;display:flex;gap:10px;flex-wrap:wrap}
@@ -1516,7 +1544,7 @@
 <script src="config.js"></script>
 <script>
 
-var APP_VERSION = "v1.20.70";
+var APP_VERSION = "v1.20.71";
 (function(){ var el=document.getElementById("appVer"); if(el) el.textContent=APP_VERSION; })();
 
 
@@ -2470,6 +2498,16 @@ function renderTodoBlock(){
           '<div class="todo-detail hidden" id="td-'+i+'">'+crewManifestView(t,i)+'</div>'+
         '</div>';
       }
+      if(t.type==="spares"){
+        return '<div class="todo">'+
+          '<div class="todo-row" onclick="toggleTodo('+i+')">'+
+            '<span class="todo-ck '+(t.done?'on':'')+'">'+(t.done?'✓':'')+'</span>'+
+            '<span class="todo-title">'+esc(t.title||'(未命名)')+' <span class="todo-tag">备件</span></span>'+
+            '<span class="todo-arrow" id="ta-'+i+'">▾</span>'+
+          '</div>'+
+          '<div class="todo-detail hidden" id="td-'+i+'">'+sparesView(t)+'</div>'+
+        '</div>';
+      }
       return '<div class="todo">'+
         '<div class="todo-row" onclick="toggleTodo('+i+')">'+
           '<span class="todo-ck '+(t.done?'on':'')+'">'+(t.done?'✓':'')+'</span>'+
@@ -2791,7 +2829,9 @@ function copyTodos(s){
     return { title:t.title||"", detail:t.detail||"", done:!!t.done, type:(t.type||"normal"),
       onCount:(t.onCount||0), offCount:(t.offCount||0),
       crewOn:(t.crewOn||[]).map(crewClean), crewOff:(t.crewOff||[]).map(crewClean),
-      remitAmount:(t.remitAmount||""), cashAmount:(t.cashAmount||""), cashAuto:(t.cashAuto!==false) };
+      remitAmount:(t.remitAmount||""), cashAmount:(t.cashAmount||""), cashAuto:(t.cashAuto!==false),
+      overseas:sparesClean(t.overseas,SPARES_OVERSEAS), domestic:sparesClean(t.domestic,SPARES_DOMESTIC),
+      overseasCount:(t.overseasCount||0), domesticCount:(t.domesticCount||0) };
   });
 }
 function editBlockGuard(){
@@ -4053,6 +4093,43 @@ var CREW_FIELDS = [
   {k:"airline",     l:"航空公司名", en:"Airline",      ph:"如：Air India"}
 ];
 
+var SPARES_OVERSEAS = [
+  {k:"awbNo",      l:"AWB No."},
+  {k:"pcs",        l:"Pcs"},
+  {k:"weight",     l:"Weight"},
+  {k:"description",l:"Description"},
+  {k:"shipperName",l:"Shipper name"},
+  {k:"from",       l:"From"},
+  {k:"to",         l:"To"},
+  {k:"ata",        l:"ATA"},
+  {k:"clearace",   l:"Clearace"},
+  {k:"delivery",   l:"Delivery"},
+  {k:"remark",     l:"Remark"}
+];
+var SPARES_DOMESTIC = [
+  {k:"trackingNo", l:"Tracking No."},
+  {k:"pcs",        l:"Pcs"},
+  {k:"weight",     l:"Weight"},
+  {k:"description",l:"Description"},
+  {k:"shipperName",l:"Shipper name"},
+  {k:"dimensions", l:"Dimensions"},
+  {k:"ata",        l:"ATA"},
+  {k:"clearace",   l:"Clearace"},
+  {k:"delivery",   l:"Delivery"},
+  {k:"remark",     l:"Remark"}
+];
+function blankSpare(fields){ var o={}; fields.forEach(function(f){ o[f.k] = ""; }); return o; }
+function sparesClean(list, fields){
+  if(!Array.isArray(list)) return [];
+  return list.map(function(row){
+    var o={}; fields.forEach(function(f){ o[f.k] = (row && row[f.k]!=null) ? String(row[f.k]) : ""; }); return o;
+  });
+}
+function sparesFilled(row, fields){
+  if(!row) return false;
+  return fields.some(function(f){ return String(row[f.k]||"").trim()!==""; });
+}
+
 function normBirthday(v){
   var s = String(v==null?"":v).trim();
   if(!s) return "";
@@ -4119,7 +4196,7 @@ function addTodoCtx(ctx){
 }
 function todoTypeChange(ctx,i,v){
   var a=todoListBy(ctx), t=a && a[i]; if(!t) return;
-  t.type = (v==="crew" || v==="ctm") ? v : "normal";
+  t.type = (v==="crew" || v==="ctm" || v==="spares") ? v : "normal";
   if(t.type==="crew"){
     t.onCount = Number(t.onCount)||0; t.offCount = Number(t.offCount)||0;
     t.crewOn = Array.isArray(t.crewOn) ? t.crewOn : [];
@@ -4129,6 +4206,12 @@ function todoTypeChange(ctx,i,v){
     t.remitAmount = t.remitAmount==null ? "" : String(t.remitAmount);
     t.cashAmount  = t.cashAmount ==null ? "" : String(t.cashAmount);
     t.cashAuto    = t.cashAuto !== false;   
+  }
+  if(t.type==="spares"){
+    t.overseasCount = Number(t.overseasCount)||0;
+    t.domesticCount = Number(t.domesticCount)||0;
+    t.overseas = Array.isArray(t.overseas) ? t.overseas : [];
+    t.domestic = Array.isArray(t.domestic) ? t.domestic : [];
   }
   rerenderTodos(ctx);
 }
@@ -4227,21 +4310,85 @@ function crewManifestHTML(ctx,i,t){
     '<div class="crew-section"><div class="crew-h">下船船员 Off-signing Crew</div>'+crewRowsHTML(ctx,i,'off',off)+'</div>'+
   '</div>';
 }
+
+function setSpareCount(ctx,i,which,v){
+  var a=todoListBy(ctx), t=a && a[i]; if(!t) return;
+  var isOver = (which==="overseas");
+  var fields = isOver ? SPARES_OVERSEAS : SPARES_DOMESTIC;
+  var key = isOver ? "overseas" : "domestic";
+  var cntKey = isOver ? "overseasCount" : "domesticCount";
+  var n = Math.max(0, Math.min(200, parseInt(v,10)||0));
+  var arr = Array.isArray(t[key]) ? t[key] : [];
+  while(arr.length < n) arr.push(blankSpare(fields));
+  if(arr.length > n) arr.length = n;
+  t[key]=arr; t[cntKey]=n;
+  rerenderTodos(ctx);
+}
+
+function updSpare(ctx,i,which,j,k,v){
+  var a=todoListBy(ctx), t=a && a[i]; if(!t) return;
+  var arr = (which==="overseas") ? t.overseas : t.domestic;
+  if(!arr || !arr[j]) return;
+  arr[j][k]=v;
+}
+function delSpareRow(ctx,i,which,j){
+  var a=todoListBy(ctx), t=a && a[i]; if(!t) return;
+  var isOver = (which==="overseas");
+  var key = isOver ? "overseas" : "domestic";
+  var cntKey = isOver ? "overseasCount" : "domesticCount";
+  var arr = Array.isArray(t[key]) ? t[key] : [];
+  if(j<0 || j>=arr.length) return;
+  arr.splice(j,1);
+  t[key]=arr; t[cntKey]=arr.length;
+  rerenderTodos(ctx);
+}
+function spareRowsHTML(ctx,i,which,list,fields){
+  
+  var h = '<table class="sp-edit"><thead><tr><th>NO.</th>'+
+    fields.map(function(f){ return '<th>'+esc(f.l)+'</th>'; }).join('')+'<th></th></tr></thead><tbody>';
+  if(!list || !list.length){
+    h += '<tr><td colspan="'+(fields.length+2)+'" style="text-align:center;color:#999;padding:8px">暂无条目，先在上方设置行数</td></tr>';
+  }else{
+    list.forEach(function(row,j){
+      h += '<tr><td class="sp-idx">'+(j+1)+'</td>'+fields.map(function(f){
+        var v = row[f.k]==null ? "" : String(row[f.k]);
+        var handler = "updSpare('"+ctx+"',"+i+",'"+which+"',"+j+",'"+f.k+"',this.value)";
+        return '<td><input type="text" size="'+Math.max(4, Math.min(v.length+2, 18))+'" value="'+esc(v)+'" onchange="'+handler+'"></td>';
+      }).join('')+'<td class="sp-del"><button type="button" title="删除本行" onclick="delSpareRow(\''+ctx+'\','+i+',\''+which+'\','+j+')">✕</button></td></tr>';
+    });
+  }
+  return h+'</tbody></table>';
+}
+function sparesEditorHTML(ctx,i,t){
+  var ov = Array.isArray(t.overseas) ? t.overseas : [];
+  var dm = Array.isArray(t.domestic) ? t.domestic : [];
+  return '<div class="sp-block">'+
+    '<div class="sp-counts">'+
+      '<label>海外 Overseas 行数 <input class="sp-num" type="number" min="0" max="200" value="'+ov.length+'" onchange="setSpareCount(\''+ctx+'\','+i+',\'overseas\',this.value)"></label>'+
+      '<label>国内 China domestic 行数 <input class="sp-num" type="number" min="0" max="200" value="'+dm.length+'" onchange="setSpareCount(\''+ctx+'\','+i+',\'domestic\',this.value)"></label>'+
+    '</div>'+
+    '<div class="sp-sec"><div class="sp-h">Overseas Shipments（海外备件）</div>'+spareRowsHTML(ctx,i,'overseas',ov,SPARES_OVERSEAS)+'</div>'+
+    '<div class="sp-sec"><div class="sp-h">China domestic shipments（国内备件）</div>'+spareRowsHTML(ctx,i,'domestic',dm,SPARES_DOMESTIC)+'</div>'+
+  '</div>';
+}
 function todoCard(t,i,ctx){
   var isCrew = (t.type==="crew");
   var isCTM = (t.type==="ctm");
+  var isSpares = (t.type==="spares");
   var h = '<div class="todo-edit">'+
     '<div class="todo-edit-head">'+
       '<input class="ti" value="'+esc(t.title||"")+'" placeholder="待办标题" onchange="updTodoCtx(\''+ctx+'\','+i+',\'title\',this.value)">'+
       '<select class="todo-type" onchange="todoTypeChange(\''+ctx+'\','+i+',this.value)">'+
-        '<option value="normal"'+(isCrew||isCTM?'':' selected')+'>普通待办</option>'+
+        '<option value="normal"'+(isCrew||isCTM||isSpares?'':' selected')+'>普通待办</option>'+
         '<option value="crew"'+(isCrew?' selected':'')+'>船员更换</option>'+
         '<option value="ctm"'+(isCTM?' selected':'')+'>CTM</option>'+
+        '<option value="spares"'+(isSpares?' selected':'')+'>备件</option>'+
       '</select>'+
       '<label class="ck"><input type="checkbox"'+(t.done?' checked':'')+' onchange="updTodoCtx(\''+ctx+'\','+i+',\'done\',this.checked)"> 完成</label>'+
       '<button class="icon-btn danger" onclick="delTodoCtx(\''+ctx+'\','+i+')">删除</button>'+
     '</div>';
   if(isCrew) h += crewManifestHTML(ctx,i,t);
+  if(isSpares) h += sparesEditorHTML(ctx,i,t);
   if(isCTM) h += '<div class="ctm-amts">'+
     '<label>汇款金额 USD <input type="text" inputmode="decimal" value="'+esc(t.remitAmount||"")+'" placeholder="如 25350" onchange="updCTMAmount(\''+ctx+'\','+i+',\'remit\',this.value)"></label>'+
     '<label>取现金额 USD <input type="text" inputmode="decimal" value="'+esc(t.cashAmount||"")+'" placeholder="默认按千位取整" onchange="updCTMAmount(\''+ctx+'\','+i+',\'cash\',this.value)"></label>'+
@@ -4256,7 +4403,8 @@ function renderModalTodos(){
   autoGrowAllTA(box);
 }
 function serializeTodo(t){
-  var o = { title:t.title||"", detail:t.detail||"", done:!!t.done, type:((t.type==="crew"||t.type==="ctm")?t.type:"normal") };
+  var o = { title:t.title||"", detail:t.detail||"", done:!!t.done,
+    type:((t.type==="crew"||t.type==="ctm"||t.type==="spares")?t.type:"normal") };
   if(o.type==="crew"){
     o.onCount  = Number(t.onCount)||0;
     o.offCount = Number(t.offCount)||0;
@@ -4268,6 +4416,12 @@ function serializeTodo(t){
     o.cashAmount  = String(t.cashAmount ||"");
     o.cashAuto    = t.cashAuto !== false;
   }
+  if(o.type==="spares"){
+    o.overseas = sparesClean(t.overseas, SPARES_OVERSEAS);
+    o.domestic = sparesClean(t.domestic, SPARES_DOMESTIC);
+    o.overseasCount = o.overseas.length;
+    o.domesticCount = o.domestic.length;
+  }
   return o;
 }
 function todoHasContent(t){
@@ -4277,6 +4431,10 @@ function todoHasContent(t){
   if(t.type==="crew"){
     if((Number(t.onCount)||0) || (Number(t.offCount)||0)) return true;
     return (Array.isArray(t.crewOn)&&t.crewOn.some(crewFilled)) || (Array.isArray(t.crewOff)&&t.crewOff.some(crewFilled));
+  }
+  if(t.type==="spares"){
+    return (Array.isArray(t.overseas)&&t.overseas.some(function(r){return sparesFilled(r,SPARES_OVERSEAS);})) ||
+           (Array.isArray(t.domestic)&&t.domestic.some(function(r){return sparesFilled(r,SPARES_DOMESTIC);}));
   }
   return false;
 }
@@ -4312,6 +4470,30 @@ function crewManifestView(t,i){
   var joiners = on.filter(function(c){ return String(c.name||"").trim(); });
   if(joiners.length){
     h += '<div class="crew-actions"><button class="btn sm" onclick="generateOKTB('+i+')">📄 生成 OKTB（登轮船员）</button></div>';
+  }
+  return h+'</div>';
+}
+
+function sparesTableView(title, list, fields){
+  var h = '<div class="sp-sec"><div class="sp-h">'+title+'</div>';
+  if(!list || !list.length){ h += '<div class="sp-empty">无</div></div>'; return h; }
+  h += '<table class="sp-table"><thead><tr><th>NO.</th>'+
+    fields.map(function(f){ return '<th>'+f.l+'</th>'; }).join('')+'</tr></thead><tbody>';
+  list.forEach(function(row,j){
+    h += '<tr><td>'+(j+1)+'</td>'+fields.map(function(f){
+      return '<td>'+esc(row && row[f.k]!=null ? String(row[f.k]) : '')+'</td>';
+    }).join('')+'</tr>';
+  });
+  return h+'</tbody></table></div>';
+}
+function sparesView(t){
+  var ov = Array.isArray(t.overseas) ? t.overseas : [];
+  var dm = Array.isArray(t.domestic) ? t.domestic : [];
+  var h = '<div class="sp-block ro">'+
+    sparesTableView('Overseas Shipments（海外备件）', ov, SPARES_OVERSEAS)+
+    sparesTableView('China domestic shipments（国内备件）', dm, SPARES_DOMESTIC);
+  if(String(t.detail||"").trim()){
+    h += '<div style="margin-top:8px;white-space:pre-wrap;font-size:13px;color:#444">'+esc(t.detail)+'</div>';
   }
   return h+'</div>';
 }
